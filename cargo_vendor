@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# OBS Source Service to vendor all crates.io and dependencies for a 
+# OBS Source Service to vendor all crates.io and dependencies for a
 # Rust project locally.
 #
 # (C) 2019 SUSE LLC
@@ -14,7 +14,7 @@
 # The following code is a derivative work of the code from obs-service-go_modules,
 # available at: https://github.com/openSUSE/obs-service-go_modules
 """\
-OBS Source Service to vendor all crates.io and dependencies for a 
+OBS Source Service to vendor all crates.io and dependencies for a
 Rust project locally, by calling:
 
 cargo vendor  <path/to/project/vendor>
@@ -62,9 +62,9 @@ def get_archive_extension():
     if args.compression not in tarfile.TarFile.OPEN_METH:
         log.error(f"The specified compression mode is not supported: \"{args.compression}\"")
         exit(1)
-    
+
     if args.compression == "tar":
-        return  "tar"
+        return "tar"
 
     return "tar." + (args.compression or DEFAULT_COMPRESSION)
 
@@ -87,7 +87,6 @@ def archive_autodetect():
         exit(1)
     else:
         spec_dir = spec.parent  # typically the same as cwd
-        spec_stem = spec.stem  # stem is app in app.spec
         # highest sorted archive under spec_dir
         pattern = f"{spec.stem}*.{archive_ext}"
         archive = next(reversed(sorted(Path(spec_dir).glob(pattern))), None)
@@ -150,11 +149,13 @@ def run_cargo(runDirectory, command, argsList=[]):
             log.info(error)
         return False
 
+
 def cargo_vendor(appDirectory, argsList=[]):
     vendor_dir = os.path.join(appDirectory, "vendor")
     log.info(f"Vendoring Cargo.toml deps to {vendor_dir}")
     run_cargo(appDirectory, "vendor", argsList + ["--", vendor_dir])
     return vendor_dir
+
 
 def main():
     log.info(f"Running OBS Source Service: {service_name}")
@@ -180,11 +181,12 @@ def main():
         try:
             to_remove = os.path.join(outdir, basename)
             shutil.rmtree(to_remove)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             log.error(f"Could not remove directory not found {to_remove}")
     else:
         log.error(f"Not a valid strategy : \"{args.strategy}\"")
         exit(1)
+
 
 if __name__ == "__main__":
     main()
