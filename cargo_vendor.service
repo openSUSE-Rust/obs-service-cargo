@@ -4,7 +4,7 @@
   searches for a Rust application containing a Cargo.toml file,
   download all crates.io and dependecies,
   and creates a vendor.tar[.<tar compression>] to be committed allowing fully offline
-  builds of Go applications.</description>
+  builds of Rust applications.</description>
   <parameter name="strategy">
     <description>Choose the strategy this service runs in. Values: vendor. Default: vendor</description>
   </parameter>
