@@ -1,0 +1,17 @@
+<service name="cargo_vendor">
+  <summary> OBS Source Service to vendor all crates.io and dependencies for a Rust project</summary>
+  <description>This service extracts a Rust application source,
+  searches for a Rust application containing a Cargo.toml file,
+  download all crates.io and dependecies,
+  and creates a vendor.tar[.<tar compression>] to be committed allowing fully offline
+  builds of Go applications.</description>
+  <parameter name="strategy">
+    <description>Choose the strategy this service runs in. Values: vendor. Default: vendor</description>
+  </parameter>
+  <parameter name="archive">
+    <description>Specify the Rust application source archive. Values: app-x.y.z.tar.gz. Default: None, will use autodetection</description>
+  </parameter>
+  <parameter name="compression">
+    <description>Specify the source / vendor tarballs compression method. When using "tar" no compression is applied. Default: "gz".</description>
+  </parameter>
+</service>
