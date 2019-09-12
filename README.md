@@ -1,9 +1,12 @@
 # OBS Source Service `obs-service-cargo_vendor`
 
-This is the Git repository for [`devel:languages:rust/obs-service-cargo_vendor`](https://build.opensuse.org/package/show/devel:languages:go/obs-service-cargo_vendor),
+<!--
+This is the Git repository for [`devel:languages:rust/obs-service-cargo_vendor`](https://build.opensuse.org/package/show/devel:languages:rust/obs-service-cargo_vendor),
 an [Open Build Service (OBS)](https://build.opensuse.org) [Source Service](https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.source_service.html)
 to locally vendor Rust crates and dependencies.
-The authoritative source is https://github.com/openSUSE/obs-service-cargo_vendor.
+-->
+
+The authoritative source of this project is https://github.com/openSUSE/obs-service-cargo_vendor.
 
 `obs-service-cargo_vendor` uses the `Cargo.toml` file present in a Rust application
 to run `cargo vendor`, that populates a folder with the sources of the Rust dependencies.
@@ -93,3 +96,8 @@ source tarball.
 ## License
 
 GNU General Public License v2.0 or later
+
+## Attributions
+
+This project is a derivative work of `obs-service-go_modules` available at
+https://github.com/openSUSE/obs-service-go_modules.
