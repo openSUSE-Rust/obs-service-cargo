@@ -69,21 +69,19 @@ Source1:        vendor.tar.xz
 Create a `$CARGO_HOME` directory, including a `config` file in it with the configuration
 for the vendored sources:
 ```
-mkdir cargo-home
-cat > cargo-home/config <<EOF
+mkdir .cargo
+cat >.cargo/config <<EOF
 [source.crates-io]
-replace-with = "vendored-sources"
-
+registry = 'https://github.com/rust-lang/crates.io-index'
+replace-with = 'vendored-sources'
 [source.vendored-sources]
-directory = "vendor"
+directory = './vendor'
 EOF
 ```
 
 - At the `%build` step, export the previously created `$CARGO_HOME` and use `cargo build`
 to build the application:
 ```
-export CARGO_HOME=`pwd`/cargo-home
-
 cargo build --path `pwd` # <cargo build options...>
 ```
 
