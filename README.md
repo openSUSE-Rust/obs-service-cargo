@@ -88,6 +88,34 @@ to build the application:
 cargo build --release # <cargo build options...>
 ```
 
+## Options
+
+There are a few options that you can supply to the service. The default behaviour without these options is to autodetect the archive type, and in the case where a directory is found with a `Cargo.toml` in the root, then the default compression of `gzip` is used.
+
+- `<param name="strategy">vendor</param>`
+
+The default here is `vendor` which will use `cargo vendor` to fetch the crate dependencies. There are currently no alternatives to `vendor`.
+
+- `<param name="archive">archivename.tar.gz</param>`
+
+The name of the required archive. The option is used in the case where there may be multiple archives available in the package build. This can also be used to specify a directory - useful in the case of using the `obs_scm` service.
+
+- `<param name="compression">xz</param>`
+
+The compression to use for the `vendor.tar`. If the option is not supplied it will default to `gz` or the same compression as the source archive. Available compressions are those supported by `tar`.
+
+#### Example
+
+```
+<services>
+  <service name="cargo_vendor" mode="disabled">
+    <param name="strategy">vendor</param>
+    <param name="archive">some_git_repo</param>
+    <param name="compression">xz</param>
+  </service>
+</services>
+```
+
 ## Transition note
 
 Until `obs-service-cargo_vendor` is available on [OBS](https://build.opensuse.org),
