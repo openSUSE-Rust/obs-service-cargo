@@ -57,6 +57,31 @@ args = parser.parse_args()
 
 outdir = args.outdir
 
+vendor_example = """
+Your spec file should be modified per the following example:
+
+---BEGIN---
+%global rustflags '-Clink-arg=-Wl,-z,relro,-z,now'
+
+Source1:    vendor.tar.xz
+Source2:    cargo_config
+
+%prep
+%setup -qa1
+mkdir .cargo
+cp %{SOURCE2} .cargo/config
+
+%build
+RUSTFLAGS=%{rustflags} cargo build --release
+
+%install
+RUSTFLAGS=%{rustflags} cargo install --root=%{buildroot}%{_prefix} --path .
+---END---
+
+WARNING: To avoid cargo install rebuilding the binary in the install stage
+         all environment variables must be the same as in the build stage.
+"""
+
 
 def get_archive_extension():
     if args.compression not in tarfile.TarFile.OPEN_METH:
@@ -71,6 +96,13 @@ def get_archive_extension():
 
 archive_ext = get_archive_extension()
 vendor_tarname = f"vendor.{archive_ext}"
+
+
+def find_file(path, filename):
+    for root, dirs, files in os.walk(path):
+        if filename in files:
+            print(os.path.join(root, filename))
+            return os.path.join(root, filename)
 
 
 def archive_autodetect():
@@ -91,8 +123,13 @@ def archive_autodetect():
         pattern = f"{spec.stem}*.{archive_ext}"
         archive = next(reversed(sorted(Path(spec_dir).glob(pattern))), None)
     if not archive:
-        log.error(f"Archive autodetection found no matching archive under {cwd}")
-        exit(1)
+        archive = find_file(cwd, "Cargo.toml")
+        app_dir = os.path.basename(os.path.normpath(os.path.dirname(archive)))
+        if app_dir:
+            return app_dir
+        else:
+            log.error(f"Archive autodetection found no matching archive under {cwd}")
+            exit(1)
     else:
         log.info(f"Archive autodetected at {archive}")
         # Check that app.spec Version: directive value
@@ -117,23 +154,20 @@ def archive_autodetect():
 archive = args.archive or archive_autodetect()
 log.info(f"Using archive {archive}")
 
-basename = archive.replace(f".{archive_ext}", "")
-
-
 def extract(filename, dir):
     if filename.endswith(f".{archive_ext}"):
         tar = tarfile.open(filename)
         tar.extractall(path=dir)
         tar.close()
     else:
-        log.info(f"Unsupported archive file format for {filename}")
-        exit(1)
-
-
-def find_file(path, filename):
-    for root, dirs, files in os.walk(path):
-        if filename in files:
-            return os.path.join(root, filename)
+        cargo_toml_path = find_file(filename, "Cargo.toml")
+        if cargo_toml_path:
+            log.info(f"Archive {filename} is a directory containing Cargo.toml")
+            log.info(f"Copying {filename} in to {dir}")
+            shutil.copytree(filename, dir+'/'+filename)
+        else:
+            log.info(f"Unsupported archive file format for {filename}")
+            exit(1)
 
 
 def run_cargo(runDirectory, command, argsList=[]):
@@ -141,7 +175,11 @@ def run_cargo(runDirectory, command, argsList=[]):
         log.info(f"Running cargo {command} in directory: {runDirectory}")
         output = check_output(["cargo", command] + argsList, cwd=runDirectory).decode("utf-8").strip()
         if output:
-            log.info(output)
+            log.info(vendor_example)
+            config_file_path = os.path.join(outdir, "cargo_config")
+            config_file = open(config_file_path, 'w')
+            config_file.write(output)
+            config_file.close()
         return True
     except CalledProcessError as e:
         error = e.output.decode("utf-8").strip()
@@ -153,7 +191,7 @@ def run_cargo(runDirectory, command, argsList=[]):
 def cargo_vendor(appDirectory, argsList=[]):
     vendor_dir = os.path.join(appDirectory, "vendor")
     log.info(f"Vendoring Cargo.toml deps to {vendor_dir}")
-    run_cargo(appDirectory, "vendor", argsList + ["--", vendor_dir])
+    run_cargo(appDirectory, "vendor", argsList + ["--", "vendor"])
     return vendor_dir
 
 
@@ -179,10 +217,11 @@ def main():
 
         # remove extracted Rust application source
         try:
+            basename = archive.replace(f".{archive_ext}", "")
             to_remove = os.path.join(outdir, basename)
             shutil.rmtree(to_remove)
         except FileNotFoundError:
-            log.error(f"Could not remove directory not found {to_remove}")
+            log.error(f"Could not remove: Directory not found {to_remove}")
     else:
         log.error(f"Not a valid strategy : \"{args.strategy}\"")
         exit(1)
