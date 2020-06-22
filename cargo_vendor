@@ -19,6 +19,10 @@ Rust project locally, by calling:
 
 cargo vendor  <path/to/project/vendor>
 
+This requires a decompressed version of you sources. Either you need to
+provide this manually, or you can use obs_scm to generate this as part
+of the osc services.
+
 obs-service-cargo_vendor will a create vendor tarball, compressed with
 the specified method (default to "gz"), containing the
 vendor/ directory populated by cargo vendor.
@@ -44,18 +48,18 @@ description = __doc__
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(service_name)
 
-DEFAULT_COMPRESSION = "gz"
-
 parser = argparse.ArgumentParser(
     description=description, formatter_class=argparse.RawDescriptionHelpFormatter
 )
 parser.add_argument("--strategy", default="vendor")
-parser.add_argument("--archive")
+parser.add_argument("--srcdir")
 parser.add_argument("--outdir")
-parser.add_argument("--compression")
+parser.add_argument("--compression", default="xz")
 args = parser.parse_args()
 
 outdir = args.outdir
+srcdir = args.srcdir
+compression = args.compression
 
 vendor_example = """
 Your spec file should be modified per the following example:
@@ -82,20 +86,7 @@ WARNING: To avoid cargo install rebuilding the binary in the install stage
          all environment variables must be the same as in the build stage.
 """
 
-
-def get_archive_extension():
-    if args.compression not in tarfile.TarFile.OPEN_METH:
-        log.error(f"The specified compression mode is not supported: \"{args.compression}\"")
-        exit(1)
-
-    if args.compression == "tar":
-        return "tar"
-
-    return "tar." + (args.compression or DEFAULT_COMPRESSION)
-
-
-archive_ext = get_archive_extension()
-vendor_tarname = f"vendor.{archive_ext}"
+vendor_tarname = f"vendor.tar.{compression}"
 
 
 def find_file(path, filename):
@@ -103,71 +94,6 @@ def find_file(path, filename):
         if filename in files:
             print(os.path.join(root, filename))
             return os.path.join(root, filename)
-
-
-def archive_autodetect():
-    """ Find the most likely candidate file that contains a Rust project.
-        For most Rust applications this will be app-x.y.z.tar[.<tar compression>].
-        Use the name of the .spec file as the stem for the archive to detect.
-    """
-    log.info(f"Autodetecting archive since no archive param provided in _service")
-    cwd = Path.cwd()
-    # first .spec under cwd or None
-    spec = next(reversed(sorted(Path(cwd).glob("*.spec"))), None)
-    if not spec:
-        log.error(f"Archive autodetection found no spec file under {cwd}")
-        exit(1)
-    else:
-        spec_dir = spec.parent  # typically the same as cwd
-        # highest sorted archive under spec_dir
-        pattern = f"{spec.stem}*.{archive_ext}"
-        archive = next(reversed(sorted(Path(spec_dir).glob(pattern))), None)
-    if not archive:
-        archive = find_file(cwd, "Cargo.toml")
-        app_dir = os.path.basename(os.path.normpath(os.path.dirname(archive)))
-        if app_dir:
-            return app_dir
-        else:
-            log.error(f"Archive autodetection found no matching archive under {cwd}")
-            exit(1)
-    else:
-        log.info(f"Archive autodetected at {archive}")
-        # Check that app.spec Version: directive value
-        # is a substring of detected archive filename
-        # Warn if there is disagreement between the versions.
-        pattern = re.compile(r"^Version:\s+([\S]+)$", re.IGNORECASE)
-        with spec.open(encoding="utf-8") as f:
-            for line in f:
-                versionmatch = pattern.match(line)
-                if versionmatch:
-                    version = versionmatch.groups(0)[0]
-            if not version:
-                log.warning(f"Version not found in {spec.name}")
-            else:
-                if not (version in archive.name):
-                    log.warning(
-                        f"Version {version} in {spec.name} does not match {archive.name}"
-                    )
-        return str(archive.name)  # return string not PosixPath
-
-
-archive = args.archive or archive_autodetect()
-log.info(f"Using archive {archive}")
-
-def extract(filename, dir):
-    if filename.endswith(f".{archive_ext}"):
-        tar = tarfile.open(filename)
-        tar.extractall(path=dir)
-        tar.close()
-    else:
-        cargo_toml_path = find_file(filename, "Cargo.toml")
-        if cargo_toml_path:
-            log.info(f"Archive {filename} is a directory containing Cargo.toml")
-            log.info(f"Copying {filename} in to {dir}")
-            shutil.copytree(filename, dir+'/'+filename)
-        else:
-            log.info(f"Unsupported archive file format for {filename}")
-            exit(1)
 
 
 def run_cargo(runDirectory, command, argsList=[]):
@@ -198,10 +124,10 @@ def cargo_vendor(appDirectory, argsList=[]):
 def main():
     log.info(f"Running OBS Source Service: {service_name}")
 
-    log.info(f"Extracting {archive} to {outdir}")
-    extract(archive, outdir)
+    log.info(f"Searching for Cargo.toml in {srcdir}")
+    log.info(f"Current work dir {os.getcwd()}")
 
-    cargo_toml_path = find_file(outdir, "Cargo.toml")
+    cargo_toml_path = find_file(srcdir, "Cargo.toml")
     if cargo_toml_path:
         app_dir = os.path.dirname(cargo_toml_path)
         log.info(f"Detected Rust app directory: {app_dir}")
@@ -212,16 +138,8 @@ def main():
     if args.strategy == "vendor":
         vendor_dir = cargo_vendor(appDirectory=app_dir)
         vendor_tarfile = os.path.join(outdir, vendor_tarname)
-        with tarfile.open(vendor_tarfile, "w:" + args.compression) as tar:
+        with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
             tar.add(vendor_dir, arcname=("vendor"))
-
-        # remove extracted Rust application source
-        try:
-            basename = archive.replace(f".{archive_ext}", "")
-            to_remove = os.path.join(outdir, basename)
-            shutil.rmtree(to_remove)
-        except FileNotFoundError:
-            log.error(f"Could not remove: Directory not found {to_remove}")
     else:
         log.error(f"Not a valid strategy : \"{args.strategy}\"")
         exit(1)
