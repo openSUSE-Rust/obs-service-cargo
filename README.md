@@ -68,7 +68,7 @@ RUSTFLAGS=%{rustflags} cargo install --root=%{buildroot}%{_prefix} --path .
 4. Add the generated tarball to the packages sources:
 
 ```
-$ osc add vendor.tar.gz
+$ osc add vendor.tar.xz
 ```
 
 5. Perform a local build to confirm the changes work as expected:
