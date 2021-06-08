@@ -138,11 +138,20 @@ def main():
     if args.strategy == "vendor":
         vendor_dir = cargo_vendor(appDirectory=app_dir)
         vendor_tarfile = os.path.join(outdir, vendor_tarname)
+        log.info("Starting compression ...")
         with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
             tar.add(vendor_dir, arcname=("vendor"))
+        # Complete, so cleanup the vendor folder. This is needed as obs_scm + compress
+        # will on subsequent runs, put the vendor folder in the mail tar AND into
+        # our vendor.tar.xz.
+        #
+        # This is not a greater cost, as cargo vendor will always download anyway.
+        log.info(f"Cleaning up {vendor_dir} ...")
+        shutil.rmtree(vendor_dir)
     else:
         log.error(f"Not a valid strategy : \"{args.strategy}\"")
         exit(1)
+    log.info(f"Success")
 
 
 if __name__ == "__main__":
