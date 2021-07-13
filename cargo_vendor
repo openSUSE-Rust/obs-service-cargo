@@ -45,7 +45,11 @@ service_name = "obs-service-cargo_vendor"
 
 description = __doc__
 
-logging.basicConfig(level=logging.DEBUG)
+if os.getenv('DEBUG') is not None:
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
+
 log = logging.getLogger(service_name)
 
 parser = argparse.ArgumentParser(
@@ -54,11 +58,13 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--strategy", default="vendor")
 parser.add_argument("--srcdir")
 parser.add_argument("--outdir")
+parser.add_argument("--update", default=False, action='store_true')
 parser.add_argument("--compression", default="xz")
 args = parser.parse_args()
 
 outdir = args.outdir
 srcdir = args.srcdir
+update = args.update
 compression = args.compression
 
 vendor_example = """
@@ -100,25 +106,27 @@ def run_cargo(runDirectory, command, argsList=[]):
     try:
         log.info(f"Running cargo {command} in directory: {runDirectory}")
         output = check_output(["cargo", command] + argsList, cwd=runDirectory).decode("utf-8").strip()
-        if output:
-            log.info(vendor_example)
-            config_file_path = os.path.join(outdir, "cargo_config")
-            config_file = open(config_file_path, 'w')
-            config_file.write(output)
-            config_file.close()
-        return True
+        return output
     except CalledProcessError as e:
         error = e.output.decode("utf-8").strip()
         if error:
             log.info(error)
-        return False
+        return None
 
 
 def cargo_vendor(appDirectory, argsList=[]):
-    vendor_dir = os.path.join(appDirectory, "vendor")
-    log.info(f"Vendoring Cargo.toml deps to {vendor_dir}")
-    run_cargo(appDirectory, "vendor", argsList + ["--", "vendor"])
-    return vendor_dir
+    if update:
+        log.info("Updating deps before vendor")
+        run_cargo(appDirectory, "update")
+    log.info(f"Vendoring Cargo.toml deps to {appDirectory}/vendor")
+    output = run_cargo(appDirectory, "vendor", argsList + ["--", "vendor"])
+    if output:
+        log.info(vendor_example)
+        config_file_path = os.path.join(outdir, "cargo_config")
+        config_file = open(config_file_path, 'w')
+        config_file.write(output)
+        config_file.close()
+    # End cargo_vendor.
 
 
 def main():
@@ -136,18 +144,26 @@ def main():
         exit(1)
 
     if args.strategy == "vendor":
-        vendor_dir = cargo_vendor(appDirectory=app_dir)
+        cargo_vendor(appDirectory=app_dir)
+        vendor_dir = os.path.join(app_dir, "vendor")
+        vendor_lock = os.path.join(app_dir, "Cargo.lock")
         vendor_tarfile = os.path.join(outdir, vendor_tarname)
         log.info("Starting compression ...")
         with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
             tar.add(vendor_dir, arcname=("vendor"))
+            if update:
+                tar.add(vendor_lock, arcname=("Cargo.lock"))
         # Complete, so cleanup the vendor folder. This is needed as obs_scm + compress
         # will on subsequent runs, put the vendor folder in the mail tar AND into
         # our vendor.tar.xz.
         #
         # This is not a greater cost, as cargo vendor will always download anyway.
-        log.info(f"Cleaning up {vendor_dir} ...")
+        log.debug(f"Cleaning up {vendor_dir} ...")
         shutil.rmtree(vendor_dir)
+        # Remove the updated cargo.lock so that we don't conflict with obs_scm if run again.
+        if update:
+            log.debug(f"Cleaning up {vendor_lock} ...")
+            os.remove(vendor_lock)
     else:
         log.error(f"Not a valid strategy : \"{args.strategy}\"")
         exit(1)
