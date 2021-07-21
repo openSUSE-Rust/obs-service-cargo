@@ -40,6 +40,7 @@ import shutil
 from pathlib import Path
 from subprocess import check_output
 from subprocess import CalledProcessError
+from subprocess import DEVNULL
 
 service_name = "obs-service-cargo_vendor"
 
@@ -105,12 +106,14 @@ def find_file(path, filename):
 def run_cargo(runDirectory, command, argsList=[]):
     try:
         log.info(f"Running cargo {command} in directory: {runDirectory}")
-        output = check_output(["cargo", command] + argsList, cwd=runDirectory).decode("utf-8").strip()
+        output = check_output(["cargo", command] + argsList, cwd=runDirectory, stderr=DEVNULL).decode("utf-8").strip()
+        log.info(f"✅ cargo {command} success")
         return output
     except CalledProcessError as e:
+        log.info(f"❌ cargo {command} failed")
         error = e.output.decode("utf-8").strip()
         if error:
-            log.info(error)
+            log.error(error)
         return None
 
 
