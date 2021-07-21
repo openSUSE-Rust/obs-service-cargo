@@ -117,6 +117,11 @@ configuration.
 The compression to use for the `vendor.tar`. If the option is not supplied it will default to `xz`.
 Available compressions are those supported by `tar`.
 
+- `<param name="update" />`
+
+If present, cargo update will be run before vendoring to ensure that the latest version of compatible
+dependencies is used.
+
 - `<param name="strategy">vendor</param>`
 
 The default here is `vendor` which will use `cargo vendor` to fetch the crate dependencies. There
@@ -133,6 +138,7 @@ are currently no alternatives to `vendor`.
     <param name="strategy">vendor</param>
     <param name="srcdir">projectname</param>
     <param name="compression">xz</param>
+    <param name="update" />
   </service>
 </services>
 ```
