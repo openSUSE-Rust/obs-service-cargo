@@ -59,13 +59,16 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--strategy", default="vendor")
 parser.add_argument("--srcdir")
 parser.add_argument("--outdir")
-parser.add_argument("--update", default=False, action='store_true')
+parser.add_argument("--update", default=False)
 parser.add_argument("--compression", default="xz")
 args = parser.parse_args()
 
 outdir = args.outdir
 srcdir = args.srcdir
+# Hack - obs always emits an arg to this so we can't use store_true/store_false.
 update = args.update
+if update == "false" or update == '0':
+    update = False
 compression = args.compression
 
 vendor_example = """

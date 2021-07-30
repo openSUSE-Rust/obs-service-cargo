@@ -138,7 +138,7 @@ are currently no alternatives to `vendor`.
     <param name="strategy">vendor</param>
     <param name="srcdir">projectname</param>
     <param name="compression">xz</param>
-    <param name="update" />
+    <param name="update">true</param>
   </service>
 </services>
 ```
