@@ -34,6 +34,7 @@ import logging
 import argparse
 import re
 import tarfile
+import tempfile
 import os
 import shutil
 
@@ -53,56 +54,21 @@ else:
 
 log = logging.getLogger(service_name)
 
-parser = argparse.ArgumentParser(
-    description=description, formatter_class=argparse.RawDescriptionHelpFormatter
-)
-parser.add_argument("--strategy", default="vendor")
-parser.add_argument("--srcdir")
-parser.add_argument("--outdir")
-parser.add_argument("--update", default=False)
-parser.add_argument("--compression", default="xz")
-args = parser.parse_args()
-
-outdir = args.outdir
-srcdir = args.srcdir
-# Hack - obs always emits an arg to this so we can't use store_true/store_false.
-update = args.update
-if update == "false" or update == '0':
-    update = False
-compression = args.compression
 
 vendor_example = """
-Your spec file should be modified per the following example:
+Examples of how to modify your spec file to use vendored libraries can be found online:
 
----BEGIN---
-%global rustflags '-Clink-arg=-Wl,-z,relro,-z,now'
-
-Source1:    vendor.tar.xz
-Source2:    cargo_config
-
-%prep
-%setup -qa1
-mkdir .cargo
-cp %{SOURCE2} .cargo/config
-
-%build
-RUSTFLAGS=%{rustflags} cargo build --release
-
-%install
-RUSTFLAGS=%{rustflags} cargo install --root=%{buildroot}%{_prefix} --path .
----END---
+https://en.opensuse.org/Packaging_Rust_Software#Creating_the_Package
 
 WARNING: To avoid cargo install rebuilding the binary in the install stage
          all environment variables must be the same as in the build stage.
 """
 
-vendor_tarname = f"vendor.tar.{compression}"
-
 
 def find_file(path, filename):
     for root, dirs, files in os.walk(path):
         if filename in files:
-            print(os.path.join(root, filename))
+            log.debug(os.path.join(root, filename))
             return os.path.join(root, filename)
 
 
@@ -120,7 +86,7 @@ def run_cargo(runDirectory, command, argsList=[]):
         return None
 
 
-def cargo_vendor(appDirectory, argsList=[]):
+def cargo_vendor(appDirectory, update, outdir, argsList=[]):
     if update:
         log.info("Updating deps before vendor")
         run_cargo(appDirectory, "update")
@@ -135,45 +101,81 @@ def cargo_vendor(appDirectory, argsList=[]):
     # End cargo_vendor.
 
 
-def main():
-    log.info(f"Running OBS Source Service: {service_name}")
+def do_cargo_vendor(srcdir, srctar, outdir, update, compression):
+    if srcdir and srctar:
+        log.error("I'm confused - can't work with both a srctar and srcdir!")
+        return False
 
-    log.info(f"Searching for Cargo.toml in {srcdir}")
-    log.info(f"Current work dir {os.getcwd()}")
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        if srctar:
+            log.debug(f" Unpacking {srctar}")
+            # Setup the tar.
+            log.debug(f" setting up sources into {tmpdirname}")
+            with tarfile.open(f"{srctar}", "r:*") as tar:
+                tar.extractall(path=tmpdirname)
+            lsrcdir = tmpdirname
+        else:
+            log.debug(f" Copying {srcdir}")
+            (_, dirname) = os.path.split(srcdir)
+            dirpath = os.path.join(tmpdirname, dirname)
+            log.debug(f" copying sources into {dirpath}")
+            lsrcdir = shutil.copytree(srcdir, dirpath, dirs_exist_ok=True)
 
-    cargo_toml_path = find_file(srcdir, "Cargo.toml")
-    if cargo_toml_path:
-        app_dir = os.path.dirname(cargo_toml_path)
-        log.info(f"Detected Rust app directory: {app_dir}")
-    else:
-        log.error(f"No Rust app using Cargo.toml found under {outdir}")
-        exit(1)
+        log.info(f"Current work dir {os.getcwd()}")
+        log.info(f"Searching for Cargo.toml in {lsrcdir}")
 
-    if args.strategy == "vendor":
-        cargo_vendor(appDirectory=app_dir)
+        cargo_toml_path = find_file(lsrcdir, "Cargo.toml")
+        if cargo_toml_path:
+            app_dir = os.path.dirname(cargo_toml_path)
+            log.info(f"Detected Rust app directory: {app_dir}")
+        else:
+            log.error(f"No Rust app using Cargo.toml found under {outdir}")
+            return False
+
+        cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir)
         vendor_dir = os.path.join(app_dir, "vendor")
         vendor_lock = os.path.join(app_dir, "Cargo.lock")
-        vendor_tarfile = os.path.join(outdir, vendor_tarname)
+        vendor_tarfile = os.path.join(outdir, f"vendor.tar.{compression}")
         log.info("Starting compression ...")
         with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
             tar.add(vendor_dir, arcname=("vendor"))
             if update:
                 tar.add(vendor_lock, arcname=("Cargo.lock"))
-        # Complete, so cleanup the vendor folder. This is needed as obs_scm + compress
-        # will on subsequent runs, put the vendor folder in the mail tar AND into
-        # our vendor.tar.xz.
-        #
-        # This is not a greater cost, as cargo vendor will always download anyway.
-        log.debug(f"Cleaning up {vendor_dir} ...")
-        shutil.rmtree(vendor_dir)
-        # Remove the updated cargo.lock so that we don't conflict with obs_scm if run again.
-        if update:
-            log.debug(f"Cleaning up {vendor_lock} ...")
-            os.remove(vendor_lock)
-    else:
-        log.error(f"Not a valid strategy : \"{args.strategy}\"")
-        exit(1)
+        # No longer need cleanup since we used a temp location.
     log.info(f"Success")
+    return True
+
+
+def main():
+    log.info(f"Running OBS Source Service: {service_name}")
+
+    parser = argparse.ArgumentParser(
+        description=description, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    # Legacy argument, no longer used.
+    parser.add_argument("--strategy", default="vendor")
+
+    # Where to find unpacked sources.
+    parser.add_argument("--srcdir", default=None)
+    # Where to find packed sources.
+    parser.add_argument("--srctar", default=None)
+    # Where to put the vendor.tar and cargo_config
+    parser.add_argument("--outdir", default=None)
+    parser.add_argument("--update", default=False)
+    parser.add_argument("--compression", default="xz")
+    args = parser.parse_args()
+
+    # Hack - obs always emits an arg to this so we can't use store_true/store_false.
+    update = args.update
+    if args.update == "false" or update == '0':
+        update = False
+    else:
+        update = True
+
+    log.debug("%s" % args)
+
+    if not do_cargo_vendor(args.srcdir, args.srctar, args.outdir, update, args.compression):
+        exit(1)
 
 
 if __name__ == "__main__":
