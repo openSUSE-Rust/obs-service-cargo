@@ -32,6 +32,7 @@ Follow this steps when creating a new RPM package for a Rust application:
   </service>
   <service name="cargo_vendor" mode="disabled">
     <param name="srcdir">projectname</param>
+    <param name="update">true</param>
   </service>
 </services>
 ```
@@ -107,10 +108,14 @@ you should keep `mode="disabled"`
 ## Options
 
 - `<param name="srcdir">projectname</param>`
+- `<param name="srctar">name-of-source.tar</param>`
 
 The location to search for the Cargo.toml which we will vendor from. Generally this is your project
 name from the SCM checkout, or the extracted archive top dir, but it may differ depending on your
 configuration.
+
+You can alternately specify srctar, which we will unpack into a temp location and perform the vendor
+instead. This removes your need to rely on `obs_scm` or similar
 
 - `<param name="compression">xz</param>`
 
@@ -122,10 +127,11 @@ Available compressions are those supported by `tar`.
 If present, cargo update will be run before vendoring to ensure that the latest version of compatible
 dependencies is used.
 
-- `<param name="strategy">vendor</param>`
+- `<param name="tag">tagname</param>`
 
-The default here is `vendor` which will use `cargo vendor` to fetch the crate dependencies. There
-are currently no alternatives to `vendor`.
+In some rare case, you may wish to annotate your `vendor.tar` and `cargo_config` with a unique
+tag. Generally this happens if you are needing to create multiple vendor tars. When you specify
+`tag` the vendor routine will create `vendor-{tag}.tar` and `cargo_config_{tag}` instead.
 
 #### Example
 
@@ -135,8 +141,17 @@ are currently no alternatives to `vendor`.
     ...
   </service>
   <service name="cargo_vendor" mode="disabled">
-    <param name="strategy">vendor</param>
     <param name="srcdir">projectname</param>
+    <param name="compression">xz</param>
+    <param name="update">true</param>
+  </service>
+</services>
+```
+
+```
+<services>
+  <service name="cargo_vendor" mode="disabled">
+    <param name="srctar">projectname.tar.xz</param>
     <param name="compression">xz</param>
     <param name="update">true</param>
   </service>
