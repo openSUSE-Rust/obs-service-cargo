@@ -51,7 +51,7 @@ Your spec file should be modified per the following example:
 ---BEGIN---
 %global rustflags '-Clink-arg=-Wl,-z,relro,-z,now'
 
-Source1:    vendor.tar.xz
+Source1:    vendor.tar.zst
 Source2:    cargo_config
 
 %prep
@@ -69,7 +69,7 @@ RUSTFLAGS=%{rustflags} cargo install --root=%{buildroot}%{_prefix} --path .
 4. Add the generated tarball to the packages sources:
 
 ```
-$ osc add vendor.tar.xz
+$ osc add vendor.tar.zst
 ```
 
 5. Perform a local build to confirm the changes work as expected:
@@ -85,7 +85,7 @@ If you are not using SCM, you can use the cargo vendor service manually.
 1. Extract your source archive into your working directory.
 
 ```
-$ tar -xv archive.tar.xz
+$ tar -xv archive.tar.zst
 ```
 
 2. Examine the folder name it extracted, IE archive-v1.0.0
@@ -117,9 +117,9 @@ configuration.
 You can alternately specify srctar, which we will unpack into a temp location and perform the vendor
 instead. This removes your need to rely on `obs_scm` or similar
 
-- `<param name="compression">xz</param>`
+- `<param name="compression">zst</param>`
 
-The compression to use for the `vendor.tar`. If the option is not supplied it will default to `xz`.
+The compression to use for the `vendor.tar`. If the option is not supplied it will default to `zst`.
 Available compressions are those supported by `tar`.
 
 - `<param name="update" />`
@@ -142,7 +142,7 @@ tag. Generally this happens if you are needing to create multiple vendor tars. W
   </service>
   <service name="cargo_vendor" mode="disabled">
     <param name="srcdir">projectname</param>
-    <param name="compression">xz</param>
+    <param name="compression">zst</param>
     <param name="update">true</param>
   </service>
 </services>
@@ -151,8 +151,8 @@ tag. Generally this happens if you are needing to create multiple vendor tars. W
 ```
 <services>
   <service name="cargo_vendor" mode="disabled">
-    <param name="srctar">projectname.tar.xz</param>
-    <param name="compression">xz</param>
+    <param name="srctar">projectname.tar.zst</param>
+    <param name="compression">zst</param>
     <param name="update">true</param>
   </service>
 </services>

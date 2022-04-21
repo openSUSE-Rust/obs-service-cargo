@@ -37,6 +37,7 @@ import tarfile
 import tempfile
 import os
 import shutil
+import zstandard
 
 from pathlib import Path
 from subprocess import check_output
@@ -106,16 +107,28 @@ def cargo_vendor(appDirectory, update, outdir, tag, argsList=[]):
 
 def do_cargo_vendor(srcdir, srctar, outdir, update, compression, tag):
     if srcdir and srctar:
-        log.error("I'm confused - can't work with both a srctar and srcdir!")
+        log.error("I'm confused 🥺 - can't work with both a srctar and srcdir!")
         return False
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         if srctar:
-            log.debug(f" Unpacking {srctar}")
-            # Setup the tar.
-            log.debug(f" setting up sources into {tmpdirname}")
-            with tarfile.open(f"{srctar}", "r:*") as tar:
-                tar.extractall(path=tmpdirname)
+            log.debug(f" Unpacking {srctar} into {tmpdirname}")
+            if srctar.endswith('.tar.zst') or srctar.endswith('.tzst'):
+                log.debug(" zst requested.")
+                # Since python has changed from "batteries included" to "we jettisoned half the
+                # batteries and the rest have no charge" we have to manually do this manual decompression
+                with tempfile.NamedTemporaryFile() as decompressed:
+                    with open(srctar, 'rb') as compressed:
+                        zstd = zstandard.ZstdDecompressor()
+                        zstd.copy_stream(compressed, decompressed)
+                    decompressed.seek(0)
+                    # Setup the tar.
+                    with tarfile.open(fileobj=decompressed, mode="r:") as tar:
+                        tar.extractall(path=tmpdirname)
+            else:
+                # Setup the tar.
+                with tarfile.open(f"{srctar}", "r:*") as tar:
+                    tar.extractall(path=tmpdirname)
             lsrcdir = tmpdirname
         else:
             log.debug(f" Copying {srcdir}")
@@ -143,10 +156,21 @@ def do_cargo_vendor(srcdir, srctar, outdir, update, compression, tag):
         else:
             vendor_tarfile = os.path.join(outdir, f"vendor.tar.{compression}")
         log.info("Starting compression ...")
-        with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
-            tar.add(vendor_dir, arcname=("vendor"))
-            if update:
-                tar.add(vendor_lock, arcname=("Cargo.lock"))
+        if compression in ['tzst', 'zst', 'zstd']:
+            # Manual compress.
+            with tempfile.NamedTemporaryFile() as decompressed:
+                with tarfile.open(decompressed.name, f"w:") as tar:
+                    tar.add(vendor_dir, arcname=("vendor"))
+                    if update:
+                        tar.add(vendor_lock, arcname=("Cargo.lock"))
+                with open(vendor_tarfile, 'wb') as compressed:
+                    zstd = zstandard.ZstdCompressor()
+                    zstd.copy_stream(decompressed, compressed)
+        else:
+            with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
+                tar.add(vendor_dir, arcname=("vendor"))
+                if update:
+                    tar.add(vendor_lock, arcname=("Cargo.lock"))
         # No longer need cleanup since we used a temp location.
     log.info(f"Success")
     return True
@@ -169,7 +193,7 @@ def main():
     parser.add_argument("--outdir", default=None)
     parser.add_argument("--update", default=False)
     parser.add_argument("--tag", default=None)
-    parser.add_argument("--compression", default="xz")
+    parser.add_argument("--compression", default="zst")
     args = parser.parse_args()
 
     # Hack - obs always emits an arg to this so we can't use store_true/store_false.
