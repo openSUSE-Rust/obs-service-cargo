@@ -164,7 +164,7 @@ def do_cargo_vendor(srcdir, srctar, outdir, update, compression, tag):
                     if update:
                         tar.add(vendor_lock, arcname=("Cargo.lock"))
                 with open(vendor_tarfile, 'wb') as compressed:
-                    zstd = zstandard.ZstdCompressor()
+                    zstd = zstandard.ZstdCompressor(level=6,write_checksum=True,threads=-1)
                     zstd.copy_stream(decompressed, compressed)
         else:
             with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
