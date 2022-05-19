@@ -173,7 +173,7 @@ def do_cargo_vendor(srcdir, srctar, outdir, update, compression, tag):
                     tar.add(vendor_lock, arcname=("Cargo.lock"))
         # No longer need cleanup since we used a temp location.
     log.info(f"Success")
-    return True
+    return vendor_tarfile
 
 
 def main():
@@ -193,7 +193,7 @@ def main():
     parser.add_argument("--outdir", default=None)
     parser.add_argument("--update", default=False)
     parser.add_argument("--tag", default=None)
-    parser.add_argument("--compression", default="zst")
+    parser.add_argument("--compression", default="xz")
     args = parser.parse_args()
 
     # Hack - obs always emits an arg to this so we can't use store_true/store_false.
