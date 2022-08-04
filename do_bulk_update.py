@@ -68,30 +68,35 @@ def does_have_cargo_vendor(pkgpath):
         tree = ET.parse(service)
         root_node = tree.getroot()
         for tag in root_node.findall('service'):
+            if tag.attrib['name'] == 'cargo_audit':
+                root_node.remove(tag)
             if tag.attrib['name'] == 'cargo_vendor':
                 has_vendor = True
                 for attr in tag:
-                    if attr.attrib['name'] == 'update' and attr.text == 'true':
-                        has_vendor_update = True
+                    # if attr.attrib['name'] == 'update' and attr.text == 'true':
+                    #     has_vendor_update = True
                     if attr.attrib['name'] == 'srctar':
                         srctar = attr.text
                     if attr.attrib['name'] == 'srcdir':
                         srcdir = attr.text
                     if attr.attrib['name'] == 'compression':
                         compression = attr.text
-                if not has_vendor_update:
-                    print("Forcing update to true in _service")
-                    sub = ET.SubElement(tag, 'param')
-                    sub.set('name', 'update')
-                    sub.text = 'true'
+                # if not has_vendor_update:
+                #     print("Forcing update to true in _service")
+                #     sub = ET.SubElement(tag, 'param')
+                #     sub.set('name', 'update')
+                #     sub.text = 'true'
+                root_node.remove(tag)
 
         # Rewrite the _service to include vendor_update = true
-        if not has_vendor_update:
-            tree.write(service)
+        # and to temporarily remove audit.
+        tree.write(service)
 
     return (has_vendor, srctar, srcdir, compression)
 
-def attempt_update(pkgpath, message, yolo=False):
+
+def attempt_update(pkgpath, message):
+    print("---")
     print(f"Attempting update for {pkgpath}")
 
     (has_vendor, srctar, srcdir, compression) = does_have_cargo_vendor(pkgpath)
@@ -100,62 +105,86 @@ def attempt_update(pkgpath, message, yolo=False):
 
     if not has_vendor:
         print(f"ERROR ⚠️ : {pkgpath} is not setup for cargo vendor!")
-        return
-
-    # if srcdir and srctar is None:
-    #     # We can use srcdir to have a guess what tar we need to use.
-    #     content = os.listdir(pkgpath)
-    #     maybe_src = [
-    #         x for x in content
-    #         if x.startswith(srcdir) and '.tar' in x and 'vendor' not in x and not x.endswith('.asc')
-    #     ]
-    #     if len(maybe_src) != 1:
-    #         print(f"ERROR ⚠️ : confused! Not sure what tar to use in {pkgpath} {maybe_src}")
-    #         print(f"This likely indicates a wacky package config that depends on services")
-    #         return
-
-    #     srctar = maybe_src[0]
-
-    # assert srctar
-
-    srctar = f"{pkgpath}/{srctar}"
+        return False
 
     print(f"Running services in {pkgpath}")
     if not do_services(pkgpath):
-        return
+        print(f"Services reported a failure, this should be checked ...")
+        # return False
 
-    # print(f"Running vendor in {pkgpath} ...")
-    # vendor_tarfile = cargo_vendor_module.do_cargo_vendor(None, srctar, pkgpath, True, compression)
-    #
-    # if not vendor_tarfile:
-    #     print(f"Failed to run cargo vendor 🥺 ")
-    #     return
+    if srcdir and srctar is None:
+        # We can use srcdir to have a guess what tar we need to use.
+        content = os.listdir(pkgpath)
+        maybe_src = [
+            x for x in content
+            if x.startswith(srcdir) and '.tar' in x and 'vendor' not in x and not x.endswith('.asc')
+        ]
+        if len(maybe_src) != 1:
+            print(f"ERROR ⚠️ : confused! Not sure what tar to use in {pkgpath} {maybe_src}")
+            print(f"This likely indicates a wacky package config that depends on services")
+            return False
+
+        srctar = maybe_src[0]
+
+    srctar = f"{pkgpath}/{srctar}"
+
+    print(f"Running vendor against {srctar} ...  ")
+    try:
+        vendor_tarfile = cargo_vendor_module.do_cargo_vendor(None, srctar, outdir=pkgpath, compression=compression)
+    except Exception as e:
+        print("ERROR %s" % e)
+        vendor_tarfile = None
+
+    if not vendor_tarfile:
+        print(f"Failed to run cargo vendor 🥺 ")
+        return False
 
     out = subprocess.check_output(["osc", "status"], cwd=f"{pkgpath}", encoding='UTF-8', stderr=subprocess.STDOUT)
     print(out)
+
+    revert = []
     changed = False
     for line in out.split('\n'):
-        if line.startswith('M') and 'vendor' in line:
-            changed = True
+        if line.startswith('M'):
+            if 'vendor' in line:
+                changed = True
+            elif 'cargo_config' in line:
+                # skipp, we don't want to revert this
+                pass
+            else:
+                print("Reverting %s" % line.split()[1].strip())
+                revert.append(line.split()[1].strip())
 
-    if changed:
+    for item in revert:
+        subprocess.check_output(["osc", "revert", item], cwd=f"{pkgpath}")
+
+    return changed
+
+
+def attempt_submit(pkgpath, message, yolo=False):
+    try:
+        print("---")
         if not yolo:
             print("You must manually run: ")
-        print(f"osc vc {pkgpath}")
+
+        print(f"osc vc -m '{message}' {pkgpath}")
         if yolo:
             out = subprocess.check_output(["osc", "vc", "-m", message], cwd=f"{pkgpath}")
 
-        print(f"osc ci {pkgpath}")
+        print(f"osc ci -m '{message}' {pkgpath}")
         if yolo:
             out = subprocess.check_output(["osc", "ci", "-m", message], cwd=f"{pkgpath}")
 
-        print(f"osc sr {pkgpath}")
+        print(f"osc sr -m '{message}' {pkgpath}")
         if yolo:
-            out = subprocess.check_output(["osc", "sr", "-m", message], cwd=f"{pkgpath}")
-    else:
-        print("No changes detected, skipping submit phase")
+            # out = subprocess.check_output(["osc", "sr", "-m", message], cwd=f"{pkgpath}")
+            pass
 
-    print(f"Complete!")
+        return f"osc sr -m '{message}' {pkgpath}"
+
+    except Exception as e:
+        print("ERROR %s" % e)
+        return None
 
 
 if __name__ == '__main__':
@@ -168,21 +197,19 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('--yolo', action='store_true')
+    parser.add_argument('--message', nargs='?', default="Automatic update of vendored dependencies")
     parser.add_argument('packages', nargs='+')
-    parser.add_argument('message', nargs='?', default="Automatic update of vendored dependencies")
     args = parser.parse_args()
 
     print(args)
 
     pkgpaths = [checkout_or_update(pkgname, basepath) for pkgname in args.packages]
 
-    for pkgpath in pkgpaths:
-        print("---")
-        attempt_update(pkgpath, args.message, args.yolo)
-
-    for pkgpath in pkgpaths:
-        print(f"echo {pkgpath}")
-        print(f"osc results {pkgpath}")
+    submit_req = [attempt_update(pkgpath, args.message) for pkgpath in pkgpaths]
+    submited_req = [attempt_submit(pkgpath, args.message, args.yolo) for pkgpath in pkgpaths]
 
     print("--- complete")
+
+    for sr in sorted(submited_req):
+        print(sr)
 

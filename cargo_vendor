@@ -105,10 +105,13 @@ def cargo_vendor(appDirectory, update, outdir, tag, argsList=[]):
     # End cargo_vendor.
 
 
-def do_cargo_vendor(srcdir, srctar, outdir, update, compression, tag):
+def do_cargo_vendor(srcdir, srctar, outdir, update=True, compression='xz', tag=None):
     if srcdir and srctar:
         log.error("I'm confused 🥺 - can't work with both a srctar and srcdir!")
         return False
+
+    if compression is None:
+        compression = "xz"
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         if srctar:
@@ -145,7 +148,7 @@ def do_cargo_vendor(srcdir, srctar, outdir, update, compression, tag):
             app_dir = os.path.dirname(cargo_toml_path)
             log.info(f"Detected Rust app directory: {app_dir}")
         else:
-            log.error(f"No Rust app using Cargo.toml found under {outdir}")
+            log.error(f"No Rust app using Cargo.toml found under {lsrcdir}")
             return False
 
         cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag)
