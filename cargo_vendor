@@ -92,7 +92,7 @@ def cargo_vendor(appDirectory, update, outdir, tag, argsList=[]):
         log.info("Updating deps before vendor")
         run_cargo(appDirectory, "update")
     log.info(f"Vendoring Cargo.toml deps to {appDirectory}/vendor")
-    output = run_cargo(appDirectory, "vendor", argsList + ["--", "vendor"])
+    output = run_cargo(appDirectory, "vendor", argsList + ["--locked", "--", "vendor"])
     if output:
         log.info(vendor_example)
         if tag:
@@ -105,13 +105,13 @@ def cargo_vendor(appDirectory, update, outdir, tag, argsList=[]):
     # End cargo_vendor.
 
 
-def do_cargo_vendor(srcdir, srctar, outdir, update=True, compression='xz', tag=None):
+def do_cargo_vendor(srcdir, srctar, outdir, update=True, compression='zst', tag=None):
     if srcdir and srctar:
         log.error("I'm confused 🥺 - can't work with both a srctar and srcdir!")
         return False
 
     if compression is None:
-        compression = "xz"
+        compression = "zst"
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         if srctar:
@@ -196,7 +196,7 @@ def main():
     parser.add_argument("--outdir", default=None)
     parser.add_argument("--update", default=False)
     parser.add_argument("--tag", default=None)
-    parser.add_argument("--compression", default="xz")
+    parser.add_argument("--compression", default="zst")
     args = parser.parse_args()
 
     # Hack - obs always emits an arg to this so we can't use store_true/store_false.
