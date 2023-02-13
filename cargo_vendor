@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 #
 # OBS Source Service to vendor all crates.io and dependencies for a
 # Rust project locally.
@@ -138,7 +138,10 @@ def do_cargo_vendor(srcdir, srctar, outdir, update=True, compression='zst', tag=
             (_, dirname) = os.path.split(srcdir)
             dirpath = os.path.join(tmpdirname, dirname)
             log.debug(f" copying sources into {dirpath}")
-            lsrcdir = shutil.copytree(srcdir, dirpath, dirs_exist_ok=True)
+            # We previously set dirs_exist_ok, probably for a good reason but I think now with the
+            # inclusion of the tmpdir, we don't need it. It also blocked operation on python 3.6
+            # lsrcdir = shutil.copytree(srcdir, dirpath, dirs_exist_ok=True)
+            lsrcdir = shutil.copytree(srcdir, dirpath)
 
         log.info(f"Current work dir {os.getcwd()}")
         log.info(f"Searching for Cargo.toml in {lsrcdir}")
