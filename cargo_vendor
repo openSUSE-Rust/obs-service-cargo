@@ -38,6 +38,7 @@ import tempfile
 import os
 import shutil
 import zstandard
+import glob
 
 from pathlib import Path
 from subprocess import check_output
@@ -115,6 +116,10 @@ def do_cargo_vendor(srcdir, srctar, outdir, update=True, compression='zst', tag=
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         if srctar:
+            globs = glob.glob(srctar)
+            log.debug(f" Globbed srctar to {globs}")
+            srctar = globs[0]
+
             log.debug(f" Unpacking {srctar} into {tmpdirname}")
             if srctar.endswith('.tar.zst') or srctar.endswith('.tzst'):
                 log.debug(" zst requested.")
