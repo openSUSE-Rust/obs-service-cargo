@@ -1,10 +1,13 @@
 <service name="cargo_vendor">
   <summary> OBS Source Service to vendor all crates.io and dependencies for a Rust project</summary>
-  <description>This service extracts a Rust application source,
+  <description>
+  <![CDATA[
+  This service extracts a Rust application source,
   searches for a Rust application containing a Cargo.toml file,
   download all crates.io and dependecies,
   and creates a vendor.tar[.<tar compression>] to be committed allowing fully offline
-  builds of Rust applications.</description>
+  builds of Rust applications.
+  ]]></description>
   <parameter name="strategy">
     <description>Choose the strategy this service runs in. Values: vendor. Default: vendor</description>
   </parameter>
