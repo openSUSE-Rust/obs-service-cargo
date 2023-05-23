@@ -106,6 +106,14 @@ def cargo_vendor(appDirectory, update, outdir, tag, argsList=[]):
     # End cargo_vendor.
 
 
+def filter_tarinfo(tarinfo):
+    tarinfo.uid = 0
+    tarinfo.gid = 0
+    tarinfo.uname = "root"
+    tarinfo.gname = "root"
+    return tarinfo
+
+
 def do_cargo_vendor(srcdir, srctar, outdir, update=True, compression='zst', tag=None):
     if srcdir and srctar:
         log.error("I'm confused 🥺 - can't work with both a srctar and srcdir!")
@@ -171,17 +179,17 @@ def do_cargo_vendor(srcdir, srctar, outdir, update=True, compression='zst', tag=
             # Manual compress.
             with tempfile.NamedTemporaryFile() as decompressed:
                 with tarfile.open(decompressed.name, f"w:") as tar:
-                    tar.add(vendor_dir, arcname=("vendor"))
+                    tar.add(vendor_dir, arcname=("vendor"), filter=filter_tarinfo)
                     if update:
-                        tar.add(vendor_lock, arcname=("Cargo.lock"))
+                        tar.add(vendor_lock, arcname=("Cargo.lock"), filter=filter_tarinfo)
                 with open(vendor_tarfile, 'wb') as compressed:
                     zstd = zstandard.ZstdCompressor(level=6,write_checksum=True,threads=-1)
                     zstd.copy_stream(decompressed, compressed)
         else:
             with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
-                tar.add(vendor_dir, arcname=("vendor"))
+                tar.add(vendor_dir, arcname=("vendor"), filter=filter_tarinfo)
                 if update:
-                    tar.add(vendor_lock, arcname=("Cargo.lock"))
+                    tar.add(vendor_lock, arcname=("Cargo.lock"), filter=filter_tarinfo)
         # No longer need cleanup since we used a temp location.
     log.info(f"Success")
     return vendor_tarfile
