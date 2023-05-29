@@ -78,6 +78,7 @@ def run_cargo(runDirectory, command, argsList=[]):
     try:
         log.info(f"Running cargo {command} in directory: {runDirectory}")
         output = check_output(["cargo", command] + argsList, cwd=runDirectory, stderr=DEVNULL).decode("utf-8").strip()
+        log.debug(output)
         log.info(f"✅ cargo {command} success")
         return output
     except CalledProcessError as e:
@@ -88,12 +89,18 @@ def run_cargo(runDirectory, command, argsList=[]):
         return None
 
 
-def cargo_vendor(appDirectory, update, outdir, tag, argsList=[]):
+def cargo_vendor(appDirectory, update, outdir, tag, cargotoml=None, argsList=[]):
     if update:
         log.info("Updating deps before vendor")
         run_cargo(appDirectory, "update")
     log.info(f"Vendoring Cargo.toml deps to {appDirectory}/vendor")
-    output = run_cargo(appDirectory, "vendor", argsList + ["--locked", "--", "vendor"])
+    sync_args = []
+    if cargotoml:
+        for toml in cargotoml:
+            log.info(f"Adding path '{toml}' to sync options")
+            sync_args.append("--sync")
+            sync_args.append(os.path.join(appDirectory, toml))
+    output = run_cargo(appDirectory, "vendor", argsList + sync_args + ["--locked", "--", "vendor"])
     if output:
         log.info(vendor_example)
         if tag:
@@ -114,7 +121,7 @@ def filter_tarinfo(tarinfo):
     return tarinfo
 
 
-def do_cargo_vendor(srcdir, srctar, outdir, update=True, compression='zst', tag=None):
+def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression='zst', tag=None):
     if srcdir and srctar:
         log.error("I'm confused 🥺 - can't work with both a srctar and srcdir!")
         return False
@@ -167,7 +174,16 @@ def do_cargo_vendor(srcdir, srctar, outdir, update=True, compression='zst', tag=
             log.error(f"No Rust app using Cargo.toml found under {lsrcdir}")
             return False
 
-        cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag)
+        if cargotoml:
+            log.info(f"Multiple Cargo.toml paths are added. To be used for sync option 😘")
+            temptoml = [os.path.join(app_dir, c) for c in cargotoml]
+            log.info(f"Detected Rust app directory: {app_dir}")
+            for toml in temptoml:
+                log.info(f"🌟 Here are the following Cargo.toml files added for syncing: {toml}")
+            cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag, cargotoml=temptoml)
+        else:
+            cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag)
+            
         vendor_dir = os.path.join(app_dir, "vendor")
         vendor_lock = os.path.join(app_dir, "Cargo.lock")
         if tag:
@@ -213,6 +229,7 @@ def main():
     parser.add_argument("--update", default=False)
     parser.add_argument("--tag", default=None)
     parser.add_argument("--compression", default="zst")
+    parser.add_argument("--cargotoml", action="append", default=None)
     args = parser.parse_args()
 
     # Hack - obs always emits an arg to this so we can't use store_true/store_false.
@@ -224,7 +241,7 @@ def main():
 
     log.debug("%s" % args)
 
-    if not do_cargo_vendor(args.srcdir, args.srctar, args.outdir, update, args.compression, args.tag):
+    if not do_cargo_vendor(args.srcdir, args.srctar, args.outdir, args.cargotoml, update, args.compression, args.tag):
         exit(1)
 
 
