@@ -25,7 +25,7 @@ Follow this steps when creating a new RPM package for a Rust application:
 
 1. Add to the `_service` file this snippet:
 
-```
+```xml
 <services>
   <service name="obs_scm" mode="disabled">
     ...
@@ -92,7 +92,7 @@ $ tar -xv archive.tar.zst
 
 3. Set srcdir to match
 
-```
+```xml
 <services>
   <service name="cargo_vendor" mode="disabled">
     <param name="srcdir">archive-v1.0.0</param>
@@ -133,9 +133,23 @@ In some rare case, you may wish to annotate your `vendor.tar` and `cargo_config`
 tag. Generally this happens if you are needing to create multiple vendor tars. When you specify
 `tag` the vendor routine will create `vendor-{tag}.tar` and `cargo_config_{tag}` instead.
 
+You may also want to add additional `Cargo.toml` files to sync and vendor. This will fix some issues
+with complex projects with many subcrates that are not in match with the dependencies of the
+root `Cargo.toml` file. The first param will be assumed to be the `manifest path`. Subsequent
+`cargotoml` parameters are sync options.
+
+```xml
+     <!-- This will be for manifest path -->
+     <param name="cargotoml">jay-config/Cargo.toml</param>
+    <!-- This will be assumed to be synced and vendored -->
+     <param name="cargotoml">default-config/Cargo.toml</param>
+    <!-- This will be assumed to be synced and vendored -->
+     <param name="cargotoml">algorithms/Cargo.toml</param>
+```
+
 #### Example
 
-```
+```xml
 <services>
   <service name="obs_scm" mode="disabled">
     ...
@@ -148,7 +162,7 @@ tag. Generally this happens if you are needing to create multiple vendor tars. W
 </services>
 ```
 
-```
+```xml
 <services>
   <service name="cargo_vendor" mode="disabled">
     <param name="srctar">projectname.tar.zst</param>
