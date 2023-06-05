@@ -95,11 +95,20 @@ def cargo_vendor(appDirectory, update, outdir, tag, cargotoml=None, argsList=[])
         run_cargo(appDirectory, "update")
     log.info(f"Vendoring Cargo.toml deps to {appDirectory}/vendor")
     sync_args = []
-    if cargotoml:
-        for toml in cargotoml:
-            log.info(f"Adding path '{toml}' to sync options")
+    
+    # Manifest path
+    if cargotoml[0]:
+        log.info(f"🌟 Custom Manifest Path: {cargotoml[0]}")
+        sync_args.append("--manifest-path")
+        sync_args.append(os.path.join(appDirectory, cargotoml[0]))
+
+    # Additional Cargo.toml to sync and vendor
+    if cargotoml[1:]:
+        for toml in cargotoml[1:]:
+            log.info(f"😘 Adding path '{toml}' to sync options")
             sync_args.append("--sync")
             sync_args.append(os.path.join(appDirectory, toml))
+
     output = run_cargo(appDirectory, "vendor", argsList + sync_args + ["--locked", "--", "vendor"])
     if output:
         log.info(vendor_example)
@@ -178,8 +187,6 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
             log.info(f"Multiple Cargo.toml paths are added. To be used for sync option 😘")
             temptoml = [os.path.join(app_dir, c) for c in cargotoml]
             log.info(f"Detected Rust app directory: {app_dir}")
-            for toml in temptoml:
-                log.info(f"🌟 Here are the following Cargo.toml files added for syncing: {toml}")
             cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag, cargotoml=temptoml)
         else:
             cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag)
@@ -229,7 +236,9 @@ def main():
     parser.add_argument("--update", default=False)
     parser.add_argument("--tag", default=None)
     parser.add_argument("--compression", default="zst")
+
     parser.add_argument("--cargotoml", action="append", default=None)
+
     args = parser.parse_args()
 
     # Hack - obs always emits an arg to this so we can't use store_true/store_false.
@@ -247,3 +256,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
