@@ -237,7 +237,7 @@ def main():
     parser.add_argument("--tag", default=None)
     parser.add_argument("--compression", default="zst")
 
-    parser.add_argument("--cargotoml", action="append", default=None)
+    parser.add_argument("--cargotoml", action="append", default=[])
 
     args = parser.parse_args()
 
