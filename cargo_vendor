@@ -89,25 +89,26 @@ def run_cargo(runDirectory, command, argsList=[]):
         return None
 
 
-def cargo_vendor(appDirectory, update, outdir, tag, cargotoml=None, argsList=[]):
+def cargo_vendor(appDirectory, update, outdir, tag, cargotoml=[], argsList=[]):
     if update:
         log.info("Updating deps before vendor")
         run_cargo(appDirectory, "update")
     log.info(f"Vendoring Cargo.toml deps to {appDirectory}/vendor")
     sync_args = []
-    
-    # Manifest path
-    if cargotoml[0]:
-        log.info(f"🌟 Custom Manifest Path: {cargotoml[0]}")
-        sync_args.append("--manifest-path")
-        sync_args.append(cargotoml[0])
 
-    # Additional Cargo.toml to sync and vendor
-    if cargotoml[1:]:
-        for toml in cargotoml[1:]:
-            log.info(f"😘 Adding path '{toml}' to sync options")
-            sync_args.append("--sync")
-            sync_args.append(toml)
+    if cargotoml:
+        # Manifest Path
+        if cargotoml[0]:
+            log.info(f"🌟 Custom Manifest Path: {cargotoml[0]}")
+            sync_args.append("--manifest-path")
+            sync_args.append(cargotoml[0])
+
+        # Additional Cargo.toml to sync and vendor
+        if cargotoml[1:]:
+            for toml in cargotoml[1:]:
+                log.info(f"😘 Adding path '{toml}' to sync options")
+                sync_args.append("--sync")
+                sync_args.append(toml)
 
     output = run_cargo(appDirectory, "vendor", argsList + sync_args + ["--locked", "--", "vendor"])
     if output:
