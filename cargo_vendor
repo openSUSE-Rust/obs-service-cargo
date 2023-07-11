@@ -171,7 +171,7 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
             # We previously set dirs_exist_ok, probably for a good reason but I think now with the
             # inclusion of the tmpdir, we don't need it. It also blocked operation on python 3.6
             # lsrcdir = shutil.copytree(srcdir, dirpath, dirs_exist_ok=True)
-            lsrcdir = shutil.copytree(srcdir, dirpath)
+            lsrcdir = shutil.copytree(srcdir, dirpath, symlinks=True)
 
         log.info(f"Current work dir {os.getcwd()}")
         log.info(f"Searching for Cargo.toml in {lsrcdir}")
