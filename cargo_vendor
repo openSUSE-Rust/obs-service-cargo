@@ -89,14 +89,14 @@ def run_cargo(runDirectory, command, argsList=[]):
         return None
 
 
-def cargo_vendor(appDirectory, update, outdir, tag, cargotoml=[], argsList=[]):
+def cargo_vendor(appDirectory, update, outdir, tag, cargotoml=None, argsList=[]):
     if update:
         log.info("Updating deps before vendor")
         run_cargo(appDirectory, "update")
     log.info(f"Vendoring Cargo.toml deps to {appDirectory}/vendor")
     sync_args = []
 
-    if cargotoml:
+    if cargotoml is not None:
         # Manifest Path
         if cargotoml[0]:
             log.info(f"🌟 Custom Manifest Path: {cargotoml[0]}")
@@ -184,7 +184,7 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
             log.error(f"No Rust app using Cargo.toml found under {lsrcdir}")
             return False
 
-        if cargotoml:
+        if cargotoml is not None:
             log.info(f"Multiple Cargo.toml paths are added. To be used for sync option 😘")
             temptoml = [os.path.join(app_dir, c) for c in cargotoml]
             log.info(f"Detected Rust app directory: {app_dir}")
@@ -238,7 +238,7 @@ def main():
     parser.add_argument("--tag", default=None)
     parser.add_argument("--compression", default="zst")
 
-    parser.add_argument("--cargotoml", action="append", default=[])
+    parser.add_argument("--cargotoml", action="append", default=None)
 
     args = parser.parse_args()
 
