@@ -171,7 +171,7 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
             # We previously set dirs_exist_ok, probably for a good reason but I think now with the
             # inclusion of the tmpdir, we don't need it. It also blocked operation on python 3.6
             # lsrcdir = shutil.copytree(srcdir, dirpath, dirs_exist_ok=True)
-            lsrcdir = shutil.copytree(srcdir, dirpath)
+            lsrcdir = shutil.copytree(srcdir, dirpath, symlinks=True)
 
         log.info(f"Current work dir {os.getcwd()}")
         log.info(f"Searching for Cargo.toml in {lsrcdir}")
@@ -191,7 +191,7 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
             cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag, cargotoml=temptoml)
         else:
             cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag)
-            
+
         vendor_dir = os.path.join(app_dir, "vendor")
         vendor_lock = os.path.join(app_dir, "Cargo.lock")
         if tag:
@@ -207,7 +207,7 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
                     if update:
                         tar.add(vendor_lock, arcname=("Cargo.lock"), filter=filter_tarinfo)
                 with open(vendor_tarfile, 'wb') as compressed:
-                    zstd = zstandard.ZstdCompressor(level=6,write_checksum=True,threads=-1)
+                    zstd = zstandard.ZstdCompressor(level=19,write_checksum=True,threads=-1)
                     zstd.copy_stream(decompressed, compressed)
         else:
             with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
