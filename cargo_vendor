@@ -77,9 +77,10 @@ def find_file(path, filename):
 def run_cargo(runDirectory, command, argsList=[]):
     try:
         log.info(f"Running cargo {command} in directory: {runDirectory}")
+
         raw_cmd = ' '.join(["cargo", "-v", command] + argsList)
-        # log.debug(f"{os.listdir(runDirectory)}")
         log.debug(f"{raw_cmd}")
+
         output = check_output(["cargo", "-v", command] + argsList, cwd=runDirectory, stderr=DEVNULL).decode("utf-8").strip()
         log.debug(output)
         log.info(f"✅ cargo {command} success")
