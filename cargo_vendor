@@ -77,22 +77,38 @@ def find_file(path, filename):
 def run_cargo(runDirectory, command, argsList=[]):
     try:
         log.info(f"Running cargo {command} in directory: {runDirectory}")
-        output = check_output(["cargo", command] + argsList, cwd=runDirectory, stderr=DEVNULL).decode("utf-8").strip()
+        raw_cmd = ' '.join(["cargo", "-v", command] + argsList)
+        # log.debug(f"{os.listdir(runDirectory)}")
+        log.debug(f"{raw_cmd}")
+        output = check_output(["cargo", "-v", command] + argsList, cwd=runDirectory, stderr=DEVNULL).decode("utf-8").strip()
         log.debug(output)
         log.info(f"✅ cargo {command} success")
         return output
     except CalledProcessError as e:
-        log.info(f"❌ cargo {command} failed")
+        log.info(f"❌ cargo {command} failed -> {e}")
         error = e.output.decode("utf-8").strip()
-        if error:
-            log.error(error)
+        log.error(error)
         return None
 
 
 def cargo_vendor(appDirectory, update, outdir, tag, cargotoml=None, argsList=[]):
+    vendor_locks = []
     if update:
         log.info("Updating deps before vendor")
-        run_cargo(appDirectory, "update")
+
+        if cargotoml is None:
+            log.debug(f"updating in {appDirectory}");
+            run_cargo(appDirectory, "update")
+            lock_abs = os.path.join(appDirectory, "Cargo.lock")
+            lock_rel = "Cargo.lock"
+            vendor_locks.append((lock_abs, lock_rel))
+        else:
+            for toml in cargotoml:
+                log.debug(f"updating manifest {toml}");
+                run_cargo(appDirectory, "update", ["--manifest-path", toml])
+                lock_abs = os.path.join(os.path.dirname(toml), "Cargo.lock")
+                lock_rel = os.path.relpath(lock_abs, appDirectory)
+                vendor_locks.append((lock_abs, lock_rel))
     log.info(f"Vendoring Cargo.toml deps to {appDirectory}/vendor")
     sync_args = []
 
@@ -110,7 +126,7 @@ def cargo_vendor(appDirectory, update, outdir, tag, cargotoml=None, argsList=[])
                 sync_args.append("--sync")
                 sync_args.append(toml)
 
-    output = run_cargo(appDirectory, "vendor", argsList + sync_args + ["--locked", "--", "vendor"])
+    output = run_cargo(appDirectory, "vendor", argsList + sync_args + ["--locked", "--", f"{appDirectory}/vendor"])
     if output:
         log.info(vendor_example)
         if tag:
@@ -121,6 +137,7 @@ def cargo_vendor(appDirectory, update, outdir, tag, cargotoml=None, argsList=[])
         config_file.write(output)
         config_file.close()
     # End cargo_vendor.
+    return vendor_locks
 
 
 def filter_tarinfo(tarinfo):
@@ -162,7 +179,9 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
                 # Setup the tar.
                 with tarfile.open(f"{srctar}", "r:*") as tar:
                     tar.extractall(path=tmpdirname)
-            lsrcdir = tmpdirname
+            # We need to now move into the unpacked source.
+            unpacked_dir_name = os.listdir(tmpdirname)[0]
+            lsrcdir = os.path.join(tmpdirname, unpacked_dir_name)
         else:
             log.debug(f" Copying {srcdir}")
             (_, dirname) = os.path.split(srcdir)
@@ -176,24 +195,29 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
         log.info(f"Current work dir {os.getcwd()}")
         log.info(f"Searching for Cargo.toml in {lsrcdir}")
 
-        cargo_toml_path = find_file(lsrcdir, "Cargo.toml")
-        if cargo_toml_path:
-            app_dir = os.path.dirname(cargo_toml_path)
-            log.info(f"Detected Rust app directory: {app_dir}")
+        if cargotoml is None:
+            cargo_toml_path = find_file(lsrcdir, "Cargo.toml")
+            if cargo_toml_path:
+                app_dir = os.path.dirname(cargo_toml_path)
+                log.info(f"Detected Rust app directory: {app_dir}")
+            else:
+                log.error(f"No Rust app using Cargo.toml found under {lsrcdir}")
+                return False
         else:
-            log.error(f"No Rust app using Cargo.toml found under {lsrcdir}")
-            return False
+            app_dir = lsrcdir
 
-        if cargotoml is not None:
+        if cargotoml is None:
+            vendor_lock = cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag)
+        else:
             log.info(f"Multiple Cargo.toml paths are added. To be used for sync option 😘")
             temptoml = [os.path.join(app_dir, c) for c in cargotoml]
             log.info(f"Detected Rust app directory: {app_dir}")
-            cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag, cargotoml=temptoml)
-        else:
-            cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag)
+            vendor_lock = cargo_vendor(appDirectory=app_dir, update=update, outdir=outdir, tag=tag, cargotoml=temptoml)
 
         vendor_dir = os.path.join(app_dir, "vendor")
-        vendor_lock = os.path.join(app_dir, "Cargo.lock")
+        # vendor_lock = os.path.join(app_dir, "Cargo.lock")
+        log.debug(f"{vendor_dir}  {vendor_lock}")
+
         if tag:
             vendor_tarfile = os.path.join(outdir, f"vendor-{tag}.tar.{compression}")
         else:
@@ -205,7 +229,8 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
                 with tarfile.open(decompressed.name, f"w:") as tar:
                     tar.add(vendor_dir, arcname=("vendor"), filter=filter_tarinfo)
                     if update:
-                        tar.add(vendor_lock, arcname=("Cargo.lock"), filter=filter_tarinfo)
+                        for (lock, arcname) in vendor_lock:
+                            tar.add(lock, arcname=arcname, filter=filter_tarinfo)
                 with open(vendor_tarfile, 'wb') as compressed:
                     zstd = zstandard.ZstdCompressor(level=19,write_checksum=True,threads=-1)
                     zstd.copy_stream(decompressed, compressed)
@@ -213,7 +238,8 @@ def do_cargo_vendor(srcdir, srctar, outdir, cargotoml, update=True, compression=
             with tarfile.open(vendor_tarfile, f"w:{compression}") as tar:
                 tar.add(vendor_dir, arcname=("vendor"), filter=filter_tarinfo)
                 if update:
-                    tar.add(vendor_lock, arcname=("Cargo.lock"), filter=filter_tarinfo)
+                    for (lock, arcname) in vendor_lock:
+                        tar.add(lock, arcname=arcname, filter=filter_tarinfo)
         # No longer need cleanup since we used a temp location.
     log.info(f"Success")
     return vendor_tarfile
