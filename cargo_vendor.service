@@ -9,12 +9,29 @@
   builds of Rust applications.
   ]]></description>
   <parameter name="strategy">
-    <description>Choose the strategy this service runs in. Values: vendor. Default: vendor</description>
+    <description>Legacy argument, no longer used. Values: vendor. Default: vendor</description>
   </parameter>
-  <parameter name="archive">
-    <description>Specify the Rust application source archive. Values: app-x.y.z.tar.gz. Default: None, will use autodetection</description>
+  <parameter name="srcdir">
+    <description>Where to find unpacked sources. Cannot be used with srctar. One of srcdir or srctar must be defined</description>
+  </parameter>
+  <parameter name="srctar">
+    <description>Where to find packed sources. Cannot be used with srcdir. One of srcdir or srctar must be defined</description>
+  </parameter>
+  <parameter name="outdir">
+    <description>Specify where to put the vendor tarball and cargo_config file</description>
+  </parameter>
+  <parameter name="update">
+    <description>Specify whether to run a cargo update before vendor. Default: False</description>
+    <allowedvalue>false</allowedvalue>
+    <allowedvalue>true</allowedvalue>
+  </parameter>
+  <parameter name="tag">
+    <description>Specify a string to append to the tarball and cargo_config filenames</description>
   </parameter>
   <parameter name="compression">
-    <description>Specify the source / vendor tarballs compression method. When using "tar" no compression is applied. Default: "gz".</description>
+    <description>Specify the vendor tarball compression method. Default: "zst".</description>
+  </parameter>
+  <parameter name="cargotoml">
+    <description>Specify a Cargo.toml to use. Can be specified multiple times. Default will autodetect.</description>
   </parameter>
 </service>
