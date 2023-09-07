@@ -1,188 +1,62 @@
-# OBS Source Service `obs-service-cargo_vendor`
+# OBS Source Service `obs-service-cargo`
 
-<!--
-This is the Git repository for [`devel:languages:rust/obs-service-cargo_vendor`](https://build.opensuse.org/package/show/devel:languages:rust/obs-service-cargo_vendor),
-an [Open Build Service (OBS)](https://build.opensuse.org) [Source Service](https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.source_service.html)
-to locally vendor Rust crates and dependencies.
--->
+This is a Rust written variant for https://github.com/openSUSE/obs-service-cargo_vendor and https://github.com/obs-service-cargo_audit.
 
-The authoritative source of this project is https://github.com/openSUSE/obs-service-cargo_vendor.
+> [!IMPORTANT]
+> An informative tutorial for packaging Rust software in openSUSE can be found at https://en.opensuse.org/openSUSE:Packaging_Rust_Software.
 
-`obs-service-cargo_vendor` uses the `Cargo.toml` file present in a Rust application
-to run `cargo vendor`, that populates a folder with the sources of the Rust dependencies.
-This folder is compressed in a `vendor.tar[.<tar compression>]` archive,
-and copied in the RPM package directory source.
-The archive can be commited to [OBS](https://build.opensuse.org) to facilitate builds
-of Rust application packages for [openSUSE](https://www.opensuse.org),
-[SUSE](https://www.suse.com), and numerous other distributions.
+## How to use OBS Service `cargo vendor`
 
-The vendored sources allow building a Rust application using `cargo build`, without requiring
-access to the network.
+Typical Rust projects may have a **workspace** manifest at the **root of their project directory**. Others don't and do not really require much intervention.
 
-## Usage for packagers (with SCM service)
-
-Follow this steps when creating a new RPM package for a Rust application:
-
-1. Add to the `_service` file this snippet:
+A good example would be the [zellij](https://zellij.dev) project. Users will just depend the first Cargo.toml found in that project. Therefore, they do not need to use the 
+`cargotoml` parameter for the `_service` file.
 
 ```xml
 <services>
-  <service name="obs_scm" mode="disabled">
-    ...
+  <service name="download_files" mode="manual" />
+  <service name="cargo_vendor" mode="manual">
+     <param name="srctar">zellij-0.37.2.tar.gz</param>
+     <param name="compression">zst</param>
+     <param name="update">true</param>
   </service>
-  <service name="cargo_vendor" mode="disabled">
-    <param name="srcdir">projectname</param>
-    <param name="update">true</param>
-  </service>
+  <service name="cargo_audit" mode="manual" />
 </services>
 ```
 
-2. Run `osc` command locally:
+> [!WARNING]
+> However, certain projects may not have a root manifest file, thus, each directory may be a separate subproject e.g. https://github.com/ibm-s390-linux/s390-tools and may need some thinking.
+> If projects like these cannot have a root manifest but have different subprojects, you may need to define the relative path to the other manifest files from root.
+> 
+> ```xml
+> <services>
+>   <service name="cargo_vendor" mode="manual">
+>      <param name="srcdir">s390-tools</param>
+>      <param name="compression">zst</param>
+>      <param name="cargotoml">s390-tools/rust/utils/Cargo.toml</param>
+>      <param name="update">true</param>
+>   </service>
+>   <service name="cargo_audit" mode="manual" />
+> </services>
+> ```
 
-```
-$ osc service ra
-```
+Once you are ready, run the following command locally:
 
-3. A set of steps is displayed from this command to guide you in modifying your .spec. An example is:
-
-```
-Your spec file should be modified per the following example:
-
----BEGIN---
-%global rustflags '-Clink-arg=-Wl,-z,relro,-z,now'
-
-Source1:    vendor.tar.zst
-Source2:    cargo_config
-
-%prep
-%setup -qa1
-mkdir .cargo
-cp %{SOURCE2} .cargo/config
-
-%build
-RUSTFLAGS=%{rustflags} cargo build --release
-
-%install
-RUSTFLAGS=%{rustflags} cargo install --root=%{buildroot}%{_prefix} --path .
+```bash
+osc service mr
 ```
 
-4. Add the generated tarball to the packages sources:
+Then add the generated tarball of vendored dependencies:
 
-```
-$ osc add vendor.tar.zst
-```
-
-5. Perform a local build to confirm the changes work as expected:
-
-```
-$ osc build
+```bash
+osc add vendor.tar.zst
 ```
 
-## Manual (without SCM service)
+> [!NOTE]
+> Some Rust software such as the infamous https://github.com/elliot40404/bonk do not have any dependencies so they may not generate a vendored tarball.
+> The service will give you an output of information about it by checking the manifest file.
 
-If you are not using SCM, you can use the cargo vendor service manually.
+# Limitations
 
-1. Extract your source archive into your working directory.
-
-```
-$ tar -xv archive.tar.zst
-```
-
-2. Examine the folder name it extracted, IE archive-v1.0.0
-
-3. Set srcdir to match
-
-```xml
-<services>
-  <service name="cargo_vendor" mode="disabled">
-    <param name="srcdir">archive-v1.0.0</param>
-  </service>
-</services>
-```
-
-4. Continue from Usage for packagers - Step 2.
-
-Note you will not be able to have a server side cargo vendor service with this configuration, so
-you should keep `mode="disabled"`
-
-## Options
-
-- `<param name="srcdir">projectname</param>`
-- `<param name="srctar">name-of-source.tar</param>`
-
-The location to search for the Cargo.toml which we will vendor from. Generally this is your project
-name from the SCM checkout, or the extracted archive top dir, but it may differ depending on your
-configuration.
-
-You can alternately specify srctar, which we will unpack into a temp location and perform the vendor
-instead. This removes your need to rely on `obs_scm` or similar
-
-- `<param name="compression">zst</param>`
-
-The compression to use for the `vendor.tar`. If the option is not supplied it will default to `zst`.
-Available compressions are those supported by `tar`.
-
-- `<param name="update" />`
-
-If present, cargo update will be run before vendoring to ensure that the latest version of compatible
-dependencies is used.
-
-- `<param name="tag">tagname</param>`
-
-In some rare case, you may wish to annotate your `vendor.tar` and `cargo_config` with a unique
-tag. Generally this happens if you are needing to create multiple vendor tars. When you specify
-`tag` the vendor routine will create `vendor-{tag}.tar` and `cargo_config_{tag}` instead.
-
-You may also want to add additional `Cargo.toml` files to sync and vendor. This will fix some issues
-with complex projects with many subcrates that are not in match with the dependencies of the
-root `Cargo.toml` file. The first param will be assumed to be the `manifest path`. Subsequent
-`cargotoml` parameters are sync options.
-
-```xml
-     <!-- This will be for manifest path -->
-     <param name="cargotoml">jay-config/Cargo.toml</param>
-    <!-- This will be assumed to be synced and vendored -->
-     <param name="cargotoml">default-config/Cargo.toml</param>
-    <!-- This will be assumed to be synced and vendored -->
-     <param name="cargotoml">algorithms/Cargo.toml</param>
-```
-
-#### Example
-
-```xml
-<services>
-  <service name="obs_scm" mode="disabled">
-    ...
-  </service>
-  <service name="cargo_vendor" mode="disabled">
-    <param name="srcdir">projectname</param>
-    <param name="compression">zst</param>
-    <param name="update">true</param>
-  </service>
-</services>
-```
-
-```xml
-<services>
-  <service name="cargo_vendor" mode="disabled">
-    <param name="srctar">projectname.tar.zst</param>
-    <param name="compression">zst</param>
-    <param name="update">true</param>
-  </service>
-</services>
-```
-
-## Transition note
-
-Until `obs-service-cargo_vendor` is available on [OBS](https://build.opensuse.org),
-the `vendor.tar[.<tar compression>]` should be committed along with the Rust application
-source tarball.
-
-## License
-
-GNU General Public License v2.0 or later
-
-## Attributions
-
-This project is a derivative work of `obs-service-go_modules` available at
-https://github.com/openSUSE/obs-service-go_modules.
+There may be some corner/edge (whatever-you-call-it) cases that will not work with **OBS Service Cargo**. Please open a bug report at https://github.com/openSUSE/obs-service-cargo_vendor/issues.
+We will try to investigate those in the best of our abilities. In the mean time, this will work, *hopefully*, in most projects.
