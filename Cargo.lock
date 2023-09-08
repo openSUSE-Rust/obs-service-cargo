@@ -84,6 +84,8 @@ dependencies = [
  "clap",
  "quick-xml",
  "serde",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
