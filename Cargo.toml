@@ -16,8 +16,6 @@ version = "0.1.0"
 description = "OBS Source Service and utilities for Rust software packaging."
 authors = [
   "Soc Virnyl Estela <socvirnyl.estela@gmail.com>",
-]
-mentors = [
   "William Brown <william@blackhats.net.au>",
 ]
 edition = "2021"
