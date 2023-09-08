@@ -1,0 +1,22 @@
+[package]
+name = "obs-service-cargo"
+description = "OBS Source Service to vendor and audit all crates.io and dependencies for Rust project locally. Executable rewritten in Rust."
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+clap = { workspace = true, features = ["derive"] }
+glob.workspace = true
+tracing-subscriber.workspace = true
+tracing.workspace = true
+
+flate2 = { version = "1.0.27" }
+infer = "0.15.0"
+tar = "0.4.40"
+tempfile = "3.8.0"
+terminfo = "0.8.0"
+toml = "0.7.6"
+xz2 = "0.1.7"
+zstd = { version = "0.12.4", features = ["pkg-config", "zstdmt"] }
