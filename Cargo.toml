@@ -34,8 +34,7 @@ quick-xml = "0.30"
 serde = ">=1.0.184"
 
 [workspace.metadata.services]
-cargo-vendor-service = "./cargo_vendor.service"
-cargo-audit-service = "./cargo_audit.service"
+assets = [ "./cargo_vendor.service", "./cargo_audit.service" ]
 
 [profile.release]
 lto = true          # Enable Link Time Optimization.
