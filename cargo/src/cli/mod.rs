@@ -29,7 +29,7 @@ use tracing::{debug, error, info, warn, Level};
 Bugs can be reported on GitHub: https://github.com/uncomfyhalomacro/obs-service-cargo_vendor-rs/issues",
     max_term_width = 120
 )]
-pub struct Opts {
+pub struct VendorOpts {
     #[clap(flatten)]
     pub srctar: Option<SrcTar>,
     #[clap(flatten)]
@@ -62,16 +62,51 @@ pub struct Opts {
     pub color: clap::ColorChoice,
 }
 
-impl AsRef<Opts> for Opts {
+// TODO: move opts to correct modules.
+
+#[derive(Parser, Debug)]
+#[command(
+    author,
+    name = "cargo_audit",
+    version,
+    about = "OBS Source Service to audit all crates.io and dependencies in a Rust project for security issues",
+    after_long_help = "Set verbosity and tracing through `RUST_LOG` environmental variable e.g. `RUST_LOG=trace`
+
+Bugs can be reported on GitHub: https://github.com/uncomfyhalomacro/obs-service-cargo_vendor-rs/issues",
+    max_term_width = 120
+)]
+pub struct AuditOpts {
+    #[clap(flatten)]
+    pub srctar: Option<SrcTar>,
+    #[clap(flatten)]
+    pub srcdir: Option<SrcDir>,
+    #[arg(
+        long,
+        default_value = "auto",
+        default_missing_value = "always",
+        value_name = "WHEN",
+        help = "Whether WHEN to color output or not"
+    )]
+    pub color: clap::ColorChoice,
+}
+
+impl AuditOpts {}
+
+impl AsRef<VendorOpts> for VendorOpts {
     #[inline]
-    fn as_ref(&self) -> &Opts {
+    fn as_ref(&self) -> &VendorOpts {
         self
     }
 }
 
 #[derive(Args, Debug, Clone)]
 pub struct SrcTar {
-    #[arg(long, help = "Where to find packed sources", conflicts_with = "srcdir")]
+    #[arg(
+        long,
+        help = "Where to find packed sources",
+        conflicts_with = "srcdir",
+        required = false
+    )]
     pub srctar: PathBuf,
 }
 
@@ -97,7 +132,8 @@ pub struct SrcDir {
     #[arg(
         long,
         help = "Where to find unpacked sources",
-        conflicts_with = "srctar"
+        conflicts_with = "srctar",
+        required = false
     )]
     pub srcdir: PathBuf,
 }
