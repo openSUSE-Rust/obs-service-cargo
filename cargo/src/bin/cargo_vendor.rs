@@ -28,12 +28,14 @@
 use clap::Parser;
 use glob::glob;
 use obs_service_cargo::cli::{self, SrcDir, SrcTar};
-use obs_service_cargo::consts::{PREFIX, VENDOR_EXAMPLE};
-use obs_service_cargo::vendor::utils;
+use obs_service_cargo::consts::{VENDOR_EXAMPLE, VENDOR_PATH_PREFIX};
+use obs_service_cargo::utils;
+use obs_service_cargo::vendor::{self, vendor};
 
+use std::ffi::OsStr;
 use std::io;
 use std::io::IsTerminal;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use terminfo::{capability as cap, Database};
 use tracing_subscriber::EnvFilter;
 
@@ -48,7 +50,7 @@ enum Src {
 }
 
 fn main() -> Result<(), io::Error> {
-    let args = cli::Opts::parse();
+    let args = cli::VendorOpts::parse();
     let terminfodb = Database::from_env().map_err(|e| {
         error!(err = ?e, "Unable to access terminfo db. This is a bug!");
         io::Error::new(
@@ -83,7 +85,7 @@ fn main() -> Result<(), io::Error> {
     info!("🎢 Starting OBS Service Cargo Vendor.");
     debug!(?args);
     let tmpdir = tempfile::Builder::new()
-        .prefix(PREFIX)
+        .prefix(VENDOR_PATH_PREFIX)
         .rand_bytes(8)
         .tempdir()
         .map_err(|e| {
@@ -190,66 +192,24 @@ fn main() -> Result<(), io::Error> {
     };
 
     debug!(?workdir);
-    match utils::get_project_root(&workdir) {
-        Ok(prjdir) => {
-            // Addressed limitations of get_project_root
-            let pathtomanifest = prjdir.join("Cargo.toml");
-            if pathtomanifest.exists() {
-                // Again, announce once we actually confirm the details.
-                debug!("Guessed project root at {:?}", prjdir);
-                if let Ok(isworkspace) = utils::is_workspace(&pathtomanifest) {
-                    if isworkspace {
-                        info!("Project uses a workspace.");
-                        if utils::has_dependencies(&pathtomanifest).unwrap_or(false) {
-                            info!("Workspace has global dependencies!");
-                        } else {
-                            info!(
-                                "No global dependencies! May vendor dependencies of member crates"
-                            );
-                        };
-                    } else {
-                        // What is actually the need for the manual check? What's
-                        // actionable here?
-                        info!("Project is not a workspace. Please check manually! 🫂");
-                        if utils::has_dependencies(&pathtomanifest).unwrap_or(false) {
-                            info!("Project has dependencies!");
-                        } else {
-                            // This is what we call a "zero cost" abstraction.
-                            info!("No dependencies, no need to vendor!");
-                        };
-                    };
-                };
-
-                utils::vendor(&args, &prjdir, None)?;
-                if !args.cargotoml.is_empty() {
-                    // Should this be here? If there are cargo.toml's listed, then
-                    // it probably means that there are just a "list of crates" and we can't
-                    // use the workspace manifest. For example s390-tools has neither a
-                    // workspace NOR a project root. It's just 4 crates. So I think that
-                    // here we actually need to not touch cargotomls.
-                    //
-                    // Consider it like this - you either have cargotomls listed because you
-                    // want to exactly tell us where they are.
-                    //
-                    // OR
-                    //
-                    // You want us to guess and find it for you.
-                    //
-                    // Does that make sense?
-                    info!("Subcrates to vendor found!");
-                    utils::cargotomls(&args, &prjdir)?;
-                } else {
-                    info!("No subcrates to vendor!");
-                };
-            } else {
-                warn!("This is not a rust project");
-                warn!("Use the start of the root of the project to your subcrate instead!");
-                // fallback to workdir
-                utils::cargotomls(&args, &workdir)?;
-            }
-        }
+    let target_file = OsStr::new("Cargo.toml");
+    let mut possible_project_roots = match utils::find_file_multiples(&workdir, target_file) {
+        Ok(v) => v,
         Err(err) => return Err(err),
     };
+
+    possible_project_roots.sort_unstable_by_key(|path| path.components().count());
+    debug!(?possible_project_roots);
+    if let Some(prjdir) = possible_project_roots.first() {
+        process_src(&args, prjdir, target_file)?;
+    } else {
+        warn!("Project has no root manifest!");
+        if !args.cargotoml.is_empty() {
+            vendor::cargotomls(&args, &workdir)?;
+        } else {
+            warn!("No subcrates to vendor.");
+        }
+    }
 
     info!("Vendor operation success! ❤️");
     info!("\n{}", VENDOR_EXAMPLE);
@@ -258,5 +218,59 @@ fn main() -> Result<(), io::Error> {
     tmpdir.close()?;
 
     info!("Successfully ran OBS Service Cargo Vendor 🥳");
+    Ok(())
+}
+
+pub fn process_src(
+    args: &cli::VendorOpts,
+    prjdir: &Path,
+    target_file: &OsStr,
+) -> Result<(), io::Error> {
+    info!("Guessed project root at uwu {}", prjdir.display());
+    let pathtomanifest = prjdir.join(target_file);
+    debug!(?pathtomanifest);
+    if pathtomanifest.exists() {
+        if let Ok(isworkspace) = utils::is_workspace(&pathtomanifest) {
+            if isworkspace {
+                info!(?pathtomanifest, "Project uses a workspace!");
+            } else {
+                info!(?pathtomanifest, "Project does not use a workspace!");
+            };
+
+            match vendor::has_dependencies(&pathtomanifest) {
+                Ok(hasdeps) => {
+                    if hasdeps && isworkspace {
+                        info!("Workspace has dependencies!");
+                        vendor(args, prjdir, None)?;
+                    } else if !hasdeps && !isworkspace {
+                        info!("Non-workspace manifest has dependencies!");
+                        vendor(args, prjdir, None)?;
+                    } else if !hasdeps && isworkspace {
+                        info!("Workspace has no global dependencies. May vendor dependencies from member crates.");
+                        vendor(args, prjdir, None)?;
+                    } else {
+                        // This is what we call a "zero cost" abstraction.
+                        info!("No dependencies, no need to vendor!");
+                    };
+                }
+                Err(err) => return Err(err),
+            };
+
+            if args.cargotoml.is_empty() {
+                info!(?args.cargotoml, "No subcrates to vendor!");
+            } else {
+                info!(?args.cargotoml, "Found subcrates to vendor!");
+                vendor::cargotomls(args, prjdir)?;
+            }
+        }
+    } else {
+        warn!("Project does not have a manifest file at the root of the project!");
+        if args.cargotoml.is_empty() {
+            info!(?args.cargotoml, "No subcrates to vendor!");
+        } else {
+            info!(?args.cargotoml, "Found subcrates to vendor!");
+            vendor::cargotomls(args, prjdir)?;
+        }
+    }
     Ok(())
 }
