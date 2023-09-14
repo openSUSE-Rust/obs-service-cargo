@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::vendor::utils::decompress;
-use crate::vendor::utils::get_compression_type;
-use crate::vendor::utils::UnsupportedExtError;
+use crate::utils::decompress;
+use crate::vendor::{get_compression_type, UnsupportedExtError};
 
 use clap::{Args, Parser, ValueEnum};
 use std::fmt::{self, Display};
