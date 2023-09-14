@@ -336,7 +336,7 @@ pub fn cargotomls(opts: impl AsRef<VendorOpts>, prjdir: impl AsRef<Path>) -> Res
                         if hasdeps && isworkspace {
                             info!("Workspace has dependencies!");
                             vendor(&opts, &subprjdir, Some(&prefix))?;
-                        } else if !hasdeps && !isworkspace {
+                        } else if hasdeps && !isworkspace {
                             info!("Non-workspace manifest has dependencies!");
                             vendor(&opts, &subprjdir, Some(&prefix))?;
                         } else if !hasdeps && isworkspace {

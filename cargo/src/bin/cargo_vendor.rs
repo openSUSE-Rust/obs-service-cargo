@@ -242,7 +242,7 @@ pub fn process_src(
                     if hasdeps && isworkspace {
                         info!("Workspace has dependencies!");
                         vendor(args, prjdir, None)?;
-                    } else if !hasdeps && !isworkspace {
+                    } else if hasdeps && !isworkspace {
                         info!("Non-workspace manifest has dependencies!");
                         vendor(args, prjdir, None)?;
                     } else if !hasdeps && isworkspace {
