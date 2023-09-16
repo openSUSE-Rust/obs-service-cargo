@@ -63,10 +63,30 @@ osc add vendor.tar.zst
 > Some Rust software such as the infamous https://github.com/elliot40404/bonk do not have any dependencies so they may not generate a vendored tarball.
 > The service will give you an output of information about it by checking the manifest file.
 
+# Parameters
+
+```
+OBS Source Service to vendor all crates.io and dependencies for Rust project locally
+
+Usage: cargo_vendor [OPTIONS] --src <SRC> --outdir <OUTDIR>
+
+Options:
+      --src <SRC>                  Where to find sources. Source is either a directory or a source tarball AND cannot be both.
+      --compression <COMPRESSION>  What compression algorithm to use. [default: zst] [possible values: gz, xz, zst]
+      --tag <TAG>                  Tag some files for multi-vendor and multi-cargo_config projects
+      --cargotoml <CARGOTOML>      Other cargo manifest files to sync with during vendor
+      --update <UPDATE>            Update dependencies or not [default: true] [possible values: true, false]
+      --outdir <OUTDIR>            Where to output vendor.tar* and cargo_config
+      --color <WHEN>               Whether WHEN to color output or not [default: auto] [possible values: auto, always, never]
+  -h, --help                       Print help (see more with '--help')
+  -V, --version                    Print version
+
+```
+
 # Limitations
 
 There may be some corner/edge (whatever-you-call-it) cases that will not work with **OBS Service Cargo**. Please open a bug 
 report at https://github.com/openSUSE/obs-service-cargo_vendor/issues. We will try to investigate those in the best of our abilities. The goal of this
-project is to help automate some tasks when packaging Rust software. We won't assume we can automate where projects can have their manifest file `Cargo.toml`.
+project is to help automate some tasks when packaging Rust software. We won't assume we can automate where we can a locate a project's root manifest file `Cargo.toml`.
 Thus, at best, please indicate it with `cargotoml` parameter. In the mean time, this will work, *hopefully*, in most projects since most projects have
 a root manifest file.
