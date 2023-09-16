@@ -32,7 +32,7 @@ where
             info!(?pathto);
             let exists = pathto.exists();
             if exists {
-                warn!(?pathto, "Path to file or directory exists!");
+                info!(?pathto, "Path to file or directory exists!");
                 if pathto.is_file() {
                     debug!(?pathto, "Path to is file!");
                     let basedir = pathto.file_name().unwrap_or(OsStr::new(f));
