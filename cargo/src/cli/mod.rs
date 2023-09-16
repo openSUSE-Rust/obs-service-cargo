@@ -125,7 +125,10 @@ impl Display for Compression {
 
 #[derive(clap::Args, Debug, Clone)]
 pub struct Src {
-    #[arg(long, help = "Where to find sources.")]
+    #[arg(
+        long,
+        help = "Where to find sources. Source is either a directory or a source tarball AND cannot be both."
+    )]
     src: PathBuf,
 }
 
