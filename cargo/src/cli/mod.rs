@@ -107,7 +107,8 @@ impl Display for UnsupportedFormat {
         write!(f, "{}", msg)
     }
 }
-impl Error for UnsupportedFormat {}
+
+impl std::error::Error for UnsupportedFormat {}
 
 impl Display for Compression {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -216,9 +217,11 @@ impl Vendor for Src {
         let workdir: PathBuf = match tmpdir {
             Ok(p) => p.path().to_path_buf(),
             Err(err) => {
+                error!("{}", err);
                 return Err(VendorFailed {
                     error: err.to_string(),
-                })
+                    boxy: err.into(),
+                });
             }
         };
 
@@ -228,19 +231,22 @@ impl Vendor for Src {
         let newworkdir = match self.is_supported() {
             Ok(format) => match format {
                 SupportedFormat::Compressed(compression_type, srcpath) => {
-                    if decompress(&compression_type, &workdir, &srcpath).is_err() {
-                        return Err(VendorFailed {
-                            error: "Failed to decompress source".to_string(),
-                        });
-                    } else {
-                        workdir.clone()
+                    match decompress(&compression_type, &workdir, &srcpath) {
+                        Ok(_) => workdir,
+                        Err(err) => {
+                            return Err(VendorFailed {
+                                error: "Failed to decompress source".to_string(),
+                                boxy: err.into(),
+                            });
+                        }
                     }
                 }
                 SupportedFormat::Dir(srcpath) => match utils::copy_dir_all(srcpath, &workdir) {
-                    Ok(_) => workdir.clone(),
-                    Err(_) => {
+                    Ok(_) => workdir,
+                    Err(err) => {
                         return Err(VendorFailed {
                             error: "Failed to copy source path".to_string(),
+                            boxy: err.into(),
                         })
                     }
                 },
@@ -249,6 +255,7 @@ impl Vendor for Src {
                 error!(?err);
                 return Err(VendorFailed {
                     error: format!("Vendor failed. {}", err),
+                    boxy: err.into(),
                 });
             }
         };
@@ -266,6 +273,7 @@ impl Vendor for Src {
                 error!(?err);
                 Err(VendorFailed {
                     error: err.to_string(),
+                    boxy: err.into(),
                 })
             }
         }
@@ -275,11 +283,13 @@ impl Vendor for Src {
 #[derive(Debug)]
 pub struct VendorFailed {
     error: String,
+    boxy: Box<dyn Error>,
 }
 
 impl Display for VendorFailed {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", &self.error)
+        let msg = format!("{}. Got {}", self.error, self.boxy);
+        write!(f, "{}", msg)
     }
 }
 impl Error for VendorFailed {}

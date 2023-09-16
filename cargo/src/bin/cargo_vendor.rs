@@ -36,7 +36,7 @@ use terminfo::{capability as cap, Database};
 use tracing::{debug, error, info, warn, Level};
 use tracing_subscriber::EnvFilter;
 
-fn main() -> io::Result<()> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = cli::Opts::parse();
 
     let terminfodb = Database::from_env().map_err(|e| {
@@ -78,18 +78,15 @@ fn main() -> io::Result<()> {
             info!(?kay, "Source is supported");
         }
         Err(err) => {
-            error!(?err, "Source is not supported");
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, err));
+            error!("{}", err);
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, err).into());
         }
     };
     match args.src.run_vendor(&args) {
         Ok(_) => Ok(()),
         Err(err) => {
-            error!(?err);
-            Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Failed to run cargo vendor 😭",
-            ))
+            error!("{}", err);
+            Err(err.into())
         }
     }
 }

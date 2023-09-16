@@ -11,6 +11,7 @@ pub mod compress;
 pub mod decompress;
 
 use std::ffi::OsStr;
+use std::fmt::{self, Debug, Display};
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -138,5 +139,62 @@ pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
             error!(?e, "Got glob error");
             Err(io::Error::new(io::ErrorKind::InvalidInput, "Glob error"))
         }
+    }
+}
+
+pub fn cargo_command(
+    subcommand: &str,
+    options: &[&str],
+    curdir: impl AsRef<Path>,
+) -> Result<String, ExecutionError> {
+    let cmd = std::process::Command::new("cargo")
+        .arg(subcommand)
+        .args(options)
+        .current_dir(curdir.as_ref())
+        .output()
+        .map_err(|e| {
+            error!(err = ?e, "Unable to build cargo command");
+            ExecutionError {
+                command: format!("cargo {}", subcommand),
+                exit_code: None,
+            }
+        })?;
+    trace!(?cmd);
+    let stdoutput = String::from_utf8_lossy(&cmd.stdout).to_string();
+    if !cmd.status.success() {
+        return Err(ExecutionError {
+            command: format!("cargo {}", subcommand),
+            exit_code: cmd.status.code(),
+        });
+    };
+    Ok(stdoutput)
+}
+
+pub struct ExecutionError {
+    pub command: String,
+    pub exit_code: Option<i32>,
+}
+
+impl Debug for ExecutionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg = format!(
+            "ExecutionError {{ command: `{}`, exit_code: `{}` }}",
+            self.command,
+            self.exit_code.unwrap_or(-1)
+        );
+
+        write!(f, "{}", msg)
+    }
+}
+
+impl Display for ExecutionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg = format!(
+            "Failed to run command `{}`. Has exit code `{}`",
+            self.command,
+            self.exit_code.unwrap_or(-1)
+        );
+
+        write!(f, "{}", msg)
     }
 }

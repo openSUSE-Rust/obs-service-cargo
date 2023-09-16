@@ -6,76 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::fmt::Debug;
-use std::fmt::{self, Display};
 use std::fs;
 use std::io::{self, Write};
 use std::os::unix::prelude::OsStrExt;
 use std::path::Path;
 
 use crate::cli::{Compression, Opts};
+use crate::utils::cargo_command;
 use crate::utils::compress;
 use crate::vendor;
 
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
-
-pub struct ExecutionError {
-    pub command: String,
-    pub exit_code: Option<i32>,
-}
-
-impl Debug for ExecutionError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let msg = format!(
-            "ExecutionError {{ command: `{}`, exit_code: `{}` }}",
-            self.command,
-            self.exit_code.unwrap_or(-1)
-        );
-
-        write!(f, "{}", msg)
-    }
-}
-
-impl Display for ExecutionError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let msg = format!(
-            "Failed to run command `{}`. Has exit code `{}`",
-            self.command,
-            self.exit_code.unwrap_or(-1)
-        );
-
-        write!(f, "{}", msg)
-    }
-}
-
-fn cargo_command(
-    subcommand: &str,
-    options: &[&str],
-    curdir: impl AsRef<Path>,
-) -> Result<String, ExecutionError> {
-    let cmd = std::process::Command::new("cargo")
-        .arg(subcommand)
-        .args(options)
-        .current_dir(curdir.as_ref())
-        .output()
-        .map_err(|e| {
-            error!(err = ?e, "Unable to build cargo command");
-            ExecutionError {
-                command: format!("cargo {}", subcommand),
-                exit_code: None,
-            }
-        })?;
-    trace!(?cmd);
-    let stdoutput = String::from_utf8_lossy(&cmd.stdout).to_string();
-    if !cmd.status.success() {
-        return Err(ExecutionError {
-            command: format!("cargo {}", subcommand),
-            exit_code: cmd.status.code(),
-        });
-    };
-    Ok(stdoutput)
-}
 
 pub fn vendor(
     opts: impl AsRef<Opts>,
