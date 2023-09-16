@@ -204,27 +204,24 @@ impl Vendor for Src {
             })
         }
     }
+
     fn run_vendor(&self, opts: &Opts) -> Result<(), VendorFailed> {
-        let tmpdir = tempfile::Builder::new()
+        let tmpdir = match tempfile::Builder::new()
             .prefix(VENDOR_PATH_PREFIX)
             .rand_bytes(8)
             .tempdir()
-            .map_err(|e| {
-                error!(err = ?e, "Unable to create temporary work directory.");
-                e
-            });
-
-        let workdir: PathBuf = match tmpdir {
-            Ok(p) => p.path().to_path_buf(),
+        {
+            Ok(t) => t,
             Err(err) => {
                 error!("{}", err);
                 return Err(VendorFailed {
-                    error: err.to_string(),
+                    error: "Failed to create temporary directory".to_string(),
                     boxy: err.into(),
                 });
             }
         };
 
+        let workdir: PathBuf = tmpdir.path().into();
         info!(?workdir, "Created working directory");
 
         // Return workdir here?
@@ -267,15 +264,22 @@ impl Vendor for Src {
         match utils::process_src(opts, &newworkdir, target_file) {
             Ok(_) => {
                 info!("Successfull ran OBS Service Cargo Vendor 🥳");
-                Ok(())
             }
             Err(err) => {
                 error!(?err);
-                Err(VendorFailed {
+                return Err(VendorFailed {
                     error: err.to_string(),
                     boxy: err.into(),
-                })
+                });
             }
+        };
+        drop(newworkdir);
+        match tmpdir.close() {
+            Ok(_) => Ok(()),
+            Err(err) => Err(VendorFailed {
+                error: "Failed to close and remove temporary directory".to_string(),
+                boxy: err.into(),
+            }),
         }
     }
 }
