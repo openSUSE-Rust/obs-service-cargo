@@ -16,24 +16,27 @@ A good example would be the [zellij](https://zellij.dev) project. Users will jus
 <services>
   <service name="download_files" mode="manual" />
   <service name="cargo_vendor" mode="manual">
-     <param name="srctar">zellij-0.37.2.tar.gz</param>
+     <param name="src">zellij-0.37.2.tar.gz</param>
      <param name="compression">zst</param>
      <param name="update">true</param>
   </service>
   <service name="cargo_audit" mode="manual" />
 </services>
 ```
+## Using `cargotoml` parameter
+
+Use only `cargotoml` in situations where you need to also vendor a subcrate. This is useful for certain projects with no root manifest like the warning below.
 
 > [!WARNING]
-> However, certain projects may not have a root manifest file, thus, each directory may be a separate subproject e.g. https://github.com/ibm-s390-linux/s390-tools and may need some thinking.
-> If projects like these cannot have a root manifest but have different subprojects, you may need to define the relative path to the other manifest files from root.
+> Certain projects may not have a root manifest file, thus, each directory may be a separate subproject e.g. https://github.com/ibm-s390-linux/s390-tools 
+> and may need some thinking.
 > 
 > ```xml
 > <services>
 >   <service name="cargo_vendor" mode="manual">
 >      <param name="srcdir">s390-tools</param>
 >      <param name="compression">zst</param>
->      <param name="cargotoml">s390-tools/rust/utils/Cargo.toml</param>
+>      <param name="cargotoml">rust/utils/Cargo.toml</param>
 >      <param name="update">true</param>
 >   </service>
 >   <service name="cargo_audit" mode="manual" />
@@ -52,11 +55,18 @@ Then add the generated tarball of vendored dependencies:
 osc add vendor.tar.zst
 ```
 
-> [!NOTE]
+> [!IMPORTANT]
+> If using `cargotoml`, the vendored tarball is named after their parent directories e.g. `rust/pv/Cargo.toml` -> `pv.vendor.tar.zst`,
+> and has its own `cargo_config` file as well e.g. `rust/pv/Cargo.toml` -> `pv_cargo_config`.
+
+> [!IMPORTANT]
 > Some Rust software such as the infamous https://github.com/elliot40404/bonk do not have any dependencies so they may not generate a vendored tarball.
 > The service will give you an output of information about it by checking the manifest file.
 
 # Limitations
 
-There may be some corner/edge (whatever-you-call-it) cases that will not work with **OBS Service Cargo**. Please open a bug report at https://github.com/openSUSE/obs-service-cargo_vendor/issues.
-We will try to investigate those in the best of our abilities. In the mean time, this will work, *hopefully*, in most projects.
+There may be some corner/edge (whatever-you-call-it) cases that will not work with **OBS Service Cargo**. Please open a bug 
+report at https://github.com/openSUSE/obs-service-cargo_vendor/issues. We will try to investigate those in the best of our abilities. The goal of this
+project is to help automate some tasks when packaging Rust software. We won't assume we can automate where projects can have their manifest file `Cargo.toml`.
+Thus, at best, please indicate it with `cargotoml` parameter. In the mean time, this will work, *hopefully*, in most projects since most projects have
+a root manifest file.
