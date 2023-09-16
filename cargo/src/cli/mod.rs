@@ -14,11 +14,8 @@ use std::path::{Path, PathBuf};
 
 use crate::consts::{GZ_MIME, SUPPORTED_MIME_TYPES, VENDOR_PATH_PREFIX, XZ_MIME, ZST_MIME};
 use crate::utils;
-use crate::vendor;
-use crate::vendor::vendor;
 
 use clap::{Parser, ValueEnum};
-use glob::glob;
 use infer;
 
 #[allow(unused_imports)]
@@ -152,49 +149,9 @@ pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Res
     }
 }
 
-pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
-    let glob_iter = match glob(&src.as_os_str().to_string_lossy()) {
-        Ok(gi) => gi,
-        Err(e) => {
-            error!(err = ?e, "Invalid srctar glob input");
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Invalid srctar glob input",
-            ));
-        }
-    };
-
-    let mut globs = glob_iter.into_iter().collect::<Vec<_>>();
-
-    let matched_entry = match globs.len() {
-        0 => {
-            error!("No files matched srctar glob input");
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "No files matched srctar glob input",
-            ));
-        }
-        1 => globs.remove(0),
-        _ => {
-            error!("Multiple files matched srctar glob input");
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Multiple files matched srctar glob input",
-            ));
-        }
-    };
-    match matched_entry {
-        Ok(entry) => Ok(entry),
-        Err(e) => {
-            error!(?e, "Got glob error");
-            Err(io::Error::new(io::ErrorKind::InvalidInput, "Glob error"))
-        }
-    }
-}
-
 impl Vendor for Src {
     fn is_supported(&self) -> Result<SupportedFormat, UnsupportedFormat> {
-        if let Ok(actual_src) = process_globs(&self.src) {
+        if let Ok(actual_src) = utils::process_globs(&self.src) {
             if actual_src.is_file() {
                 match infer::get_from_path(&actual_src) {
                     Ok(kind) => match kind {
@@ -300,7 +257,7 @@ impl Vendor for Src {
 
         let target_file = OsStr::new("Cargo.toml");
         info!("Running cargo vendor");
-        match process_src(opts, &newworkdir, target_file) {
+        match utils::process_src(opts, &newworkdir, target_file) {
             Ok(_) => {
                 info!("Successfull ran OBS Service Cargo Vendor 🥳");
                 Ok(())
@@ -326,46 +283,3 @@ impl Display for VendorFailed {
     }
 }
 impl Error for VendorFailed {}
-
-pub fn process_src(args: &Opts, prjdir: &Path, target_file: &OsStr) -> io::Result<()> {
-    let pathtomanifest = prjdir.join(target_file);
-    debug!(?pathtomanifest);
-    if pathtomanifest.exists() {
-        if let Ok(isworkspace) = vendor::is_workspace(&pathtomanifest) {
-            if isworkspace {
-                info!(?pathtomanifest, "Project uses a workspace!");
-            } else {
-                info!(?pathtomanifest, "Project does not use a workspace!");
-            };
-
-            match vendor::has_dependencies(&pathtomanifest) {
-                Ok(hasdeps) => {
-                    if hasdeps && isworkspace {
-                        info!("Workspace has dependencies!");
-                        vendor(args, prjdir, None)?;
-                    } else if hasdeps && !isworkspace {
-                        info!("Non-workspace manifest has dependencies!");
-                        vendor(args, prjdir, None)?;
-                    } else if !hasdeps && isworkspace {
-                        info!("Workspace has no global dependencies. May vendor dependencies from member crates.");
-                        vendor(args, prjdir, None)?;
-                    } else {
-                        // This is what we call a "zero cost" abstraction.
-                        info!("No dependencies, no need to vendor!");
-                    };
-                }
-                Err(err) => return Err(err),
-            };
-        }
-    } else {
-        warn!("Project does not have a manifest file at the root of the project!");
-    };
-    if args.cargotoml.is_empty() {
-        info!(?args.cargotoml, "No subcrates to vendor!");
-    } else {
-        info!(?args.cargotoml, "Found subcrates to vendor!");
-        // I think i can just reuse process src instead of invoking this?
-        vendor::cargotomls(args, prjdir)?;
-    };
-    Ok(())
-}

@@ -14,11 +14,13 @@ use std::ffi::OsStr;
 use std::fs;
 use std::io;
 use std::path::Path;
+use std::path::PathBuf;
 
 use crate::cli::Opts;
 use crate::vendor;
 use crate::vendor::vendor;
 
+use glob::glob;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 
@@ -56,9 +58,7 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: &Path) -> Result<(), io::Error> 
     }
     Ok(())
 }
-
-pub fn process_src(args: &Opts, prjdir: &Path, target_file: &OsStr) -> Result<(), io::Error> {
-    info!("Guessed project root at uwu {}", prjdir.display());
+pub fn process_src(args: &Opts, prjdir: &Path, target_file: &OsStr) -> io::Result<()> {
     let pathtomanifest = prjdir.join(target_file);
     debug!(?pathtomanifest);
     if pathtomanifest.exists() {
@@ -87,22 +87,56 @@ pub fn process_src(args: &Opts, prjdir: &Path, target_file: &OsStr) -> Result<()
                 }
                 Err(err) => return Err(err),
             };
-
-            if args.cargotoml.is_empty() {
-                info!(?args.cargotoml, "No subcrates to vendor!");
-            } else {
-                info!(?args.cargotoml, "Found subcrates to vendor!");
-                vendor::cargotomls(args, prjdir)?;
-            }
         }
     } else {
         warn!("Project does not have a manifest file at the root of the project!");
-        if args.cargotoml.is_empty() {
-            info!(?args.cargotoml, "No subcrates to vendor!");
-        } else {
-            info!(?args.cargotoml, "Found subcrates to vendor!");
-            vendor::cargotomls(args, prjdir)?;
+    };
+    if args.cargotoml.is_empty() {
+        info!(?args.cargotoml, "No subcrates to vendor!");
+    } else {
+        info!(?args.cargotoml, "Found subcrates to vendor!");
+        // I think i can just reuse process src instead of invoking this?
+        vendor::cargotomls(args, prjdir)?;
+    };
+    Ok(())
+}
+
+pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
+    let glob_iter = match glob(&src.as_os_str().to_string_lossy()) {
+        Ok(gi) => gi,
+        Err(e) => {
+            error!(err = ?e, "Invalid srctar glob input");
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Invalid srctar glob input",
+            ));
+        }
+    };
+
+    let mut globs = glob_iter.into_iter().collect::<Vec<_>>();
+
+    let matched_entry = match globs.len() {
+        0 => {
+            error!("No files matched srctar glob input");
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "No files matched srctar glob input",
+            ));
+        }
+        1 => globs.remove(0),
+        _ => {
+            error!("Multiple files matched srctar glob input");
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Multiple files matched srctar glob input",
+            ));
+        }
+    };
+    match matched_entry {
+        Ok(entry) => Ok(entry),
+        Err(e) => {
+            error!(?e, "Got glob error");
+            Err(io::Error::new(io::ErrorKind::InvalidInput, "Glob error"))
         }
     }
-    Ok(())
 }
