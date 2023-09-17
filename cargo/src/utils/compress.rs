@@ -16,15 +16,12 @@ use tar;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
 
-pub fn tar_builder<T>(
+pub fn tar_builder<T: Write>(
     topdir: &str,
     srcpath: impl AsRef<Path>,
     additional_files: &[&str],
     builder: &mut tar::Builder<T>,
-) -> Result<(), io::Error>
-where
-    T: Write,
-{
+) -> Result<(), io::Error> {
     if !additional_files.is_empty() {
         info!("Adding additional files!");
         for f in additional_files {
