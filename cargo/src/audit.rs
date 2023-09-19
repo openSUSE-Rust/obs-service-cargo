@@ -6,15 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::error::Error;
-use std::fmt;
+// use std::error::Error;
+// use std::fmt;
 use std::io;
 use std::path::Path;
-use std::process;
+// use std::process;
 
 use crate::cli;
 
-use clap::Command;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -28,9 +27,10 @@ use clap::Parser;
 Bugs can be reported on GitHub: https://github.com/uncomfyhalomacro/obs-service-cargo_vendor-rs/issues",
     max_term_width = 120
 )]
-struct AuditOpts {
+pub struct AuditOpts {
+    // Inherit vendor's opts
     #[clap(flatten)]
-    opts: Opts,
+    pub opts: cli::Opts,
 }
 
 // TODO: Replace some of the return types with a Custom Error
