@@ -74,8 +74,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     debug!(?args);
 
     match args.src.is_supported() {
-        Ok(kay) => {
-            info!(?kay, "Source is supported");
+        Ok(ay) => {
+            info!(?ay, "Source is supported");
         }
         Err(err) => {
             error!("{}", err);
