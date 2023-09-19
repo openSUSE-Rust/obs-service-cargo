@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-pub const PREFIX: &str = ".obs-service-cargo-vendor";
+pub const VENDOR_PATH_PREFIX: &str = ".obs-service-cargo-vendor";
 pub const VENDOR_EXAMPLE: &str =
     "Examples of how to modify your spec file to use vendored libraries can be found online:
 

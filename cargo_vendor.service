@@ -11,11 +11,8 @@
   <parameter name="strategy">
     <description>Legacy argument, no longer used. Values: vendor. Default: vendor</description>
   </parameter>
-  <parameter name="srcdir">
-    <description>Where to find unpacked sources. Cannot be used with srctar. One of srcdir or srctar must be defined</description>
-  </parameter>
-  <parameter name="srctar">
-    <description>Where to find packed sources. Cannot be used with srcdir. One of srcdir or srctar must be defined</description>
+  <parameter name="src">
+    <description>Where to find sources. Source is either a directory or a source tarball AND cannot be both.</description>
   </parameter>
   <parameter name="outdir">
     <description>Specify where to put the vendor tarball and cargo_config file</description>
