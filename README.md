@@ -71,7 +71,7 @@ OBS Source Service to vendor all crates.io and dependencies for Rust project loc
 Usage: cargo_vendor [OPTIONS] --src <SRC> --outdir <OUTDIR>
 
 Options:
-      --src <SRC>                  Where to find sources. Source is either a directory or a source tarball AND cannot be both.
+      --src <SRC>                  Where to find sources. Source is either a directory or a source tarball AND cannot be both. [aliases: srctar, srcdir]
       --compression <COMPRESSION>  What compression algorithm to use. [default: zst] [possible values: gz, xz, zst]
       --tag <TAG>                  Tag some files for multi-vendor and multi-cargo_config projects
       --cargotoml <CARGOTOML>      Other cargo manifest files to sync with during vendor
