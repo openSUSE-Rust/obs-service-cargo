@@ -9,10 +9,8 @@
 // use std::error::Error;
 // use std::fmt;
 use std::io;
-use std::path::Path;
+use std::path::PathBuf;
 // use std::process;
-
-use crate::cli;
 
 use clap::Parser;
 
@@ -28,19 +26,28 @@ Bugs can be reported on GitHub: https://github.com/uncomfyhalomacro/obs-service-
     max_term_width = 120
 )]
 pub struct AuditOpts {
-    // Inherit vendor's opts
     #[clap(flatten)]
-    pub opts: cli::Opts,
+    src: AuditSrc,
+    #[arg(long, help = "Where to find other lockfiles for auditing.")]
+    lockfiles: Option<Vec<PathBuf>>,
+}
+
+#[derive(clap::Args, Debug, Clone)]
+pub struct AuditSrc {
+    #[arg(
+        long,
+        visible_aliases = ["srctar", "srcdir"],
+        help = "Where to find sources. Source is either a directory or a source tarball AND cannot be both."
+    )]
+    // NOTE If `None`, check `_service`
+    src: Option<PathBuf>,
 }
 
 // TODO: Replace some of the return types with a Custom Error
 pub trait Audit {
-    // QUESTION: This will be just vendoring?
-    fn generate_lockfile(&self, pathtomanifest: &Path) -> io::Result<()>;
-
     // RATIONALE: Running this command should be have two states
     // 1. With src option
     // 2. Without src option
     // If 2, read the `_service` file.
-    fn run_audit(&self, pathtolockfile: &Path) -> io::Result<()>;
+    fn run_audit(&self, opts: &AuditOpts) -> io::Result<()>;
 }
