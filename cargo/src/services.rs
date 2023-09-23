@@ -11,27 +11,27 @@ use xml::de::from_str;
 #[serde(rename_all = "kebab-case")]
 pub struct Services {
     #[serde(rename = "service")]
-    service: Service,
+    pub service: Option<Vec<Service>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct Service {
     #[serde(rename = "@name")]
-    name: Option<String>,
+    pub name: Option<String>,
     #[serde(rename = "@mode")]
-    mode: Option<String>,
+    pub mode: Option<String>,
     #[serde(rename = "param")]
-    param: Option<Vec<Param>>,
+    pub param: Option<Vec<Param>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct Param {
     #[serde(rename = "@name")]
-    name: String,
+    pub name: Option<String>,
     #[serde(rename = "$text")]
-    text: Option<String>,
+    pub text: Option<String>,
 }
 
 impl Services {
