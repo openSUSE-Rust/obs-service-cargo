@@ -93,8 +93,7 @@ fn process_service_file(p: &Path) -> io::Result<services::Services> {
     services::Services::from_file(p)
 }
 
-#[allow(dead_code)]
-fn make_opts(p: &Path) -> io::Result<Vec<Opts>> {
+pub fn make_opts(p: &Path) -> io::Result<Vec<Opts>> {
     let mut vicky: Vec<Opts> = Vec::new();
     match process_service_file(p) {
         Ok(serv) => match serv.service {
@@ -112,12 +111,12 @@ fn make_opts(p: &Path) -> io::Result<Vec<Opts>> {
                         ));
                     };
                     for vendor in a_public_market.iter() {
-                        let mut src = PathBuf::new();
-                        let mut comp = Compression::Zst;
-                        let mut cargotomls = Vec::new();
-                        let mut update = true;
-                        let outdir_ = PathBuf::new();
                         if let Some(part) = &vendor.param {
+                            let mut src = PathBuf::new();
+                            let mut comp = Compression::Zst;
+                            let mut cargotomls = Vec::new();
+                            let mut update = true;
+                            let outdir_ = std::env::current_dir()?;
                             for pa in part {
                                 if let (Some(pname), Some(txt)) = (&pa.name, &pa.text) {
                                     if ["src", "srctar", "srcdir"].contains(&pname.as_str()) {
@@ -149,6 +148,7 @@ fn make_opts(p: &Path) -> io::Result<Vec<Opts>> {
                                         update,
                                         &outdir_,
                                     ));
+                                    break;
                                 };
                             }
                         };
