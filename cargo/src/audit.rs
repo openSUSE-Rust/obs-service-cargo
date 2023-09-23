@@ -7,9 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+use crate::cli::{Compression, Opts};
+use crate::services;
 
 use clap::Parser;
+#[allow(unused_imports)]
+use tracing::{debug, error, info, trace, warn, Level};
 
 /// # How it works
 ///
@@ -68,11 +73,106 @@ pub struct AuditOpts {
     pub color: clap::ColorChoice,
 }
 
-/// TODO: Replace some of the return types with a Custom Error
 pub trait Audit {
     fn run_audit(self, opts: &AuditOpts) -> io::Result<()>;
-
-    fn process_src(self) -> io::Result<AuditOpts>;
-
     fn process_lockfiles(self) -> io::Result<()>;
+}
+
+impl Audit for AuditOpts {
+    fn run_audit(self, _opts: &AuditOpts) -> io::Result<()> {
+        Ok(())
+    }
+
+    fn process_lockfiles(self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+#[allow(dead_code)]
+fn process_service_file(p: &Path) -> io::Result<services::Services> {
+    services::Services::from_file(p)
+}
+
+#[allow(dead_code)]
+fn make_opts(p: &Path) -> io::Result<Vec<Opts>> {
+    let mut vicky: Vec<Opts> = Vec::new();
+    match process_service_file(p) {
+        Ok(serv) => match serv.service {
+            Some(vices) => {
+                if !vices.is_empty() {
+                    let a_public_market: Vec<&services::Service> = vices
+                        .iter()
+                        .filter(|v| v.name == Some("cargo_vendor".to_string()))
+                        .collect();
+                    if a_public_market.is_empty() {
+                        error!(?a_public_market, "Services are non-existent");
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            "Services are non-existent",
+                        ));
+                    };
+                    for vendor in a_public_market.iter() {
+                        let mut src = PathBuf::new();
+                        let mut comp = Compression::Zst;
+                        let mut cargotomls = Vec::new();
+                        let mut update = true;
+                        let outdir_ = PathBuf::new();
+                        if let Some(part) = &vendor.param {
+                            for pa in part {
+                                if let (Some(pname), Some(txt)) = (&pa.name, &pa.text) {
+                                    if ["src", "srctar", "srcdir"].contains(&pname.as_str()) {
+                                        src.push(txt);
+                                    } else if pname == "compression" {
+                                        match txt.as_str() {
+                                            "gz" => {
+                                                comp = Compression::Gz;
+                                            }
+                                            "xz" => {
+                                                comp = Compression::Xz;
+                                            }
+                                            // Use default
+                                            _ => comp = Compression::Zst,
+                                        };
+                                    } else if pname == "cargotoml" {
+                                        let manifestpath = PathBuf::from(txt);
+                                        cargotomls.push(manifestpath.clone());
+                                    } else if pname == "update" {
+                                        if let Ok(bully) = txt.trim().parse::<bool>() {
+                                            update = bully;
+                                        }
+                                    };
+                                    vicky.push(Opts::new(
+                                        &src,
+                                        comp,
+                                        "",
+                                        cargotomls.clone(),
+                                        update,
+                                        &outdir_,
+                                    ));
+                                };
+                            }
+                        };
+                    }
+                    Ok(vicky)
+                } else {
+                    error!(?vices, "Services are non-existent");
+                    Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "Services are non-existent",
+                    ))
+                }
+            }
+            None => {
+                error!(?serv, "Services are non-existent");
+                Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "Services are non-existent",
+                ))
+            }
+        },
+        Err(err) => {
+            error!(?err);
+            Err(err)
+        }
+    }
 }
