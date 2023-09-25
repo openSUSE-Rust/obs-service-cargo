@@ -142,14 +142,14 @@ pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
     }
 }
 
-pub fn cargo_command(
+pub fn cargo_command<S: AsRef<str>>(
     subcommand: &str,
-    options: &[&str],
+    options: &[S],
     curdir: impl AsRef<Path>,
 ) -> Result<String, ExecutionError> {
     let cmd = std::process::Command::new("cargo")
         .arg(subcommand)
-        .args(options)
+        .args(options.iter().map(|s| s.as_ref()))
         .current_dir(curdir.as_ref())
         .output()
         .map_err(|e| {
