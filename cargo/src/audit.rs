@@ -6,11 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::io;
+use std::error::Error;
+use std::fmt::Display;
 use std::path::{Path, PathBuf};
+use std::{fmt, io};
 
-use crate::cli::{Compression, Opts};
-use crate::services;
+use crate::cli::{Compression, Opts, Src};
+use crate::consts::AUDIT_PATH_PREFIX;
+use crate::consts::EXCLUDED_RUSTSECS;
+use crate::services::{self, Services};
+use crate::utils::cargo_command;
 
 use clap::Parser;
 #[allow(unused_imports)]
@@ -60,7 +65,7 @@ Bugs can be reported on GitHub: https://github.com/uncomfyhalomacro/obs-service-
 )]
 pub struct AuditOpts {
     #[arg(long, help = "Where to find other lockfiles for auditing.")]
-    pub lockfiles: Vec<PathBuf>,
+    pub lockfile: Vec<PathBuf>,
     #[arg(long, help = "Dummy parameter. It's not used but OBS loves it.")]
     pub outdir: Option<PathBuf>,
     #[arg(
@@ -73,24 +78,135 @@ pub struct AuditOpts {
     pub color: clap::ColorChoice,
 }
 
-pub trait Audit {
-    fn run_audit(self, opts: &AuditOpts) -> io::Result<()>;
-    fn process_lockfiles(self) -> io::Result<()>;
+#[derive(Debug)]
+pub struct AuditFailed {
+    error: String,
+    boxy: Box<dyn Error>,
 }
 
-impl Audit for AuditOpts {
-    fn run_audit(self, _opts: &AuditOpts) -> io::Result<()> {
+impl Display for AuditFailed {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let msg = format!("{}. Got {}", self.error, self.boxy);
+        write!(f, "{}", msg)
+    }
+}
+
+impl AuditOpts {
+    #[allow(dead_code)]
+    pub fn new(
+        self,
+        lockfiles: Vec<PathBuf>,
+        outdir: Option<PathBuf>,
+        color: clap::ColorChoice,
+    ) -> Self {
+        Self {
+            lockfile: lockfiles,
+            outdir,
+            color,
+        }
+    }
+
+    pub fn generate_opts(self, p: &Path) -> io::Result<Vec<Opts>> {
+        make_opts(p)
+    }
+}
+
+impl Error for AuditFailed {}
+
+pub trait Audit {
+    // Run audit sets the workdir before running other stuff
+    fn run_audit(self, opts: &Opts) -> Result<(), AuditFailed>;
+    fn audit_vendored_tar(self, opts: &Opts, workdir: &Path) -> io::Result<()>;
+    fn audit_sources(self, opts: &Opts, workdir: &Path) -> io::Result<()>;
+    fn audit_additional_locks(self, audit_opts: &AuditOpts, workdir: &Path) -> io::Result<()>;
+}
+
+impl Audit for Src {
+    fn run_audit(self, _opts: &Opts) -> Result<(), AuditFailed> {
+        let tmpdir = match tempfile::Builder::new()
+            .prefix(AUDIT_PATH_PREFIX)
+            .rand_bytes(8)
+            .tempdir()
+        {
+            Ok(t) => t,
+            Err(err) => {
+                error!("{}", err);
+                return Err(AuditFailed {
+                    error: "Failed to create temporary directory".to_string(),
+                    boxy: err.into(),
+                });
+            }
+        };
+
+        let workdir: PathBuf = tmpdir.path().into();
+        info!(?workdir, "Created working directory");
+        // TODO check and audit vendor.tar.xz. Use globs
+        // TODO check and audit src. See `make_opts`.
+        // TODO check and audit multiple `lockfile` params.
+        info!("Succesfully audited! 👀");
         Ok(())
     }
 
-    fn process_lockfiles(self) -> io::Result<()> {
+    fn audit_vendored_tar(self, _opts: &Opts, _workdir: &Path) -> io::Result<()> {
+        Ok(())
+    }
+
+    fn audit_sources(self, _opts: &Opts, _workdir: &Path) -> io::Result<()> {
+        Ok(())
+    }
+
+    fn audit_additional_locks(self, _audit_opts: &AuditOpts, _workdir: &Path) -> io::Result<()> {
         Ok(())
     }
 }
 
 #[allow(dead_code)]
+fn audit_src() {}
+
+#[allow(dead_code)]
+fn audit_vendor_tarball() {}
+
+pub fn cargo_audit(workdir: &Path, lockfiles: &[&Path]) -> io::Result<()> {
+    let subcommand = "audit";
+    let mut default_options: Vec<String> = Vec::new();
+    let mut other_options: Vec<String> = vec![
+        "--json".to_string(),
+        "-c".to_string(),
+        "never".to_string(),
+        "-D".to_string(),
+        "warnings".to_string(),
+        "-n".to_string(),
+        "-d".to_string(),
+        "/usr/share/cargo-audit-advisory-db".to_string(),
+    ];
+    for advisory in EXCLUDED_RUSTSECS.iter() {
+        let ignore: String = "ignore".into();
+        default_options.push(ignore);
+        default_options.push(advisory.to_string());
+    }
+    default_options.append(&mut other_options);
+    for lockfile in lockfiles {
+        default_options.push(lockfile.to_string_lossy().to_string());
+        match cargo_command(subcommand, &default_options, workdir) {
+            Ok(ay) => {
+                info!("{}", ay);
+            }
+            Err(err) => {
+                error!(?err);
+                return Err(io::Error::new(
+                    io::ErrorKind::Interrupted,
+                    "Got execution error. Failed to run command for audit",
+                ));
+            }
+        }
+        default_options.pop();
+    }
+
+    Ok(())
+}
+
 fn process_service_file(p: &Path) -> io::Result<services::Services> {
-    services::Services::from_file(p)
+    Services::from_file(p)
 }
 
 pub fn make_opts(p: &Path) -> io::Result<Vec<Opts>> {
