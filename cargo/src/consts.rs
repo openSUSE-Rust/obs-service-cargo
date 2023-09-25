@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 pub const VENDOR_PATH_PREFIX: &str = ".obs-service-cargo-vendor";
+pub const AUDIT_PATH_PREFIX: &str = ".obs-service-cargo-audit";
 pub const VENDOR_EXAMPLE: &str =
     "Examples of how to modify your spec file to use vendored libraries can be found online:
 
@@ -23,3 +24,11 @@ pub const XZ_MIME: &str = "application/x-xz";
 pub const ZST_MIME: &str = "application/zstd";
 pub const GZ_MIME: &str = "application/gzip";
 pub const SUPPORTED_MIME_TYPES: &[&str] = &[XZ_MIME, ZST_MIME, GZ_MIME];
+pub const EXCLUDED_RUSTSECS: &[&str] = &[
+    // NOTE: These two are excluded because they are fundamentally
+    // silly and can never be fixed.
+    // https://rustsec.org/advisories/RUSTSEC-2020-0071.html
+    // https://rustsec.org/advisories/RUSTSEC-2020-0159.html
+    "RUSTSEC-2020-0071",
+    "RUSTSEC-2020-0159",
+];
