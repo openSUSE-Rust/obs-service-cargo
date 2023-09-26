@@ -72,7 +72,12 @@ fn main() -> io::Result<()> {
     info!("🕵️ Starting OBS Service Cargo Audit.");
     debug!(?args);
 
-    let service_file = std::env::current_dir()?.join("_service");
+    let service_file = std::env::current_dir()
+        .map_err(|err| {
+            error!(?err, "Unable to determine current working directory");
+            err
+        })?
+        .join("_service");
     let _opts = args.generate_opts(&service_file)?;
 
     // let svpath = std::path::PathBuf::from("./_service");

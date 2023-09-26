@@ -211,84 +211,87 @@ fn process_service_file(p: &Path) -> io::Result<services::Services> {
 
 pub fn make_opts(p: &Path) -> io::Result<Vec<Opts>> {
     let mut vicky: Vec<Opts> = Vec::new();
-    match process_service_file(p) {
-        Ok(serv) => match serv.service {
-            Some(vices) => {
-                if !vices.is_empty() {
-                    let a_public_market: Vec<&services::Service> = vices
-                        .iter()
-                        .filter(|v| v.name == Some("cargo_vendor".to_string()))
-                        .collect();
-                    if a_public_market.is_empty() {
-                        error!(?a_public_market, "Services are non-existent");
-                        return Err(io::Error::new(
-                            io::ErrorKind::InvalidData,
-                            "Services are non-existent",
-                        ));
-                    };
-                    for vendor in a_public_market.iter() {
-                        if let Some(part) = &vendor.param {
-                            let mut src = PathBuf::new();
-                            let mut comp = Compression::Zst;
-                            let mut cargotomls = Vec::new();
-                            let mut update = true;
-                            let outdir_ = std::env::current_dir()?;
-                            for pa in part {
-                                if let (Some(pname), Some(txt)) = (&pa.name, &pa.text) {
-                                    if ["src", "srctar", "srcdir"].contains(&pname.as_str()) {
-                                        src.push(txt);
-                                    } else if pname == "compression" {
-                                        match txt.as_str() {
-                                            "gz" => {
-                                                comp = Compression::Gz;
-                                            }
-                                            "xz" => {
-                                                comp = Compression::Xz;
-                                            }
-                                            // Use default
-                                            _ => comp = Compression::Zst,
-                                        };
-                                    } else if pname == "cargotoml" {
-                                        let manifestpath = PathBuf::from(txt);
-                                        cargotomls.push(manifestpath.clone());
-                                    } else if pname == "update" {
-                                        if let Ok(bully) = txt.trim().parse::<bool>() {
-                                            update = bully;
-                                        }
-                                    };
-                                    vicky.push(Opts::new(
-                                        &src,
-                                        comp,
-                                        "",
-                                        cargotomls.clone(),
-                                        update,
-                                        &outdir_,
-                                    ));
-                                    break;
-                                };
-                            }
-                        };
-                    }
-                    Ok(vicky)
-                } else {
-                    error!(?vices, "Services are non-existent");
-                    Err(io::Error::new(
+
+    let serv = process_service_file(p).map_err(|err| {
+        error!(?err, "Unable to process `_service` file");
+        err
+    })?;
+
+    match serv.service {
+        Some(vices) => {
+            if !vices.is_empty() {
+                let a_public_market: Vec<&services::Service> = vices
+                    .iter()
+                    .filter(|v| v.name == Some("cargo_vendor".to_string()))
+                    .collect();
+                if a_public_market.is_empty() {
+                    error!(
+                        ?a_public_market,
+                        "`cargo_vendor` service not defined in `_service`"
+                    );
+                    return Err(io::Error::new(
                         io::ErrorKind::InvalidData,
-                        "Services are non-existent",
-                    ))
+                        "`cargo_vendor` service not defined in `_service`",
+                    ));
+                };
+                for vendor in a_public_market.iter() {
+                    if let Some(part) = &vendor.param {
+                        let mut src = PathBuf::new();
+                        let mut comp = Compression::Zst;
+                        let mut cargotomls = Vec::new();
+                        let mut update = true;
+                        let outdir_ = std::env::current_dir()?;
+                        for pa in part {
+                            if let (Some(pname), Some(txt)) = (&pa.name, &pa.text) {
+                                if ["src", "srctar", "srcdir"].contains(&pname.as_str()) {
+                                    src.push(txt);
+                                } else if pname == "compression" {
+                                    match txt.as_str() {
+                                        "gz" => {
+                                            comp = Compression::Gz;
+                                        }
+                                        "xz" => {
+                                            comp = Compression::Xz;
+                                        }
+                                        // Use default
+                                        _ => comp = Compression::Zst,
+                                    };
+                                } else if pname == "cargotoml" {
+                                    let manifestpath = PathBuf::from(txt);
+                                    cargotomls.push(manifestpath.clone());
+                                } else if pname == "update" {
+                                    if let Ok(bully) = txt.trim().parse::<bool>() {
+                                        update = bully;
+                                    }
+                                };
+                                vicky.push(Opts::new(
+                                    &src,
+                                    comp,
+                                    "",
+                                    cargotomls.clone(),
+                                    update,
+                                    &outdir_,
+                                ));
+                                break;
+                            };
+                        }
+                    };
                 }
-            }
-            None => {
-                error!(?serv, "Services are non-existent");
+                Ok(vicky)
+            } else {
+                error!(?vices, "Services are non-existent");
                 Err(io::Error::new(
                     io::ErrorKind::InvalidData,
                     "Services are non-existent",
                 ))
             }
-        },
-        Err(err) => {
-            error!(?err);
-            Err(err)
+        }
+        None => {
+            error!(?serv, "Services are non-existent");
+            Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Services are non-existent",
+            ))
         }
     }
 }
