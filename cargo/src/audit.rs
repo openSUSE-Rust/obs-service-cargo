@@ -169,22 +169,22 @@ fn audit_vendor_tarball() {}
 pub fn cargo_audit(workdir: &Path, lockfiles: &[&Path]) -> io::Result<()> {
     let subcommand = "audit";
     let mut default_options: Vec<String> = Vec::new();
-    let mut other_options: Vec<String> = vec![
-        "--json".to_string(),
-        "-c".to_string(),
-        "never".to_string(),
-        "-D".to_string(),
-        "warnings".to_string(),
-        "-n".to_string(),
-        "-d".to_string(),
-        "/usr/share/cargo-audit-advisory-db".to_string(),
+    let other_options = &[
+        "--json",
+        "-c",
+        "never",
+        "-D",
+        "warnings",
+        "-n",
+        "-d",
+        "/usr/share/cargo-audit-advisory-db",
     ];
     for advisory in EXCLUDED_RUSTSECS.iter() {
-        let ignore: String = "ignore".into();
+        let ignore: String = "--ignore".into();
         default_options.push(ignore);
         default_options.push(advisory.to_string());
     }
-    default_options.append(&mut other_options);
+    default_options.append(&mut other_options.iter().map(|s| s.to_string()).collect());
     for lockfile in lockfiles {
         default_options.push(lockfile.to_string_lossy().to_string());
         match cargo_command(subcommand, &default_options, workdir) {
