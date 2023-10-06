@@ -7,17 +7,20 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::error::Error;
+use std::ffi::OsStr;
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::{fmt, io};
 
-use crate::cli::{Compression, Opts, Src};
+use crate::cli::{decompress, Compression, Opts, Src, Vendor};
 use crate::consts::AUDIT_PATH_PREFIX;
 use crate::consts::EXCLUDED_RUSTSECS;
 use crate::services::{self, Services};
 use crate::utils::cargo_command;
 
 use clap::Parser;
+use glob;
+
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 
@@ -52,7 +55,7 @@ use tracing::{debug, error, info, trace, warn, Level};
 /// when generating the vendored tarball, we also check the lockfiles
 /// in those contents as well.
 ///
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(
     author,
     name = "cargo_vendor",
@@ -114,15 +117,20 @@ impl AuditOpts {
 impl Error for AuditFailed {}
 
 pub trait Audit {
-    // Run audit sets the workdir before running other stuff
-    fn run_audit(self, opts: &Opts) -> Result<(), AuditFailed>;
-    fn audit_vendored_tar(self, opts: &Opts, workdir: &Path) -> io::Result<()>;
-    fn audit_sources(self, opts: &Opts, workdir: &Path) -> io::Result<()>;
+    fn run_audit(self, audit_opts: &AuditOpts) -> io::Result<()>;
+    fn audit_vendored_tar(self) -> io::Result<()>;
+    fn audit_sources(self, audit_opts: &AuditOpts) -> io::Result<()>;
     fn audit_additional_locks(self, audit_opts: &AuditOpts, workdir: &Path) -> io::Result<()>;
 }
 
 impl Audit for Src {
-    fn run_audit(self, _opts: &Opts) -> Result<(), AuditFailed> {
+    fn run_audit(self, audit_opts: &AuditOpts) -> io::Result<()> {
+        // Should we clone or use Ref? Eh...
+        self.clone().audit_sources(audit_opts)?;
+        self.clone().audit_vendored_tar()?;
+        Ok(())
+    }
+    fn audit_vendored_tar(self) -> io::Result<()> {
         let tmpdir = match tempfile::Builder::new()
             .prefix(AUDIT_PATH_PREFIX)
             .rand_bytes(8)
@@ -131,31 +139,197 @@ impl Audit for Src {
             Ok(t) => t,
             Err(err) => {
                 error!("{}", err);
-                return Err(AuditFailed {
-                    error: "Failed to create temporary directory".to_string(),
-                    boxy: err.into(),
-                });
+                return Err(err);
             }
         };
 
         let workdir: PathBuf = tmpdir.path().into();
-        info!(?workdir, "Created working directory");
-        // TODO check and audit vendor.tar.xz. Use globs
-        // TODO check and audit src. See `make_opts`.
-        // TODO check and audit multiple `lockfile` params.
-        info!("Succesfully audited! 👀");
+        let current_path: PathBuf = std::env::current_dir()
+            .map_err(|err| {
+                error!(?err, "Unable to determinne working directory");
+                err
+            })?
+            .join("*vendor.tar.*");
+
+        let vendored_balls = match glob::glob(&current_path.to_string_lossy()) {
+            Ok(blob) => {
+                trace!(?blob);
+                blob
+            }
+            Err(err) => {
+                error!(?err, "Blob pattern error");
+                return Err(io::Error::new(io::ErrorKind::Other, "Blob pattern error"));
+            }
+        };
+
+        for ball in vendored_balls {
+            trace!(?ball);
+            match ball {
+                Ok(fart) => {
+                    trace!(?fart);
+                    if fart.exists() && fart.is_file() {
+                        // TODO: Process balls in temporary directory.
+                        let vsauce = Src::new(&fart);
+                        let newworkdir = match vsauce.is_supported() {
+                            Ok(sauce) => match sauce {
+                                crate::cli::SupportedFormat::Compressed(comp, ball_path) => {
+                                    match decompress(&comp, &workdir, &ball_path) {
+                                        Ok(_) => workdir,
+                                        Err(err) => {
+                                            error!(?err, "Failed to decompress source");
+                                            return Err(err);
+                                        }
+                                    }
+                                }
+                                crate::cli::SupportedFormat::Dir(err) => {
+                                    error!(?err, "No tarball should be a directory. This should be unreachable!");
+                                    unreachable!();
+                                }
+                            },
+                            Err(err) => {
+                                error!(?err, "Format unsupported");
+                                return Err(io::Error::new(
+                                    io::ErrorKind::Unsupported,
+                                    "Unsupported format, please check sources",
+                                ));
+                            }
+                        };
+                        let target_file = OsStr::new("Cargo.lock");
+                        let lockfile_path = newworkdir.join(target_file);
+                        if !lockfile_path.exists() {
+                            error!(?lockfile_path, "File does not exist");
+                            return Err(io::Error::new(
+                                io::ErrorKind::NotFound,
+                                "Expected lockfile. Found no such file.",
+                            ));
+                        } else if !lockfile_path.is_file() {
+                            error!(
+                                ?lockfile_path,
+                                "Expected lockfile as a file, yet it's not a file."
+                            );
+                            return Err(io::Error::new(
+                                io::ErrorKind::NotFound,
+                                "Expected lockfile as file, yet it's not a file.",
+                            ));
+                        };
+                        cargo_audit(&newworkdir, &[&lockfile_path])?;
+                    } else {
+                        return Err(io::Error::new(
+                            io::ErrorKind::NotFound,
+                            "Expected a file. Found directory",
+                        ));
+                    };
+                    return Ok(());
+                }
+                Err(err) => {
+                    error!(?err, "Glob error");
+                    continue;
+                }
+            }
+        }
+        trace!("Dropping workdir 💧");
+        drop(workdir);
+        tmpdir.close()?;
         Ok(())
     }
 
-    fn audit_vendored_tar(self, _opts: &Opts, _workdir: &Path) -> io::Result<()> {
-        Ok(())
+    fn audit_sources(self, audit_opts: &AuditOpts) -> io::Result<()> {
+        info!("Auditing project's root lockfile 🔐");
+        let tmpdir = match tempfile::Builder::new()
+            .prefix(AUDIT_PATH_PREFIX)
+            .rand_bytes(8)
+            .tempdir()
+        {
+            Ok(t) => t,
+            Err(err) => {
+                error!("{}", err);
+                return Err(err);
+            }
+        };
+
+        let workdir: PathBuf = tmpdir.path().into();
+        if self.src.exists() {
+            let newworkdir = match self.is_supported() {
+                Ok(so) => match so {
+                    crate::cli::SupportedFormat::Compressed(comp, src) => {
+                        match decompress(&comp, &workdir, &src) {
+                            Ok(_) => workdir,
+                            Err(err) => {
+                                error!(?err, "Failed to decompress source");
+                                return Err(err);
+                            }
+                        }
+                    }
+                    crate::cli::SupportedFormat::Dir(dir) => {
+                        match crate::utils::copy_dir_all(dir, &workdir) {
+                            Ok(_) => workdir,
+                            Err(err) => {
+                                error!(?err, "Failed to copy source path to workdir");
+                                return Err(err);
+                            }
+                        }
+                    }
+                },
+                Err(err) => {
+                    error!(?err, "Unsupported file format");
+                    return Err(io::Error::new(
+                        io::ErrorKind::Unsupported,
+                        "Unsupported file format",
+                    ));
+                }
+            };
+
+            let target_file = OsStr::new("Cargo.lock");
+            let lockfile_path = newworkdir.join(target_file);
+            if !lockfile_path.exists() {
+                // For projects such as s390-tools that do not have a root manifest,
+                // therefore, lockfile isn't at root of the project as well
+                warn!(?lockfile_path, "File does not exist");
+            } else if !lockfile_path.is_file() {
+                error!(
+                    ?lockfile_path,
+                    "Expected lockfile as a file, yet it's not a file."
+                );
+                return Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "Expected lockfile as file, yet it's not a file.",
+                ));
+            } else {
+                cargo_audit(&newworkdir, &[&lockfile_path])?;
+            };
+            self.audit_additional_locks(audit_opts, &newworkdir)?;
+            Ok(())
+        } else {
+            error!(?self, "Source not found");
+            Err(io::Error::new(io::ErrorKind::NotFound, "Source not found"))
+        }
     }
 
-    fn audit_sources(self, _opts: &Opts, _workdir: &Path) -> io::Result<()> {
-        Ok(())
-    }
-
-    fn audit_additional_locks(self, _audit_opts: &AuditOpts, _workdir: &Path) -> io::Result<()> {
+    fn audit_additional_locks(self, audit_opts: &AuditOpts, workdir: &Path) -> io::Result<()> {
+        info!("Auditing additional lockfiles 🔐");
+        if audit_opts.lockfile.is_empty() {
+            warn!("No additional lockfiles to audit 🕵️");
+        } else {
+            for lock in audit_opts.lockfile.iter() {
+                let lockfile_path = workdir.join(lock);
+                if !lockfile_path.exists() {
+                    error!(?lockfile_path, "File does not exist");
+                    return Err(io::Error::new(
+                        io::ErrorKind::NotFound,
+                        "Expected lockfile. Found no such file.",
+                    ));
+                } else if !lockfile_path.is_file() {
+                    error!(
+                        ?lockfile_path,
+                        "Expected lockfile as a file, yet it's not a file."
+                    );
+                    return Err(io::Error::new(
+                        io::ErrorKind::NotFound,
+                        "Expected lockfile as file, yet it's not a file.",
+                    ));
+                };
+            }
+        }
         Ok(())
     }
 }
@@ -185,6 +359,7 @@ pub fn cargo_audit(workdir: &Path, lockfiles: &[&Path]) -> io::Result<()> {
         default_options.push(advisory.to_string());
     }
     default_options.append(&mut other_options.iter().map(|s| s.to_string()).collect());
+    default_options.push("-f".to_string());
     for lockfile in lockfiles {
         default_options.push(lockfile.to_string_lossy().to_string());
         match cargo_command(subcommand, &default_options, workdir) {

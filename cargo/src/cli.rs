@@ -128,7 +128,7 @@ pub struct Src {
         visible_aliases = ["srctar", "srcdir"],
         help = "Where to find sources. Source is either a directory or a source tarball AND cannot be both."
     )]
-    src: PathBuf,
+    pub src: PathBuf,
 }
 
 impl Src {

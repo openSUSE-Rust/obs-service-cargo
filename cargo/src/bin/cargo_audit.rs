@@ -33,6 +33,7 @@ use terminfo::{capability as cap, Database};
 use tracing::{debug, error, info, warn, Level};
 use tracing_subscriber::EnvFilter;
 
+use obs_service_cargo::audit::Audit;
 use obs_service_cargo::audit::AuditOpts;
 
 fn main() -> io::Result<()> {
@@ -78,14 +79,11 @@ fn main() -> io::Result<()> {
             err
         })?
         .join("_service");
-    let _opts = args.generate_opts(&service_file)?;
+    let opts = args.clone().generate_opts(&service_file)?;
 
-    // let svpath = std::path::PathBuf::from("./_service");
-    // info!(?svpath);
-    // let exml = Services::from_file(&svpath)?;
-    // info!(?exml);
-    // let services_to_opts = obs_service_cargo::audit::make_opts(&svpath);
-    // info!(?services_to_opts);
+    for opt in opts {
+        opt.src.run_audit(&args)?;
+    }
 
     Ok(())
 }
