@@ -174,6 +174,7 @@ pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Res
 impl Vendor for Src {
     fn is_supported(&self) -> Result<SupportedFormat, UnsupportedFormat> {
         if let Ok(actual_src) = utils::process_globs(&self.src) {
+            debug!(?actual_src, "Source got from glob pattern");
             if actual_src.is_file() {
                 match infer::get_from_path(&actual_src) {
                     Ok(kind) => match kind {
@@ -181,20 +182,11 @@ impl Vendor for Src {
                             if SUPPORTED_MIME_TYPES.contains(&known.mime_type()) {
                                 trace!(?known);
                                 if known.mime_type().eq(GZ_MIME) {
-                                    Ok(SupportedFormat::Compressed(
-                                        Compression::Gz,
-                                        self.src.clone(),
-                                    ))
+                                    Ok(SupportedFormat::Compressed(Compression::Gz, actual_src))
                                 } else if known.mime_type().eq(XZ_MIME) {
-                                    Ok(SupportedFormat::Compressed(
-                                        Compression::Xz,
-                                        self.src.clone(),
-                                    ))
+                                    Ok(SupportedFormat::Compressed(Compression::Xz, actual_src))
                                 } else if known.mime_type().eq(ZST_MIME) {
-                                    Ok(SupportedFormat::Compressed(
-                                        Compression::Zst,
-                                        self.src.clone(),
-                                    ))
+                                    Ok(SupportedFormat::Compressed(Compression::Zst, actual_src))
                                 } else {
                                     unreachable!()
                                 }
@@ -216,7 +208,7 @@ impl Vendor for Src {
                     }
                 }
             } else {
-                Ok(SupportedFormat::Dir(self.src.clone()))
+                Ok(SupportedFormat::Dir(actual_src))
             }
         } else {
             error!("Sources cannot be determined!");
