@@ -22,9 +22,10 @@ pub fn targz(outdir: impl AsRef<Path>, srcpath: impl AsRef<Path>) -> Result<(), 
     let enc = GzDecoder::new(src);
     let mut ar = tar::Archive::new(enc);
     ar.unpack(outdir.as_ref())?;
-    info!(
-        "Successfully created Gz decompressed archive for {}",
-        srcpath.as_ref().to_string_lossy()
+    debug!(
+        "Successfully decompressed Gz archive from {} to {}",
+        srcpath.as_ref().to_string_lossy(),
+        outdir.as_ref().to_string_lossy(),
     );
     Ok(())
 }
@@ -36,9 +37,10 @@ pub fn tarzst(outdir: impl AsRef<Path>, srcpath: impl AsRef<Path>) -> Result<(),
     let enc = Decoder::new(src)?;
     let mut ar = tar::Archive::new(enc);
     ar.unpack(outdir.as_ref())?;
-    info!(
-        "Successfully created Zst decompressed archive for {}",
-        srcpath.as_ref().to_string_lossy()
+    debug!(
+        "Successfully decompressed Zst archive from {} to {}",
+        srcpath.as_ref().to_string_lossy(),
+        outdir.as_ref().to_string_lossy(),
     );
     Ok(())
 }
@@ -50,9 +52,10 @@ pub fn tarxz(outdir: impl AsRef<Path>, srcpath: impl AsRef<Path>) -> Result<(), 
     let enc = XzDecoder::new(src);
     let mut ar = tar::Archive::new(enc);
     ar.unpack(outdir.as_ref())?;
-    info!(
-        "Successfully created Xz decompressed archive for {}",
-        srcpath.as_ref().to_string_lossy()
+    debug!(
+        "Successfully decompressed Xz archive from {} to {}",
+        srcpath.as_ref().to_string_lossy(),
+        outdir.as_ref().to_string_lossy(),
     );
     Ok(())
 }

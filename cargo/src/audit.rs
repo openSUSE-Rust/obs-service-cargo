@@ -10,13 +10,17 @@ use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::{fmt, io};
 
 use crate::cli::{decompress, Compression, Opts, Src, Vendor};
-use crate::consts::AUDIT_PATH_PREFIX;
-use crate::consts::EXCLUDED_RUSTSECS;
+use crate::consts::{AUDIT_PATH_PREFIX, EXCLUDED_RUSTSECS, OPENSUSE_CARGO_AUDIT_DB};
 use crate::services::{self, Services};
-use crate::utils::cargo_command;
+
+use rustsec::{
+    advisory::Id, report::Report, report::Settings as ReportSettings, Database,
+    Error as RustsecError, ErrorKind as RustsecErrorKind, Lockfile,
+};
 
 use clap::Parser;
 use glob;
@@ -119,14 +123,14 @@ impl Error for AuditFailed {}
 pub trait Audit {
     fn run_audit(self, audit_opts: &AuditOpts) -> io::Result<()>;
     fn audit_vendored_tar(self) -> io::Result<()>;
-    fn audit_sources(self, audit_opts: &AuditOpts) -> io::Result<()>;
-    fn audit_additional_locks(self, audit_opts: &AuditOpts, workdir: &Path) -> io::Result<()>;
+    // fn audit_sources(self, audit_opts: &AuditOpts) -> io::Result<()>;
+    // fn audit_additional_locks(self, audit_opts: &AuditOpts, workdir: &Path) -> io::Result<()>;
 }
 
 impl Audit for Src {
-    fn run_audit(self, audit_opts: &AuditOpts) -> io::Result<()> {
+    fn run_audit(self, _audit_opts: &AuditOpts) -> io::Result<()> {
         // Should we clone or use Ref? Eh...
-        self.clone().audit_sources(audit_opts)?;
+        // self.clone().audit_sources(audit_opts)?;
         self.clone().audit_vendored_tar()?;
         Ok(())
     }
@@ -212,14 +216,65 @@ impl Audit for Src {
                                 "Expected lockfile as file, yet it's not a file.",
                             ));
                         };
-                        cargo_audit(&newworkdir, &[&lockfile_path])?;
+                        let reports =
+                            perform_cargo_audit(&[&lockfile_path]).map_err(|rustsec_err| {
+                                error!(?rustsec_err, "Unable to complete cargo audit");
+                                io::Error::new(
+                                    io::ErrorKind::Other,
+                                    "Unable to complete cargo audit",
+                                )
+                            })?;
+
+                        debug!(?reports);
+
+                        let mut passed = true;
+
+                        // Now actually analyse the report.
+                        for report in reports {
+                            if report.vulnerabilities.found {
+                                passed = false;
+
+                                if report.vulnerabilities.count == 1 {
+                                    error!("{} vulnerability found.", report.vulnerabilities.count);
+                                } else {
+                                    error!(
+                                        "{} vulnerabilities found.",
+                                        report.vulnerabilities.count
+                                    );
+                                }
+
+                                for vuln in report.vulnerabilities.list {
+                                    let score = vuln
+                                        .advisory
+                                        .cvss
+                                        .map(|base| base.score().value())
+                                        .unwrap_or(0.0);
+                                    let id = vuln.advisory.id;
+                                    let name = vuln.package.name;
+                                    let version = vuln.package.version;
+
+                                    warn!("{id} {name} {version} - cvss {score}");
+                                }
+
+                                warn!("You must action these before submitting this package.");
+                            }
+                        }
+
+                        if passed {
+                            info!("Cargo audit passed! 🎉");
+                            return Ok(());
+                        } else {
+                            return Err(io::Error::new(
+                                io::ErrorKind::Other,
+                                "Vulnerabilities found in vendored dependencies.",
+                            ));
+                        }
                     } else {
                         return Err(io::Error::new(
                             io::ErrorKind::NotFound,
                             "Expected a file. Found directory",
                         ));
                     };
-                    return Ok(());
                 }
                 Err(err) => {
                     error!(?err, "Glob error");
@@ -233,6 +288,7 @@ impl Audit for Src {
         Ok(())
     }
 
+    /*
     fn audit_sources(self, audit_opts: &AuditOpts) -> io::Result<()> {
         info!("Auditing project's root lockfile 🔐");
         let tmpdir = match tempfile::Builder::new()
@@ -295,7 +351,19 @@ impl Audit for Src {
                     "Expected lockfile as file, yet it's not a file.",
                 ));
             } else {
-                cargo_audit(&newworkdir, &[&lockfile_path])?;
+                        let report = perform_cargo_audit(&[&lockfile_path])
+                            .map_err(|rustsec_err| {
+                                error!(?rustsec_err, "Unable to complete cargo audit");
+                                io::Error::new(
+                                    io::ErrorKind::Other,
+                                    "Unable to complete cargo audit",
+                                )
+                            })?;
+
+                        debug!(?report);
+
+                        // Now actually analyse the report.
+                        todo!();
             };
             self.audit_additional_locks(audit_opts, &newworkdir)?;
             Ok(())
@@ -332,6 +400,7 @@ impl Audit for Src {
         }
         Ok(())
     }
+    */
 }
 
 #[allow(dead_code)]
@@ -340,44 +409,31 @@ fn audit_src() {}
 #[allow(dead_code)]
 fn audit_vendor_tarball() {}
 
-pub fn cargo_audit(workdir: &Path, lockfiles: &[&Path]) -> io::Result<()> {
-    let subcommand = "audit";
-    let mut default_options: Vec<String> = Vec::new();
-    let other_options = &[
-        "--json",
-        "-c",
-        "never",
-        "-D",
-        "warnings",
-        "-n",
-        "-d",
-        "/usr/share/cargo-audit-advisory-db",
-    ];
-    for advisory in EXCLUDED_RUSTSECS.iter() {
-        let ignore: String = "--ignore".into();
-        default_options.push(ignore);
-        default_options.push(advisory.to_string());
-    }
-    default_options.append(&mut other_options.iter().map(|s| s.to_string()).collect());
-    default_options.push("-f".to_string());
-    for lockfile in lockfiles {
-        default_options.push(lockfile.to_string_lossy().to_string());
-        match cargo_command(subcommand, &default_options, workdir) {
-            Ok(ay) => {
-                info!("{}", ay);
-            }
-            Err(err) => {
-                error!(?err);
-                return Err(io::Error::new(
-                    io::ErrorKind::Interrupted,
-                    "Got execution error. Failed to run command for audit",
-                ));
-            }
-        }
-        default_options.pop();
-    }
+pub fn perform_cargo_audit(lockfiles: &[&Path]) -> Result<Vec<Report>, RustsecError> {
+    // Setup our exclusions.
+    let ignore = EXCLUDED_RUSTSECS
+        .iter()
+        .map(|id_str| Id::from_str(*id_str))
+        .collect::<Result<Vec<_>, _>>()?;
 
-    Ok(())
+    let db_path: PathBuf = OPENSUSE_CARGO_AUDIT_DB.into();
+    let database = Database::open(db_path.as_path())?;
+    let report_settings = ReportSettings {
+        ignore,
+        ..Default::default()
+    };
+
+    lockfiles
+        .iter()
+        .map(|lockfile_path| {
+            Lockfile::load(lockfile_path)
+                .map(|lockfile| Report::generate(&database, &lockfile, &report_settings))
+                .map_err(|cargo_lock_err| {
+                    error!(?cargo_lock_err);
+                    RustsecError::new(RustsecErrorKind::BadParam, &cargo_lock_err)
+                })
+        })
+        .collect()
 }
 
 fn process_service_file(p: &Path) -> io::Result<services::Services> {

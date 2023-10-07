@@ -32,3 +32,5 @@ pub const EXCLUDED_RUSTSECS: &[&str] = &[
     "RUSTSEC-2020-0071",
     "RUSTSEC-2020-0159",
 ];
+
+pub const OPENSUSE_CARGO_AUDIT_DB: &str = "/usr/share/cargo-audit-advisory-db";
