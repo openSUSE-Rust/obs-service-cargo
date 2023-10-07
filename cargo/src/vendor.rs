@@ -169,7 +169,7 @@ pub fn has_dependencies(src: &Path) -> io::Result<bool> {
 }
 
 pub fn cargotomls(opts: impl AsRef<Opts>, prjdir: impl AsRef<Path>) -> io::Result<()> {
-    info!("Vendoring separate crate!");
+    info!("Vendoring additional manifest!");
     let cargotomls = &opts.as_ref().cargotoml.to_owned();
     trace!(?cargotomls);
     let prjdir = prjdir.as_ref().to_path_buf();
@@ -185,9 +185,12 @@ pub fn cargotomls(opts: impl AsRef<Opts>, prjdir: impl AsRef<Path>) -> io::Resul
         if pathtomanifest.exists() {
             if let Ok(isworkspace) = is_workspace(&pathtomanifest) {
                 if isworkspace {
-                    info!(?pathtomanifest, "Subcrate uses a workspace!");
+                    info!(?pathtomanifest, "Additional manifest uses a workspace!");
                 } else {
-                    info!(?pathtomanifest, "Subcrate does not use a workspace!");
+                    info!(
+                        ?pathtomanifest,
+                        "Additional manifest does not use a workspace!"
+                    );
                 };
                 let prefix = format!("{}.vendor", cratename.to_string_lossy());
                 let subprjdir = pathtomanifest
