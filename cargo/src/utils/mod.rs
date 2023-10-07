@@ -142,37 +142,43 @@ pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
     }
 }
 
-pub fn cargo_command(
+pub fn cargo_command<S: AsRef<str>>(
     subcommand: &str,
-    options: &[&str],
+    options: &[S],
     curdir: impl AsRef<Path>,
+    // TODO ExecutionError should also have error output as String :)
 ) -> Result<String, ExecutionError> {
     let cmd = std::process::Command::new("cargo")
         .arg(subcommand)
-        .args(options)
+        .args(options.iter().map(|s| s.as_ref()))
         .current_dir(curdir.as_ref())
         .output()
         .map_err(|e| {
             error!(err = ?e, "Unable to build cargo command");
             ExecutionError {
                 command: format!("cargo {}", subcommand),
-                exit_code: None,
+                exit_code: Some(-1),
+                stdoutput: "".to_string(),
             }
         })?;
     trace!(?cmd);
     let stdoutput = String::from_utf8_lossy(&cmd.stdout).to_string();
     if !cmd.status.success() {
+        error!("{}", stdoutput);
         return Err(ExecutionError {
             command: format!("cargo {}", subcommand),
             exit_code: cmd.status.code(),
+            stdoutput,
         });
     };
+    info!("{}", stdoutput);
     Ok(stdoutput)
 }
 
 pub struct ExecutionError {
     pub command: String,
     pub exit_code: Option<i32>,
+    pub stdoutput: String,
 }
 
 impl Debug for ExecutionError {
@@ -190,9 +196,10 @@ impl Debug for ExecutionError {
 impl Display for ExecutionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg = format!(
-            "Failed to run command `{}`. Has exit code `{}`",
+            "Failed to run command `{}`. Has exit code `{}`. Standard Output Error: {}",
             self.command,
-            self.exit_code.unwrap_or(-1)
+            self.exit_code.unwrap_or(-1),
+            self.stdoutput
         );
 
         write!(f, "{}", msg)

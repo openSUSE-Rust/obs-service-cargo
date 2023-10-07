@@ -70,7 +70,7 @@ impl AsRef<Opts> for Opts {
     }
 }
 
-#[derive(ValueEnum, Default, Debug, Clone)]
+#[derive(ValueEnum, Default, Debug, Clone, Copy)]
 pub enum Compression {
     Gz,
     Xz,
@@ -128,13 +128,33 @@ pub struct Src {
         visible_aliases = ["srctar", "srcdir"],
         help = "Where to find sources. Source is either a directory or a source tarball AND cannot be both."
     )]
-    src: PathBuf,
+    pub src: PathBuf,
 }
 
 impl Src {
-    #[allow(dead_code)]
-    fn new(p: PathBuf) -> Self {
-        Self { src: p }
+    pub fn new(p: &Path) -> Self {
+        Self { src: p.into() }
+    }
+}
+
+impl Opts {
+    pub fn new(
+        src: &Path,
+        compression: Compression,
+        tag: &str,
+        cargotoml: Vec<PathBuf>,
+        update: bool,
+        outdir: &Path,
+    ) -> Self {
+        Self {
+            src: Src::new(src),
+            compression,
+            tag: Some(tag.to_string()),
+            cargotoml,
+            update,
+            outdir: outdir.into(),
+            color: clap::ColorChoice::Auto,
+        }
     }
 }
 
