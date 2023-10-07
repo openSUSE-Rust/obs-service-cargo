@@ -104,7 +104,10 @@ pub fn process_src(args: &Opts, prjdir: &Path, target_file: &OsStr) -> io::Resul
 
 pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
     let glob_iter = match glob(&src.as_os_str().to_string_lossy()) {
-        Ok(gi) => gi,
+        Ok(gi) => {
+            trace!(?gi);
+            gi
+        }
         Err(e) => {
             error!(err = ?e, "Invalid srctar glob input");
             return Err(io::Error::new(
@@ -118,23 +121,26 @@ pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
 
     let matched_entry = match globs.len() {
         0 => {
-            error!("No files matched srctar glob input");
+            error!("No files/directories matched src glob input");
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                "No files matched srctar glob input",
+                "No files/directories matched src glob input",
             ));
         }
         1 => globs.remove(0),
         _ => {
-            error!("Multiple files matched srctar glob input");
+            error!("Multiple files/directories matched src glob input");
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                "Multiple files matched srctar glob input",
+                "Multiple files/directories matched src glob input",
             ));
         }
     };
     match matched_entry {
-        Ok(entry) => Ok(entry),
+        Ok(entry) => {
+            debug!(?entry, "Found match");
+            Ok(entry)
+        }
         Err(e) => {
             error!(?e, "Got glob error");
             Err(io::Error::new(io::ErrorKind::InvalidInput, "Glob error"))
