@@ -413,7 +413,7 @@ pub fn perform_cargo_audit(lockfiles: &[&Path]) -> Result<Vec<Report>, RustsecEr
     // Setup our exclusions.
     let ignore = EXCLUDED_RUSTSECS
         .iter()
-        .map(|id_str| Id::from_str(*id_str))
+        .map(|id_str| Id::from_str(id_str))
         .collect::<Result<Vec<_>, _>>()?;
 
     let db_path: PathBuf = OPENSUSE_CARGO_AUDIT_DB.into();
