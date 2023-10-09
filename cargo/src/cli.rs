@@ -238,29 +238,78 @@ impl Vendor for Src {
         info!(?workdir, "Created working directory");
 
         // Return workdir here?
-        let newworkdir = match self.is_supported() {
-            Ok(format) => match format {
-                SupportedFormat::Compressed(compression_type, srcpath) => {
-                    match decompress(&compression_type, &workdir, &srcpath) {
+        let newworkdir: PathBuf = match self.is_supported() {
+            Ok(format) => {
+                match format {
+                    SupportedFormat::Compressed(compression_type, srcpath) => {
+                        match decompress(&compression_type, &workdir, &srcpath) {
+                            Ok(_) => {
+                                let dirs: Vec<Result<std::fs::DirEntry, std::io::Error>> =
+                                    std::fs::read_dir(&workdir)
+                                        .map_err(|err| {
+                                            error!(?err, "Failed to read directory");
+                                            VendorFailed {
+                                                error: "Failed to read directory".to_string(),
+                                                boxy: err.into(),
+                                            }
+                                        })?
+                                        .collect();
+                                trace!(?dirs, "List of files and directories of the workdir");
+                                // If length is one, this means that the project has
+                                // a top-level folder
+                                if dirs.len() != 1 {
+                                    workdir
+                                } else {
+                                    match dirs.into_iter().last() {
+                                        Some(p) => match p {
+                                            Ok(dir) => {
+                                                if dir.path().is_dir() {
+                                                    dir.path()
+                                                } else {
+                                                    error!(?dir, "Tarball was extracted but got a file and not a possible top-level directory.");
+                                                    return Err(
+                                                        VendorFailed {
+                                                            error: "Tarball was extracted but got a file and not a possible top-level directory.".to_string(),
+                                                            boxy: io::Error::new(io::ErrorKind::InvalidData, "Expected a directory, got a file").into()
+                                                        }
+                                                    );
+                                                }
+                                            }
+                                            Err(err) => {
+                                                error!(?err, "Failed to read directory entry");
+                                                return Err(VendorFailed {
+                                                    error: "Failed to read directory entry"
+                                                        .to_string(),
+                                                    boxy: err.into(),
+                                                });
+                                            }
+                                        },
+                                        None => {
+                                            error!("This should be unreachable here");
+                                            unreachable!();
+                                        }
+                                    }
+                                }
+                            }
+                            Err(err) => {
+                                return Err(VendorFailed {
+                                    error: "Failed to decompress source".to_string(),
+                                    boxy: err.into(),
+                                });
+                            }
+                        }
+                    }
+                    SupportedFormat::Dir(srcpath) => match utils::copy_dir_all(srcpath, &workdir) {
                         Ok(_) => workdir,
                         Err(err) => {
                             return Err(VendorFailed {
-                                error: "Failed to decompress source".to_string(),
+                                error: "Failed to copy source path".to_string(),
                                 boxy: err.into(),
-                            });
+                            })
                         }
-                    }
+                    },
                 }
-                SupportedFormat::Dir(srcpath) => match utils::copy_dir_all(srcpath, &workdir) {
-                    Ok(_) => workdir,
-                    Err(err) => {
-                        return Err(VendorFailed {
-                            error: "Failed to copy source path".to_string(),
-                            boxy: err.into(),
-                        })
-                    }
-                },
-            },
+            }
             Err(err) => {
                 error!(?err);
                 return Err(VendorFailed {
