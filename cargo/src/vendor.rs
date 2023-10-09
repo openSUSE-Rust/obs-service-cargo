@@ -62,15 +62,16 @@ pub fn vendor(
         warn!("Disabled update of dependencies. You may reenable it for security updates.");
     };
 
-    let mut vendor_options: Vec<&str> = vec!["-vv", "--manifest-path"];
+    let mut vendor_options: Vec<&str> = vec!["--platform=*-unknown-linux-gnu", "--manifest-path"];
     let vendor_manifest_path =
         unsafe { std::str::from_utf8_unchecked(manifest_path.as_os_str().as_bytes()) };
     vendor_options.push(vendor_manifest_path);
     debug!(?vendor_options);
-    let cargo_vendor_output = cargo_command("vendor", &vendor_options, &prjdir).map_err(|e| {
-        error!(err = %e);
-        io::Error::new(io::ErrorKind::Other, "Unable to execute cargo")
-    })?;
+    let cargo_vendor_output =
+        cargo_command("vendor-filterer", &vendor_options, &prjdir).map_err(|e| {
+            error!(err = %e);
+            io::Error::new(io::ErrorKind::Other, "Unable to execute cargo")
+        })?;
     debug!(?outdir);
     let mut cargo_config_outdir = fs::File::create(outdir.join(cargo_config))?;
     cargo_config_outdir.write_all(cargo_vendor_output.as_bytes())?;
