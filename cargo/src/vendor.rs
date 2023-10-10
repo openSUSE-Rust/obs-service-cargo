@@ -71,18 +71,26 @@ pub fn vendor(
         warn!("Disabled update of dependencies. You may reenable it for security updates.");
     };
 
-    let mut platform_str = String::new();
+    let mut vendor_options: Vec<&str> = Vec::new();
+    // Only use linux-gnu :P since openSUSE does not use MUSL
     if opts.as_ref().filter {
-        // Only use linux-gnu :P
         info!("Filter set to true. Only vendoring crates for platforms *-unknown-linux-gnu");
-        platform_str.push_str("--platform=*-unknown-linux-gnu");
+        vendor_options.push("--platform=*-unknown-linux-gnu");
     } else {
-        // All wildcard *
         warn!("Filter set to false. Expect large vendored tar balls");
-        platform_str.push_str("--platform=*");
+        vendor_options.push("--platform=*-unknown-linux-gnu");
+        vendor_options.push("--platform=*-pc-windows-*");
+        vendor_options.push("--platform=*-apple-darwin-*");
     };
 
-    let mut vendor_options: Vec<&str> = vec![&platform_str, "--manifest-path"];
+    // We only support tier 1 and tier 2 archs
+    vendor_options.push("--tier=2");
+
+    // What is this for?
+    // vendor_options.push("--all-features=false");
+
+    // Finally we set manifest path option without the path
+    vendor_options.push("--manifest-path");
     let vendor_manifest_path =
         unsafe { std::str::from_utf8_unchecked(manifest_path.as_os_str().as_bytes()) };
     vendor_options.push(vendor_manifest_path);
