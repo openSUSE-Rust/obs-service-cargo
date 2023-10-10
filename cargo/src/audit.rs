@@ -83,6 +83,10 @@ pub struct AuditOpts {
         help = "Whether WHEN to color output or not"
     )]
     pub color: clap::ColorChoice,
+
+    // These are hidden "no-op" entries to maintain compat with the former python code.
+    #[arg(long, hide = true)]
+    pub srcdir: Option<String>,
 }
 
 #[derive(Debug)]
@@ -110,6 +114,7 @@ impl AuditOpts {
             lockfile: lockfiles,
             outdir,
             color,
+            srcdir: None,
         }
     }
 
@@ -247,13 +252,19 @@ impl Audit for Src {
                                     let score = vuln
                                         .advisory
                                         .cvss
-                                        .map(|base| base.score().value())
-                                        .unwrap_or(0.0);
+                                        .map(|base| base.score().value().to_string())
+                                        .unwrap_or_else(|| "unset".to_string());
                                     let id = vuln.advisory.id;
                                     let name = vuln.package.name;
                                     let version = vuln.package.version;
 
-                                    warn!("{id} {name} {version} - cvss {score}");
+                                    let mut category = String::new();
+                                    for cat in vuln.advisory.categories.iter() {
+                                        category.push_str(&cat.to_string());
+                                        category.push_str(" ");
+                                    }
+
+                                    warn!("{id} {name} {version} - categories {category}- cvss {score}");
                                 }
 
                                 warn!("You must action these before submitting this package.");

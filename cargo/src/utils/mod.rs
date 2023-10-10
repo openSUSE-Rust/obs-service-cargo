@@ -117,35 +117,44 @@ pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
         }
     };
 
-    let mut globs = glob_iter.into_iter().collect::<Vec<_>>();
+    let mut globs = glob_iter
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| {
+            error!(?e, "glob error");
+            io::Error::new(io::ErrorKind::InvalidInput, "Glob error")
+        })?;
 
-    let matched_entry = match globs.len() {
-        0 => {
-            error!("No files/directories matched src glob input");
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "No files/directories matched src glob input",
-            ));
-        }
-        1 => globs.remove(0),
-        _ => {
-            error!("Multiple files/directories matched src glob input");
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Multiple files/directories matched src glob input",
-            ));
-        }
-    };
-    match matched_entry {
-        Ok(entry) => {
-            debug!(?entry, "Found match");
-            Ok(entry)
-        }
-        Err(e) => {
-            error!(?e, "Got glob error");
-            Err(io::Error::new(io::ErrorKind::InvalidInput, "Glob error"))
+    // There can legitimately be multiple matching files. Generally this happens with
+    // tar_scm where you have name-v1.tar and the service reruns and creates
+    // name-v2.tar. In this case, we would error if we demand a single match, when what
+    // we really need is to take the *latest*. Thankfully for us, versions in rpm
+    // tar names tend to sort lexicographically, so we can just sort this list and
+    // the last element is the newest. (ie v2 sorts after v1).
+
+    globs.sort_unstable();
+
+    if globs.len() > 1 {
+        warn!("Multiple files matched glob");
+        for item in &globs {
+            warn!("{}", item.display());
         }
     }
+
+    // Take the last item.
+    globs
+        .pop()
+        .map(|item| {
+            info!("Using {}", item.display());
+            item
+        })
+        .ok_or_else(|| {
+            error!("No files/directories matched src glob input");
+            io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "No files/directories matched src glob input",
+            )
+        })
 }
 
 pub fn cargo_command<S: AsRef<str>>(
