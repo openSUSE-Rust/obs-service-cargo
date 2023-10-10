@@ -74,9 +74,11 @@ pub fn vendor(
     let mut platform_str = String::new();
     if opts.as_ref().filter {
         // Only use linux-gnu :P
+        info!("Filter set to true. Only vendoring crates for platforms *-unknown-linux-gnu");
         platform_str.push_str("--platform=*-unknown-linux-gnu");
     } else {
         // All wildcard *
+        warn!("Filter set to false. Expect large vendored tar balls");
         platform_str.push_str("--platform=*");
     };
 
