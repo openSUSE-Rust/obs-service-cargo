@@ -55,9 +55,18 @@ pub fn vendor(
         update_options.push(update_manifest_path);
         cargo_command("update", &update_options, &prjdir).map_err(|e| {
             error!(err = %e);
-            io::Error::new(io::ErrorKind::Other, "Unable to execute cargo")
+            io::Error::new(io::ErrorKind::Other, "Unable to execute cargo update")
         })?;
         info!("Successfully ran cargo update ❤️");
+        // Ensure lockfile is properly re-generated too
+        cargo_command("generate-lockfile", &update_options, &prjdir).map_err(|e| {
+            error!(err = %e);
+            io::Error::new(
+                io::ErrorKind::Other,
+                "Unable to execute cargo generate-lockfile",
+            )
+        })?;
+        info!("Successfully ran cargo generate-lockfile ❤️🔐");
     } else {
         warn!("Disabled update of dependencies. You may reenable it for security updates.");
     };
