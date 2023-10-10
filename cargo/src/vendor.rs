@@ -72,19 +72,21 @@ pub fn vendor(
     };
 
     let mut vendor_options: Vec<&str> = Vec::new();
+    let mut subcommand: String = String::new();
+
     // Only use linux-gnu :P since openSUSE does not use MUSL
     if opts.as_ref().filter {
         info!("Filter set to true. Only vendoring crates for platforms *-unknown-linux-gnu");
         vendor_options.push("--platform=*-unknown-linux-gnu");
+        // We only support tier 1 and tier 2 archs
+        vendor_options.push("--tier=2");
+        subcommand.push_str("vendor-filterer");
     } else {
         warn!("Filter set to false. Expect large vendored tar balls");
-        vendor_options.push("--platform=*-unknown-linux-gnu");
-        vendor_options.push("--platform=*-pc-windows-*");
-        vendor_options.push("--platform=*-apple-darwin-*");
+        // Fallback to vendor
+        // Wildcard stuff does not work correctly *if multiple platforms*
+        subcommand.push_str("vendor");
     };
-
-    // We only support tier 1 and tier 2 archs
-    vendor_options.push("--tier=2");
 
     // What is this for?
     // vendor_options.push("--all-features=false");
@@ -94,9 +96,11 @@ pub fn vendor(
     let vendor_manifest_path =
         unsafe { std::str::from_utf8_unchecked(manifest_path.as_os_str().as_bytes()) };
     vendor_options.push(vendor_manifest_path);
+    debug!(?subcommand);
     debug!(?vendor_options);
+    debug!(?prjdir);
     let cargo_vendor_output =
-        cargo_command("vendor-filterer", &vendor_options, &prjdir).map_err(|e| {
+        cargo_command(&subcommand, &vendor_options, &prjdir).map_err(|e| {
             error!(err = %e);
             io::Error::new(io::ErrorKind::Other, "Unable to execute cargo")
         })?;
