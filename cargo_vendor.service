@@ -31,4 +31,9 @@
   <parameter name="cargotoml">
     <description>Specify a Cargo.toml to use. Can be specified multiple times. Default will autodetect.</description>
   </parameter>
+  <parameter name="filter">
+    <description>Specify if we want to filter or not. Default: True</description>
+    <allowedvalue>false</allowedvalue>
+    <allowedvalue>true</allowedvalue>
+  </parameter>
 </service>
