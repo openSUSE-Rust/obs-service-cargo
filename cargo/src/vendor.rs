@@ -71,7 +71,16 @@ pub fn vendor(
         warn!("Disabled update of dependencies. You may reenable it for security updates.");
     };
 
-    let mut vendor_options: Vec<&str> = vec!["--platform=*-unknown-linux-gnu", "--manifest-path"];
+    let mut platform_str = String::new();
+    if opts.as_ref().filter {
+        // Only use linux-gnu :P
+        platform_str.push_str("--platform=*-unknown-linux-gnu");
+    } else {
+        // All wildcard *
+        platform_str.push_str("--platform=*");
+    };
+
+    let mut vendor_options: Vec<&str> = vec![&platform_str, "--manifest-path"];
     let vendor_manifest_path =
         unsafe { std::str::from_utf8_unchecked(manifest_path.as_os_str().as_bytes()) };
     vendor_options.push(vendor_manifest_path);

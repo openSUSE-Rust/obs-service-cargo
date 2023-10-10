@@ -51,6 +51,8 @@ pub struct Opts {
     pub cargotoml: Vec<PathBuf>,
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Update dependencies or not")]
     pub update: bool,
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Filter dependencies that are for GNU/Linux platform.")]
+    pub filter: bool,
     #[arg(long, help = "Where to output vendor.tar* and cargo_config")]
     pub outdir: PathBuf,
     #[arg(
@@ -144,6 +146,7 @@ impl Opts {
         tag: &str,
         cargotoml: Vec<PathBuf>,
         update: bool,
+        filter: bool,
         outdir: &Path,
     ) -> Self {
         Self {
@@ -152,6 +155,7 @@ impl Opts {
             tag: Some(tag.to_string()),
             cargotoml,
             update,
+            filter,
             outdir: outdir.into(),
             color: clap::ColorChoice::Auto,
         }

@@ -471,6 +471,7 @@ pub fn make_opts(p: &Path) -> io::Result<Vec<Opts>> {
                         let mut comp = Compression::Zst;
                         let mut cargotomls = Vec::new();
                         let mut update = true;
+                        let filter = true;
                         let outdir_ = std::env::current_dir()?;
                         for pa in part {
                             if let (Some(pname), Some(txt)) = (&pa.name, &pa.text) {
@@ -501,6 +502,7 @@ pub fn make_opts(p: &Path) -> io::Result<Vec<Opts>> {
                                     "",
                                     cargotomls.clone(),
                                     update,
+                                    filter,
                                     &outdir_,
                                 ));
                                 break;
