@@ -143,30 +143,6 @@ impl Src {
     }
 }
 
-impl Opts {
-    pub fn new(
-        _src: &Path,
-        _compression: Compression,
-        _tag: &str,
-        _cargotoml: Vec<PathBuf>,
-        _update: bool,
-        _outdir: &Path,
-    ) -> Self {
-        /*
-        Self {
-            src: Src::new(src),
-            compression,
-            tag: Some(tag.to_string()),
-            cargotoml,
-            update,
-            outdir: outdir.into(),
-            color: clap::ColorChoice::Auto,
-        }
-        */
-        todo!();
-    }
-}
-
 pub trait Vendor {
     fn is_supported(&self) -> Result<SupportedFormat, UnsupportedFormat>;
     fn run_vendor(&self, opts: &Opts) -> Result<(), VendorFailed>;
