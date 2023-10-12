@@ -15,7 +15,7 @@ resolver = "2"
 version = "0.8.0"
 description = "OBS Source Service and utilities for Rust software packaging."
 authors = [
-  "Soc Virnyl Estela <socvirnyl.estela@gmail.com>",
+  "Soc Virnyl Estela <socvirnyl.estela@uncomfyhalomacro.pl>",
   "William Brown <william@blackhats.net.au>",
 ]
 edition = "2021"
