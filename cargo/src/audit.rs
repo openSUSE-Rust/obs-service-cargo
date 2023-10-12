@@ -47,7 +47,7 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
                 let mut category = String::new();
                 for cat in vuln.advisory.categories.iter() {
                     category.push_str(&cat.to_string());
-                    category.push_str(" ");
+                    category.push(' ');
                 }
 
                 warn!("- {id} {name} {version} - categories {category}- cvss {score}");
@@ -59,12 +59,12 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
 
     if passed {
         info!("🎉 Cargo audit passed!");
-        return Ok(());
+        Ok(())
     } else {
-        return Err(io::Error::new(
+        Err(io::Error::new(
             io::ErrorKind::Other,
             "Vulnerabilities found in vendored dependencies.",
-        ));
+        ))
     }
 }
 
@@ -75,13 +75,13 @@ pub fn perform_cargo_audit(
     // Setup our exclusions.
     let ignore = EXCLUDED_RUSTSECS
         .iter()
-        .map(|s| *s)
+        .copied()
         .chain(exclude_ids.iter().map(|as_str| {
             let s = as_str.as_ref();
             info!("⚠️  Accepted risk - {}", s);
             s
         }))
-        .map(|id_str| Id::from_str(id_str))
+        .map(Id::from_str)
         .collect::<Result<Vec<_>, _>>()?;
 
     let db_path: PathBuf = OPENSUSE_CARGO_AUDIT_DB.into();
