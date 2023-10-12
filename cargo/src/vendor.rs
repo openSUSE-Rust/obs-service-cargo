@@ -9,12 +9,14 @@
 use std::fs;
 use std::io::{self, Write};
 use std::os::unix::prelude::OsStrExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::cli::{Compression, Opts};
 use crate::utils::cargo_command;
 use crate::utils::compress;
 use crate::vendor;
+
+use crate::audit::{perform_cargo_audit, process_reports};
 
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
@@ -24,18 +26,28 @@ pub fn vendor(
     prjdir: impl AsRef<Path>,
     vendorname: Option<&str>,
 ) -> io::Result<()> {
+    // Setup
+
     let mut prjdir = prjdir.as_ref().to_path_buf();
     debug!(?prjdir);
+
     // Hack. This is to use the `current_dir` parameter of `std::process`.
     let mut manifest_path = prjdir.clone();
     manifest_path.push("Cargo.toml");
-    info!(?manifest_path);
+    debug!(?manifest_path);
+
+    let mut cargo_lock_path = prjdir.clone();
+    cargo_lock_path.push("Cargo.lock");
+    debug!(?cargo_lock_path);
+
     let update = &opts.as_ref().update;
     let mut outdir = opts.as_ref().outdir.to_owned();
+
     let fullfilename = vendorname.unwrap_or("vendor");
     let fullfilename = Path::new(fullfilename)
         .file_name()
         .unwrap_or(Path::new(fullfilename).as_os_str());
+
     let mut cargo_config = String::new();
     if fullfilename.to_string_lossy() == "vendor" {
         cargo_config.push_str("cargo_config");
@@ -47,8 +59,10 @@ pub fn vendor(
         .file_name()
         .unwrap_or(Path::new(&cargo_config).as_os_str());
 
+    // Update dependencies.
+
     if *update {
-        info!("Updating dependencies before vendor");
+        info!("⏫ Updating dependencies before vendor");
         let mut update_options: Vec<&str> = vec!["-vv", "--manifest-path"];
         let update_manifest_path =
             unsafe { std::str::from_utf8_unchecked(manifest_path.as_os_str().as_bytes()) };
@@ -57,10 +71,28 @@ pub fn vendor(
             error!(err = %e);
             io::Error::new(io::ErrorKind::Other, "Unable to execute cargo")
         })?;
-        info!("Successfully ran cargo update ❤️");
+        info!("⏫ Successfully ran cargo update");
     } else {
-        warn!("Disabled update of dependencies. You may reenable it for security updates.");
+        warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
     };
+
+    // Now that we have updated, we can run the Cargo-audit. we do this now to save bandwidth
+    // and time if there are security issues that would otherwise be allowed.
+
+    let cargolocks = vec![cargo_lock_path];
+
+    let reports = perform_cargo_audit(&cargolocks, &opts.as_ref().i_accept_the_risk).map_err(
+        |rustsec_err| {
+            error!(?rustsec_err, "Unable to complete cargo audit");
+            io::Error::new(io::ErrorKind::Other, "Unable to complete cargo audit")
+        },
+    )?;
+
+    debug!(?reports);
+
+    process_reports(reports)?;
+
+    // Run the vendor
 
     let mut vendor_options: Vec<&str> = vec!["-vv", "--manifest-path"];
     let vendor_manifest_path =
@@ -74,7 +106,7 @@ pub fn vendor(
     debug!(?outdir);
     let mut cargo_config_outdir = fs::File::create(outdir.join(cargo_config))?;
     cargo_config_outdir.write_all(cargo_vendor_output.as_bytes())?;
-    info!("Proceeding to create compressed archive of vendored deps...");
+    info!("📦 Archiving vendored dependencies...");
     prjdir.push("vendor/");
     let compression: &Compression = &opts.as_ref().compression;
     debug!("Compression is of {}", &compression);
@@ -91,46 +123,49 @@ pub fn vendor(
     // NOTE: 2. Members of that workspace cannot generate their own lockfiles.
     // NOTE: 3. If they are not members, we slap that file into their own compressed vendored
     //          tarball
-    let cargolock: Vec<&str> = vec!["../Cargo.lock"];
+
+    let cargolocks: Vec<PathBuf> = vec!["../Cargo.lock".into()];
+
     match compression {
         Compression::Gz => {
             let fullfilename_with_ext = format!("{}.tar.gz", fullfilename.to_string_lossy());
             outdir.push(&fullfilename_with_ext);
             if outdir.exists() {
                 warn!(
-                    ?outdir,
-                    "Compressed tarball for vendor exists AND will be replaced. Please manually check sources 🔦"
+                    replacing = ?outdir,
+                    "🔦 Compressed tarball for vendor exists AND will be replaced."
                 );
             }
             debug!("Compressed to {}", outdir.to_string_lossy());
-            compress::targz("vendor", outdir, &prjdir, &cargolock)?
+            compress::targz("vendor", outdir, &prjdir, &cargolocks)?
         }
         Compression::Xz => {
             let fullfilename_with_ext = format!("{}.tar.xz", fullfilename.to_string_lossy());
             outdir.push(&fullfilename_with_ext);
             if outdir.exists() {
                 warn!(
-                    ?outdir,
-                    "Compressed tarball for vendor exists AND will be replaced. Please manually check sources 🔦"
+                    replacing = ?outdir,
+                    "🔦 Compressed tarball for vendor exists AND will be replaced."
                 );
             }
             debug!("Compressed to {}", outdir.to_string_lossy());
-            compress::tarxz("vendor", outdir, &prjdir, &cargolock)?
+            compress::tarxz("vendor", outdir, &prjdir, &cargolocks)?
         }
         Compression::Zst => {
             let fullfilename_with_ext = format!("{}.tar.zst", fullfilename.to_string_lossy());
             outdir.push(&fullfilename_with_ext);
             if outdir.exists() {
                 warn!(
-                    ?outdir,
-                    "Compressed tarball for vendor exists AND will be replaced. Please manually check sources 🔦"
+                    replacing = ?outdir,
+                    "🔦 Compressed tarball for vendor exists AND will be replaced."
                 );
             }
             debug!("Compressed to {}", outdir.to_string_lossy());
-            compress::tarzst("vendor", outdir, &prjdir, &cargolock)?
+            compress::tarzst("vendor", outdir, &prjdir, &cargolocks)?
         }
     };
-    info!("Finished creating {} compressed tarball", compression);
+    debug!("Finished creating {} compressed tarball", compression);
+
     Ok(())
 }
 

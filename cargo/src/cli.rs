@@ -61,6 +61,12 @@ pub struct Opts {
         help = "Whether WHEN to color output or not"
     )]
     pub color: clap::ColorChoice,
+
+    #[arg(
+        long,
+        help = "A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it."
+    )]
+    pub i_accept_the_risk: Vec<String>,
 }
 
 impl AsRef<Opts> for Opts {
@@ -139,13 +145,14 @@ impl Src {
 
 impl Opts {
     pub fn new(
-        src: &Path,
-        compression: Compression,
-        tag: &str,
-        cargotoml: Vec<PathBuf>,
-        update: bool,
-        outdir: &Path,
+        _src: &Path,
+        _compression: Compression,
+        _tag: &str,
+        _cargotoml: Vec<PathBuf>,
+        _update: bool,
+        _outdir: &Path,
     ) -> Self {
+        /*
         Self {
             src: Src::new(src),
             compression,
@@ -155,6 +162,8 @@ impl Opts {
             outdir: outdir.into(),
             color: clap::ColorChoice::Auto,
         }
+        */
+        todo!();
     }
 }
 
@@ -235,7 +244,7 @@ impl Vendor for Src {
         };
 
         let workdir: PathBuf = tmpdir.path().into();
-        info!(?workdir, "Created working directory");
+        debug!(?workdir, "Created working directory");
 
         // Return workdir here?
         let newworkdir: PathBuf = match self.is_supported() {
@@ -319,13 +328,12 @@ impl Vendor for Src {
             }
         };
 
-        info!(?newworkdir, "Workdir updated!");
+        debug!(?newworkdir, "Workdir updated!");
 
         let target_file = OsStr::new("Cargo.toml");
-        info!("Running cargo vendor");
         match utils::process_src(opts, &newworkdir, target_file) {
             Ok(_) => {
-                info!("Successfull ran OBS Service Cargo Vendor 🥳");
+                info!("🥳 ✨ Successfull ran OBS Service Cargo Vendor ✨");
             }
             Err(err) => {
                 error!(?err);
