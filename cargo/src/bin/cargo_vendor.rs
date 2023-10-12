@@ -59,29 +59,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let filter_layer = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
-    tracing_subscriber::fmt()
+    let builder = tracing_subscriber::fmt()
         .with_level(true)
         .with_ansi(to_color)
-        .with_file(true)
-        .with_line_number(true)
         .with_env_filter(filter_layer)
-        .with_level(true)
-        // Somehow pretty actually looks dank nasty
-        // .pretty()
-        .init();
+        .with_level(true);
+
+    let builder = if cfg!(debug_assertions) {
+        builder.with_file(true).with_line_number(true)
+    } else {
+        builder
+    };
+
+    builder.init();
 
     info!("🎢 Starting OBS Service Cargo Vendor.");
     debug!(?args);
 
-    match args.src.is_supported() {
-        Ok(ay) => {
-            info!(?ay, "Source is supported");
-        }
-        Err(err) => {
-            error!("{}", err);
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, err).into());
-        }
-    };
     match args.src.run_vendor(&args) {
         Ok(_) => Ok(()),
         Err(err) => {

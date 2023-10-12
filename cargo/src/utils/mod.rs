@@ -61,45 +61,49 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: &Path) -> Result<(), io::Error> 
 }
 pub fn process_src(args: &Opts, prjdir: &Path, target_file: &OsStr) -> io::Result<()> {
     let pathtomanifest = prjdir.join(target_file);
-    debug!(?pathtomanifest);
-    if pathtomanifest.exists() {
+
+    if !args.cargotoml.is_empty() {
+        info!(?args.cargotoml, "Found crates to vendor!");
+        // I think i can just reuse process src instead of invoking this?
+        vendor::cargotomls(args, prjdir)
+    } else if pathtomanifest.exists() {
         if let Ok(isworkspace) = vendor::is_workspace(&pathtomanifest) {
+            debug!(?pathtomanifest);
             if isworkspace {
-                info!(?pathtomanifest, "Project uses a workspace!");
+                info!("📚 Project uses a workspace!");
             } else {
-                info!(?pathtomanifest, "Project does not use a workspace!");
+                info!("📗 Project does not use a workspace!");
             };
 
             match vendor::has_dependencies(&pathtomanifest) {
                 Ok(hasdeps) => {
                     if hasdeps && isworkspace {
-                        info!("Workspace has dependencies!");
+                        debug!("Workspace has dependencies!");
                         vendor(args, prjdir, None)?;
                     } else if hasdeps && !isworkspace {
-                        info!("Non-workspace manifest has dependencies!");
+                        debug!("Non-workspace manifest has dependencies!");
                         vendor(args, prjdir, None)?;
                     } else if !hasdeps && isworkspace {
-                        info!("Workspace has no global dependencies. May vendor dependencies from member crates.");
+                        debug!("Workspace has no global dependencies. May vendor dependencies from member crates.");
                         vendor(args, prjdir, None)?;
                     } else {
                         // This is what we call a "zero cost" abstraction.
-                        info!("No dependencies, no need to vendor!");
+                        info!("😌 No dependencies, no need to vendor!");
                     };
                 }
                 Err(err) => return Err(err),
             };
         }
+
+        Ok(())
     } else {
-        warn!("Project does not have a manifest file at the root of the project!");
-    };
-    if args.cargotoml.is_empty() {
-        info!(?args.cargotoml, "No subcrates to vendor!");
-    } else {
-        info!(?args.cargotoml, "Found subcrates to vendor!");
-        // I think i can just reuse process src instead of invoking this?
-        vendor::cargotomls(args, prjdir)?;
-    };
-    Ok(())
+        debug!(?pathtomanifest);
+        warn!("Project does not have a manifest or configured paths to Cargo.toml");
+        Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Project does not have a manifest or configured paths to Cargo.toml",
+        ))
+    }
 }
 
 pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
@@ -135,9 +139,9 @@ pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
     globs.sort_unstable();
 
     if globs.len() > 1 {
-        warn!("Multiple files matched glob");
+        warn!("⚠️  Multiple files matched glob");
         for item in &globs {
-            warn!("{}", item.display());
+            warn!("- {}", item.display());
         }
     }
 
@@ -145,7 +149,7 @@ pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
     globs
         .pop()
         .map(|item| {
-            info!("Using {}", item.display());
+            info!("🍿 Vendoring for src '{}'", item.display());
             item
         })
         .ok_or_else(|| {
@@ -177,17 +181,21 @@ pub fn cargo_command<S: AsRef<str>>(
             }
         })?;
     trace!(?cmd);
-    let stdoutput = String::from_utf8_lossy(&cmd.stdout).to_string();
+    let stdoutput = String::from_utf8_lossy(&cmd.stdout);
+    let stderrput = String::from_utf8_lossy(&cmd.stderr);
     if !cmd.status.success() {
-        error!("{}", stdoutput);
+        error!(?stdoutput);
+        error!(?stderrput);
         return Err(ExecutionError {
             command: format!("cargo {}", subcommand),
             exit_code: cmd.status.code(),
-            stdoutput,
+            stdoutput: stdoutput.to_string(),
         });
     };
-    info!("{}", stdoutput);
-    Ok(stdoutput)
+    debug!(?stdoutput);
+    debug!(?stderrput);
+    // Return the output on success as this has the infor for .cargo/config
+    Ok(stdoutput.to_string())
 }
 
 pub struct ExecutionError {

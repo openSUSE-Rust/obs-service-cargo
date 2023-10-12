@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::ffi::OsStr;
 use std::fs;
 use std::io;
 use std::io::Write;
@@ -19,26 +18,28 @@ use tracing::{debug, error, info, trace, warn};
 pub fn tar_builder<T: Write>(
     topdir: &str,
     srcpath: impl AsRef<Path>,
-    additional_files: &[&str],
+    additional_files: &[impl AsRef<Path>],
     builder: &mut tar::Builder<T>,
 ) -> Result<(), io::Error> {
     if !additional_files.is_empty() {
-        info!("Adding additional files!");
+        debug!("Adding additional files!");
         for f in additional_files {
-            let pathto = &srcpath.as_ref().join(f);
-            info!(?pathto);
+            let f_path: &Path = f.as_ref();
+
+            let pathto = &srcpath.as_ref().join(f_path);
+            trace!(?pathto);
             let exists = pathto.exists();
             if exists {
-                info!(?pathto, "Path to file or directory exists!");
+                debug!(?pathto, "Path to file or directory exists!");
                 if pathto.is_file() {
                     debug!(?pathto, "Path to is file!");
-                    let basedir = pathto.file_name().unwrap_or(OsStr::new(f));
+                    let basedir = pathto.file_name().unwrap_or(f_path.as_os_str());
                     let mut addf = fs::File::open(pathto)?;
                     builder.append_file(basedir, &mut addf)?;
-                    debug!("Added {} to archive", f);
+                    debug!("Added {} to archive", f_path.to_string_lossy());
                 } else if pathto.is_dir() {
                     builder.append_dir_all("", pathto)?;
-                    debug!("Added {} to archive", f);
+                    debug!("Added {} to archive", f_path.to_string_lossy());
                 } else {
                     warn!(?pathto, "Is this the correct path to file? 🤔");
                 };
@@ -47,7 +48,7 @@ pub fn tar_builder<T: Write>(
     };
     builder.append_dir_all(topdir, &srcpath)?;
     builder.finish()?;
-    info!(
+    debug!(
         "Successfully created compressed archive for {}",
         srcpath.as_ref().to_string_lossy()
     );
@@ -58,7 +59,7 @@ pub fn targz(
     topdir: &str,
     outdir: impl AsRef<Path>,
     srcpath: impl AsRef<Path>,
-    additional_files: &[&str],
+    additional_files: &[impl AsRef<Path>],
 ) -> Result<(), io::Error> {
     use flate2::write::GzEncoder;
     use flate2::Compression;
@@ -72,7 +73,7 @@ pub fn tarzst(
     topdir: &str,
     outdir: impl AsRef<Path>,
     srcpath: impl AsRef<Path>,
-    additional_files: &[&str],
+    additional_files: &[impl AsRef<Path>],
 ) -> Result<(), io::Error> {
     use zstd::Encoder;
     let outtar = fs::File::create(outdir.as_ref())?;
@@ -89,7 +90,7 @@ pub fn tarxz(
     topdir: &str,
     outdir: impl AsRef<Path>,
     srcpath: impl AsRef<Path>,
-    additional_files: &[&str],
+    additional_files: &[impl AsRef<Path>],
 ) -> Result<(), io::Error> {
     // Crc32 is simpler/faster and often hardware accelerated.
     use xz2::stream::Check::Crc32;
