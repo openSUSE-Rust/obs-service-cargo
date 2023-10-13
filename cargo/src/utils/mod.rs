@@ -17,9 +17,10 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
-use crate::cli::Opts;
-use crate::vendor;
-use crate::vendor::vendor;
+use crate::cli::{Compression, Opts};
+use crate::vendor::{self, vendor};
+
+use crate::audit::{perform_cargo_audit, process_reports};
 
 use glob::glob;
 #[allow(unused_imports)]
@@ -59,51 +60,122 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: &Path) -> Result<(), io::Error> 
     }
     Ok(())
 }
-pub fn process_src(args: &Opts, prjdir: &Path, target_file: &OsStr) -> io::Result<()> {
-    let pathtomanifest = prjdir.join(target_file);
 
-    if !args.cargotoml.is_empty() {
-        info!(?args.cargotoml, "Found crates to vendor!");
-        // I think i can just reuse process src instead of invoking this?
-        vendor::cargotomls(args, prjdir)
-    } else if pathtomanifest.exists() {
-        if let Ok(isworkspace) = vendor::is_workspace(&pathtomanifest) {
-            debug!(?pathtomanifest);
-            if isworkspace {
-                info!("📚 Project uses a workspace!");
-            } else {
-                info!("📗 Project does not use a workspace!");
-            };
+pub fn process_src(args: &Opts, prjdir: &Path) -> io::Result<()> {
+    let mut manifest_files: Vec<PathBuf> = if !args.cargotoml.is_empty() {
+        debug!("Using manually specified Cargo.toml files.");
+        debug!(?args.cargotoml);
+        args.cargotoml.iter().map(|p| p.into()).collect()
+    } else {
+        debug!("Assuming Cargo.toml in root of the projectdir");
+        vec![prjdir.join("Cargo.toml")]
+    };
 
-            match vendor::has_dependencies(&pathtomanifest) {
-                Ok(hasdeps) => {
-                    if hasdeps && isworkspace {
-                        debug!("Workspace has dependencies!");
-                        vendor(args, prjdir, None)?;
-                    } else if hasdeps && !isworkspace {
-                        debug!("Non-workspace manifest has dependencies!");
-                        vendor(args, prjdir, None)?;
-                    } else if !hasdeps && isworkspace {
-                        debug!("Workspace has no global dependencies. May vendor dependencies from member crates.");
-                        vendor(args, prjdir, None)?;
-                    } else {
-                        // This is what we call a "zero cost" abstraction.
-                        info!("😌 No dependencies, no need to vendor!");
-                    };
-                }
-                Err(err) => return Err(err),
-            };
+    let first_manifest = match manifest_files.pop() {
+        Some(fm) => fm,
+        None => {
+            warn!("Project does not have a discovered manifest or configured paths to Cargo.toml");
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Project does not have a discovered manifest or configured paths to Cargo.toml",
+            ));
+        }
+    };
+
+    debug!(?first_manifest);
+    debug!(?manifest_files);
+
+    // Setup some common paths we'll use from here out.
+    let outdir = args.as_ref().outdir.to_owned();
+    let cargo_lock = prjdir.join("Cargo.lock");
+    let cargo_config = prjdir.join("cargo_config");
+    let vendor_dir = prjdir.join("vendor");
+    let update = args.as_ref().update;
+
+    // This is all pre-processing, which is affected by the single/multi Cargo.toml
+    // case. We do all this first.
+
+    // Now switch on the multi vs single case.
+    if manifest_files.is_empty() {
+        // Single file
+        let isworkspace = vendor::is_workspace(&first_manifest)?;
+
+        if isworkspace {
+            info!("📚 Project uses a workspace!");
+        } else {
+            info!("📗 Project does not use a workspace!");
+        };
+
+        let hasdeps = vendor::has_dependencies(&first_manifest)?;
+
+        let should_vendor = if hasdeps && isworkspace {
+            debug!("Workspace has dependencies!");
+            true
+        } else if hasdeps && !isworkspace {
+            debug!("Non-workspace manifest has dependencies!");
+            true
+        } else if !hasdeps && isworkspace {
+            debug!(
+                "Workspace has no global dependencies. May vendor dependencies from member crates."
+            );
+            true
+        } else {
+            // This is what we call a "zero cost" abstraction.
+            debug!("😌 No dependencies, no need to vendor!");
+            false
+        };
+
+        if !should_vendor {
+            warn!("🔥 No dependencies for project were found, skipping vendoring. If you think this is an error, please check your configuration.");
+            return Ok(());
         }
 
-        Ok(())
+        if update {
+            vendor::update(&prjdir, &first_manifest)?
+        } else {
+            warn!(
+                "😥 Disabled update of dependencies. You should enable this for security updates."
+            );
+        }
+        // Okay, we are ready to go now.
     } else {
-        debug!(?pathtomanifest);
-        warn!("Project does not have a manifest or configured paths to Cargo.toml");
-        Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Project does not have a manifest or configured paths to Cargo.toml",
-        ))
+        if update {
+            warn!("⚠️  Unable to update when multiple Cargo.toml files are specified.");
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Unable to update when multiple Cargo.toml files are specified.",
+            ));
+        }
     }
+
+    // Audit the Cargo.lock file.
+    let reports = perform_cargo_audit(&[&cargo_lock], &args.as_ref().i_accept_the_risk).map_err(
+        |rustsec_err| {
+            error!(?rustsec_err, "Unable to complete cargo audit");
+            io::Error::new(io::ErrorKind::Other, "Unable to complete cargo audit")
+        },
+    )?;
+
+    debug!(?reports);
+
+    process_reports(reports)?;
+
+    vendor(&prjdir, &cargo_config, &first_manifest, &manifest_files)?;
+
+    // Finally, compress everything together.
+    let compression: &Compression = &args.as_ref().compression;
+    debug!("Compression is of {}", &compression);
+
+    let paths_to_archive: [&Path; 3] = [
+        cargo_config.as_ref(),
+        cargo_lock.as_ref(),
+        vendor_dir.as_ref(),
+    ];
+
+    vendor::compress(&outdir, &prjdir, &paths_to_archive, compression)?;
+
+    // And we're golden!
+    Ok(())
 }
 
 pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
@@ -161,7 +233,7 @@ pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
         })
 }
 
-pub fn cargo_command<S: AsRef<str>>(
+pub fn cargo_command<S: AsRef<OsStr>>(
     subcommand: &str,
     options: &[S],
     curdir: impl AsRef<Path>,
