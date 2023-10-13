@@ -109,8 +109,7 @@ pub struct UnsupportedFormat {
 
 impl Display for UnsupportedFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let msg = format!("Expected one of the supported types. Got {}", self.ext);
-        write!(f, "{}", msg)
+        write!(f, "Unsupported archive format {}", self.ext)
     }
 }
 
@@ -338,8 +337,8 @@ pub struct VendorFailed {
 
 impl Display for VendorFailed {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let msg = format!("{}. Got {}", self.error, self.boxy);
-        write!(f, "{}", msg)
+        write!(f, "Vendor operation failed. Reason: {}", self.error)
     }
 }
+
 impl Error for VendorFailed {}

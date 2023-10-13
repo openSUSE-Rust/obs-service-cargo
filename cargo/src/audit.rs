@@ -29,9 +29,9 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
             passed = false;
 
             if report.vulnerabilities.count == 1 {
-                error!("⚠️ {} vulnerability found.", report.vulnerabilities.count);
+                warn!("⚠️  {} vulnerability found.", report.vulnerabilities.count);
             } else {
-                error!("⚠️ {} vulnerabilities found.", report.vulnerabilities.count);
+                warn!("⚠️  {} vulnerabilities found.", report.vulnerabilities.count);
             }
 
             for vuln in report.vulnerabilities.list {
@@ -53,7 +53,7 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
                 warn!("- {id} {name} {version} - categories {category}- cvss {score}");
             }
 
-            warn!("⚠️ You must action these before submitting this package.");
+            error!("⚠️  You must action these before submitting this package.");
         }
     }
 
@@ -63,7 +63,7 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
     } else {
         Err(io::Error::new(
             io::ErrorKind::Other,
-            "Vulnerabilities found in vendored dependencies.",
+            "Vulnerabilities found in application dependencies. These must be actioned to proceed with vendoring.",
         ))
     }
 }
