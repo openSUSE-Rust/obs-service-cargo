@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::error::Error;
-use std::ffi::OsStr;
 use std::fmt::{self, Display};
 use std::io;
 use std::path::{Path, PathBuf};
@@ -211,10 +210,7 @@ impl Vendor for Src {
             Ok(t) => t,
             Err(err) => {
                 error!("{}", err);
-                return Err(VendorFailed {
-                    error: "Failed to create temporary directory".to_string(),
-                    boxy: err.into(),
-                });
+                return Err(VendorFailed { boxy: err.into() });
             }
         };
 
@@ -232,10 +228,7 @@ impl Vendor for Src {
                                     std::fs::read_dir(&workdir)
                                         .map_err(|err| {
                                             error!(?err, "Failed to read directory");
-                                            VendorFailed {
-                                                error: "Failed to read directory".to_string(),
-                                                boxy: err.into(),
-                                            }
+                                            VendorFailed { boxy: err.into() }
                                         })?
                                         .collect();
                                 trace!(?dirs, "List of files and directories of the workdir");
@@ -253,21 +246,18 @@ impl Vendor for Src {
                                                     dir.path()
                                                 } else {
                                                     error!(?dir, "Tarball was extracted but got a file and not a possible top-level directory.");
-                                                    return Err(
-                                                        VendorFailed {
-                                                            error: "Tarball was extracted but got a file and not a possible top-level directory.".to_string(),
-                                                            boxy: io::Error::new(io::ErrorKind::InvalidData, "Expected a directory, got a file").into()
-                                                        }
-                                                    );
+                                                    return Err(VendorFailed {
+                                                        boxy: io::Error::new(
+                                                            io::ErrorKind::InvalidData,
+                                                            "Expected a directory, got a file",
+                                                        )
+                                                        .into(),
+                                                    });
                                                 }
                                             }
                                             Err(err) => {
                                                 error!(?err, "Failed to read directory entry");
-                                                return Err(VendorFailed {
-                                                    error: "Failed to read directory entry"
-                                                        .to_string(),
-                                                    boxy: err.into(),
-                                                });
+                                                return Err(VendorFailed { boxy: err.into() });
                                             }
                                         },
                                         None => {
@@ -278,78 +268,49 @@ impl Vendor for Src {
                                 }
                             }
                             Err(err) => {
-                                return Err(VendorFailed {
-                                    error: "Failed to decompress source".to_string(),
-                                    boxy: err.into(),
-                                });
+                                return Err(VendorFailed { boxy: err.into() });
                             }
                         }
                     }
-                    SupportedFormat::Dir(srcpath) => {
-                        match utils::copy_dir_all(
-                            &srcpath,
-                            &workdir.join(srcpath.file_name().unwrap_or(srcpath.as_os_str())),
-                        ) {
-                            Ok(_) => {
-                                let new_wdir = workdir
-                                    .join(srcpath.file_name().unwrap_or(srcpath.as_os_str()));
-                                debug!(?new_wdir);
-                                new_wdir
-                            }
-                            Err(err) => {
-                                return Err(VendorFailed {
-                                    error: "Failed to copy source path".to_string(),
-                                    boxy: err.into(),
-                                })
-                            }
-                        }
-                    }
+                    SupportedFormat::Dir(srcpath) => match utils::copy_dir_all(srcpath, &workdir) {
+                        Ok(_) => workdir,
+                        Err(err) => return Err(VendorFailed { boxy: err.into() }),
+                    },
                 }
             }
             Err(err) => {
                 error!(?err);
-                return Err(VendorFailed {
-                    error: format!("Vendor failed. {}", err),
-                    boxy: err.into(),
-                });
+                return Err(VendorFailed { boxy: err.into() });
             }
         };
 
         debug!(?newworkdir, "Workdir updated!");
 
-        let target_file = OsStr::new("Cargo.toml");
-        match utils::process_src(opts, &newworkdir, target_file) {
+        match utils::process_src(opts, &newworkdir) {
             Ok(_) => {
                 info!("🥳 ✨ Successfull ran OBS Service Cargo Vendor ✨");
             }
             Err(err) => {
                 error!(?err);
-                return Err(VendorFailed {
-                    error: err.to_string(),
-                    boxy: err.into(),
-                });
+                return Err(VendorFailed { boxy: err.into() });
             }
         };
         drop(newworkdir);
         match tmpdir.close() {
             Ok(_) => Ok(()),
-            Err(err) => Err(VendorFailed {
-                error: "Failed to close and remove temporary directory".to_string(),
-                boxy: err.into(),
-            }),
+            Err(err) => Err(VendorFailed { boxy: err.into() }),
         }
     }
 }
 
 #[derive(Debug)]
 pub struct VendorFailed {
-    error: String,
     boxy: Box<dyn Error>,
 }
 
 impl Display for VendorFailed {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Vendor operation failed. Reason: {}", self.error)
+        write!(f, "Vendor operation failed. Reason: {}", self.boxy)
     }
 }
 
