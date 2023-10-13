@@ -272,8 +272,11 @@ impl Vendor for Src {
                             }
                         }
                     }
-                    SupportedFormat::Dir(srcpath) => match utils::copy_dir_all(srcpath, &workdir) {
-                        Ok(_) => workdir,
+                    SupportedFormat::Dir(srcpath) => match utils::copy_dir_all(
+                        &srcpath,
+                        &workdir.join(srcpath.file_name().unwrap_or(srcpath.as_os_str())),
+                    ) {
+                        Ok(_) => workdir.join(srcpath.file_name().unwrap_or(srcpath.as_os_str())),
                         Err(err) => return Err(VendorFailed { boxy: err.into() }),
                     },
                 }
