@@ -243,12 +243,14 @@ impl Vendor for Src {
                                 // If length is one, this means that the project has
                                 // a top-level folder
                                 if dirs.len() != 1 {
+                                    debug!(?workdir);
                                     workdir
                                 } else {
                                     match dirs.into_iter().last() {
                                         Some(p) => match p {
                                             Ok(dir) => {
                                                 if dir.path().is_dir() {
+                                                    debug!("{}", dir.path().display());
                                                     dir.path()
                                                 } else {
                                                     error!(?dir, "Tarball was extracted but got a file and not a possible top-level directory.");
@@ -284,15 +286,25 @@ impl Vendor for Src {
                             }
                         }
                     }
-                    SupportedFormat::Dir(srcpath) => match utils::copy_dir_all(srcpath, &workdir) {
-                        Ok(_) => workdir,
-                        Err(err) => {
-                            return Err(VendorFailed {
-                                error: "Failed to copy source path".to_string(),
-                                boxy: err.into(),
-                            })
+                    SupportedFormat::Dir(srcpath) => {
+                        match utils::copy_dir_all(
+                            &srcpath,
+                            &workdir.join(srcpath.file_name().unwrap_or(srcpath.as_os_str())),
+                        ) {
+                            Ok(_) => {
+                                let new_wdir = workdir
+                                    .join(srcpath.file_name().unwrap_or(srcpath.as_os_str()));
+                                debug!(?new_wdir);
+                                new_wdir
+                            }
+                            Err(err) => {
+                                return Err(VendorFailed {
+                                    error: "Failed to copy source path".to_string(),
+                                    boxy: err.into(),
+                                })
+                            }
                         }
-                    },
+                    }
                 }
             }
             Err(err) => {
