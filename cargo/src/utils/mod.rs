@@ -71,26 +71,23 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> io::Result<()> {
         vec![prjdir.join("Cargo.toml")]
     };
 
-    let first_manifest = match manifest_files.pop() {
-        Some(fm) => fm,
-        None => {
-            warn!("Project does not have a discovered manifest or configured paths to Cargo.toml");
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Project does not have a discovered manifest or configured paths to Cargo.toml",
-            ));
-        }
+    let Some(first_manifest) = manifest_files.pop() else {
+        warn!("Project does not have a discovered manifest or configured paths to Cargo.toml");
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Project does not have a discovered manifest or configured paths to Cargo.toml",
+        ));
     };
 
     debug!(?first_manifest);
     debug!(?manifest_files);
 
     // Setup some common paths we'll use from here out.
-    let outdir = args.as_ref().outdir.to_owned();
+    let outdir = args.outdir.to_owned();
     let cargo_lock = prjdir.join("Cargo.lock");
     let cargo_config = prjdir.join("cargo_config");
     let vendor_dir = prjdir.join("vendor");
-    let update = args.as_ref().update;
+    let update = args.update;
 
     // This is all pre-processing, which is affected by the single/multi Cargo.toml
     // case. We do all this first.
@@ -131,39 +128,36 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> io::Result<()> {
         }
 
         if update {
-            vendor::update(&prjdir, &first_manifest)?
+            vendor::update(prjdir, &first_manifest)?
         } else {
             warn!(
                 "😥 Disabled update of dependencies. You should enable this for security updates."
             );
         }
         // Okay, we are ready to go now.
-    } else {
-        if update {
-            warn!("⚠️  Unable to update when multiple Cargo.toml files are specified.");
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Unable to update when multiple Cargo.toml files are specified.",
-            ));
-        }
+    } else if update {
+        warn!("⚠️  Unable to update when multiple Cargo.toml files are specified.");
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Unable to update when multiple Cargo.toml files are specified.",
+        ));
     }
 
     // Audit the Cargo.lock file.
-    let reports = perform_cargo_audit(&[&cargo_lock], &args.as_ref().i_accept_the_risk).map_err(
-        |rustsec_err| {
+    let reports =
+        perform_cargo_audit(&[&cargo_lock], &args.i_accept_the_risk).map_err(|rustsec_err| {
             error!(?rustsec_err, "Unable to complete cargo audit");
             io::Error::new(io::ErrorKind::Other, "Unable to complete cargo audit")
-        },
-    )?;
+        })?;
 
     debug!(?reports);
 
     process_reports(reports)?;
 
-    vendor(&prjdir, &cargo_config, &first_manifest, &manifest_files)?;
+    vendor(prjdir, &cargo_config, &first_manifest, &manifest_files)?;
 
     // Finally, compress everything together.
-    let compression: &Compression = &args.as_ref().compression;
+    let compression: &Compression = &args.compression;
     debug!("Compression is of {}", &compression);
 
     let paths_to_archive: [&Path; 3] = [
@@ -172,7 +166,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> io::Result<()> {
         vendor_dir.as_ref(),
     ];
 
-    vendor::compress(&outdir, &prjdir, &paths_to_archive, compression)?;
+    vendor::compress(outdir, prjdir, &paths_to_archive, compression)?;
 
     // And we're golden!
     Ok(())

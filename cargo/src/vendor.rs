@@ -96,7 +96,7 @@ pub fn compress(
                     "🔦 Compressed tarball for vendor exists AND will be replaced."
                 );
             }
-            compress::targz(&vendor_out, &prjdir, &paths_to_archive)?;
+            compress::targz(&vendor_out, &prjdir, paths_to_archive)?;
             debug!("Compressed to {}", vendor_out.to_string_lossy());
         }
         Compression::Xz => {
@@ -107,7 +107,7 @@ pub fn compress(
                     "🔦 Compressed tarball for vendor exists AND will be replaced."
                 );
             }
-            compress::tarxz(&vendor_out, &prjdir, &paths_to_archive)?;
+            compress::tarxz(&vendor_out, &prjdir, paths_to_archive)?;
             debug!("Compressed to {}", vendor_out.to_string_lossy());
         }
         Compression::Zst => {
@@ -118,7 +118,7 @@ pub fn compress(
                     "🔦 Compressed tarball for vendor exists AND will be replaced."
                 );
             }
-            compress::tarzst(&vendor_out, &prjdir, &paths_to_archive)?;
+            compress::tarzst(&vendor_out, &prjdir, paths_to_archive)?;
             debug!("Compressed to {}", vendor_out.to_string_lossy());
         }
     };

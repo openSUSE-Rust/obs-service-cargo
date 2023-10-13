@@ -25,8 +25,9 @@ pub fn tar_builder<T: Write>(
         // prjdir prefix to get the relative archive path.
         let f_rel_path = match f.strip_prefix(&prjdir) {
             Ok(f_rel) => f_rel,
-            Err(_) => {
+            Err(err) => {
                 error!(
+                    ?err,
                     "THIS IS A BUG. Unable to proceed. {} is not within {}.",
                     f.to_string_lossy(),
                     prjdir.as_ref().to_string_lossy()
