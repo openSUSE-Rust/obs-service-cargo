@@ -23,6 +23,27 @@ A good example would be the [zellij](https://zellij.dev) project. Users will jus
   <service name="cargo_audit" mode="manual" />
 </services>
 ```
+
+## Accepting risks of RUSTSEC advisories
+
+Sometimes, software dependencies have vulnerabilities or security issues, and it's not that surprising. If you just want to YOLO because this version
+should now be in openSUSE, you can "accept a risk" of a RUSTSEC ID by adding a new parameter `i-accept-the-risk`:
+
+```xml
+<services>
+  <service mode="manual" name="download_files" />
+  <service name="cargo_vendor" mode="manual">
+     <param name="srctar">atuin-*.tar.gz</param>
+	 <param name="i-accept-the-risk">RUSTSEC-2022-0093</param>
+	 <param name="i-accept-the-risk">RUSTSEC-2021-0041</param>
+  </service>
+  <service name="cargo_audit" mode="manual" />
+</services>
+```
+
+[!INFO]
+If you are not sure what to do, let a security expert assess and audit it for you by just pushing the new update 
+
 ## Using `cargotoml` parameter
 
 Use only `cargotoml` in situations where you need to also vendor a subcrate. This is useful for certain projects with no root manifest like the warning below.
