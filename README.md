@@ -41,9 +41,8 @@ should now be in openSUSE, you can "accept a risk" of a RUSTSEC ID by adding a n
 </services>
 ```
 
-[!IMPORTANT]
-
-If you are not sure what to do, let a security expert assess and audit it for you by just pushing the new update.
+> [!IMPORTANT]
+> If you are not sure what to do, let a security expert assess and audit it for you by just pushing the new update.
 
 ## Using `cargotoml` parameter
 
