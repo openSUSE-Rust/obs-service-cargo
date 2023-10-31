@@ -172,7 +172,9 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         vendor_dir.as_ref(),
     ];
 
-    if vendor_dir.exists() && vendor::has_dependencies(&first_manifest)? {
+    if vendor_dir.exists()
+        && (vendor::has_dependencies(&first_manifest)? || vendor::is_workspace(&first_manifest)?)
+    {
         vendor::compress(outdir, prjdir, &paths_to_archive, compression)?;
     } else {
         info!("😌 No dependencies, no need to vendor!");
