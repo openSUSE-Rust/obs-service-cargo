@@ -27,6 +27,7 @@
 pub mod audit;
 pub mod cli;
 pub mod consts;
+mod errors;
 pub mod services;
 pub mod utils;
 pub mod vendor;

@@ -18,6 +18,8 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use crate::cli::{Compression, Opts};
+use crate::errors::OBSCargoError;
+use crate::errors::OBSCargoErrorKind;
 use crate::vendor::{self, vendor};
 
 use crate::audit::{perform_cargo_audit, process_reports};
@@ -61,7 +63,7 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: &Path) -> Result<(), io::Error> 
     Ok(())
 }
 
-pub fn process_src(args: &Opts, prjdir: &Path) -> io::Result<()> {
+pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
     let mut manifest_files: Vec<PathBuf> = if !args.cargotoml.is_empty() {
         debug!("Using manually specified Cargo.toml files.");
         debug!(?args.cargotoml);
@@ -73,9 +75,10 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> io::Result<()> {
 
     let Some(first_manifest) = manifest_files.pop() else {
         warn!("Project does not have a discovered manifest or configured paths to Cargo.toml");
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Project does not have a discovered manifest or configured paths to Cargo.toml",
+        return Err(OBSCargoError::new(
+            OBSCargoErrorKind::VendorError,
+            "Project does not have a discovered manifest or configured paths to Cargo.toml"
+                .to_string(),
         ));
     };
 
@@ -137,9 +140,9 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> io::Result<()> {
         // Okay, we are ready to go now.
     } else if update {
         warn!("⚠️  Unable to update when multiple Cargo.toml files are specified.");
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Unable to update when multiple Cargo.toml files are specified.",
+        return Err(OBSCargoError::new(
+            OBSCargoErrorKind::VendorError,
+            "Unable to update when multiple Cargo.toml files are specified.".to_string(),
         ));
     }
 
@@ -147,7 +150,10 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> io::Result<()> {
     let reports =
         perform_cargo_audit(&[&cargo_lock], &args.i_accept_the_risk).map_err(|rustsec_err| {
             error!(?rustsec_err, "Unable to complete cargo audit");
-            io::Error::new(io::ErrorKind::Other, "Unable to complete cargo audit")
+            OBSCargoError::new(
+                OBSCargoErrorKind::AuditError,
+                "Unable to complete cargo audit".to_string(),
+            )
         })?;
 
     debug!(?reports);

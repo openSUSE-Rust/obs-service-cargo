@@ -6,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::io;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use crate::consts::{EXCLUDED_RUSTSECS, OPENSUSE_CARGO_AUDIT_DB};
+use crate::errors::OBSCargoError;
+use crate::errors::OBSCargoErrorKind;
 
 use rustsec::{
     advisory::Id, report::Report, report::Settings as ReportSettings, Database,
@@ -20,7 +21,7 @@ use rustsec::{
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 
-pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
+pub fn process_reports(reports: Vec<Report>) -> Result<(), OBSCargoError> {
     let mut passed = true;
 
     // Now actually analyse the report.
@@ -61,9 +62,9 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
         info!("🎉 Cargo audit passed!");
         Ok(())
     } else {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Vulnerabilities found in application dependencies. These must be actioned to proceed with vendoring.",
+        error!("Vulnerabilities found in application dependencies. These must be actioned to proceed with vendoring.");
+        Err(OBSCargoError::new(OBSCargoErrorKind::AuditNeedsAction,
+            "Vulnerabilities found in application dependencies. These must be actioned to proceed with vendoring.".to_string(),
         ))
     }
 }
