@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::error::Error;
 use std::fmt::{self, Display};
 use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::consts::{GZ_MIME, SUPPORTED_MIME_TYPES, VENDOR_PATH_PREFIX, XZ_MIME, ZST_MIME};
+use crate::errors::OBSCargoError;
+use crate::errors::OBSCargoErrorKind;
 use crate::utils;
 
 use clap::{Parser, ValueEnum};
@@ -143,7 +144,7 @@ impl Src {
 
 pub trait Vendor {
     fn is_supported(&self) -> Result<SupportedFormat, UnsupportedFormat>;
-    fn run_vendor(&self, opts: &Opts) -> Result<(), VendorFailed>;
+    fn run_vendor(&self, opts: &Opts) -> Result<(), OBSCargoError>;
 }
 
 pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Result<()> {
@@ -201,7 +202,7 @@ impl Vendor for Src {
         }
     }
 
-    fn run_vendor(&self, opts: &Opts) -> Result<(), VendorFailed> {
+    fn run_vendor(&self, opts: &Opts) -> Result<(), OBSCargoError> {
         let tmpdir = match tempfile::Builder::new()
             .prefix(VENDOR_PATH_PREFIX)
             .rand_bytes(8)
@@ -210,7 +211,10 @@ impl Vendor for Src {
             Ok(t) => t,
             Err(err) => {
                 error!("{}", err);
-                return Err(VendorFailed { boxy: err.into() });
+                return Err(OBSCargoError::new(
+                    OBSCargoErrorKind::VendorError,
+                    "failed to create temporary directory for vendor process".to_string(),
+                ));
             }
         };
 
@@ -228,7 +232,10 @@ impl Vendor for Src {
                                     std::fs::read_dir(&workdir)
                                         .map_err(|err| {
                                             error!(?err, "Failed to read directory");
-                                            VendorFailed { boxy: err.into() }
+                                            OBSCargoError::new(
+                                                OBSCargoErrorKind::VendorError,
+                                                "failed to read directory".to_string(),
+                                            )
                                         })?
                                         .collect();
                                 trace!(?dirs, "List of files and directories of the workdir");
@@ -246,18 +253,15 @@ impl Vendor for Src {
                                                     dir.path()
                                                 } else {
                                                     error!(?dir, "Tarball was extracted but got a file and not a possible top-level directory.");
-                                                    return Err(VendorFailed {
-                                                        boxy: io::Error::new(
-                                                            io::ErrorKind::InvalidData,
-                                                            "Expected a directory, got a file",
-                                                        )
-                                                        .into(),
-                                                    });
+                                                    return Err(OBSCargoError::new(OBSCargoErrorKind::VendorError, "No top-level directory found after tarball was extracted".to_string()));
                                                 }
                                             }
                                             Err(err) => {
                                                 error!(?err, "Failed to read directory entry");
-                                                return Err(VendorFailed { boxy: err.into() });
+                                                return Err(OBSCargoError::new(
+                                                    OBSCargoErrorKind::VendorError,
+                                                    err.to_string(),
+                                                ));
                                             }
                                         },
                                         None => {
@@ -268,7 +272,10 @@ impl Vendor for Src {
                                 }
                             }
                             Err(err) => {
-                                return Err(VendorFailed { boxy: err.into() });
+                                return Err(OBSCargoError::new(
+                                    OBSCargoErrorKind::VendorError,
+                                    err.to_string(),
+                                ));
                             }
                         }
                     }
@@ -277,13 +284,21 @@ impl Vendor for Src {
                         &workdir.join(srcpath.file_name().unwrap_or(srcpath.as_os_str())),
                     ) {
                         Ok(_) => workdir.join(srcpath.file_name().unwrap_or(srcpath.as_os_str())),
-                        Err(err) => return Err(VendorFailed { boxy: err.into() }),
+                        Err(err) => {
+                            return Err(OBSCargoError::new(
+                                OBSCargoErrorKind::VendorError,
+                                err.to_string(),
+                            ))
+                        }
                     },
                 }
             }
             Err(err) => {
                 error!(?err);
-                return Err(VendorFailed { boxy: err.into() });
+                return Err(OBSCargoError::new(
+                    OBSCargoErrorKind::VendorError,
+                    err.to_string(),
+                ));
             }
         };
 
@@ -295,26 +310,19 @@ impl Vendor for Src {
             }
             Err(err) => {
                 error!(?err);
-                return Err(VendorFailed { boxy: err.into() });
+                return Err(OBSCargoError::new(
+                    OBSCargoErrorKind::VendorError,
+                    err.to_string(),
+                ));
             }
         };
         drop(newworkdir);
         match tmpdir.close() {
             Ok(_) => Ok(()),
-            Err(err) => Err(VendorFailed { boxy: err.into() }),
+            Err(err) => Err(OBSCargoError::new(
+                OBSCargoErrorKind::VendorError,
+                err.to_string(),
+            )),
         }
     }
 }
-
-#[derive(Debug)]
-pub struct VendorFailed {
-    boxy: Box<dyn Error>,
-}
-
-impl Display for VendorFailed {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Vendor operation failed. Reason: {}", self.boxy)
-    }
-}
-
-impl Error for VendorFailed {}

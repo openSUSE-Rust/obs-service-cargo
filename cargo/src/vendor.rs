@@ -8,17 +8,22 @@
 
 use std::ffi::OsString;
 use std::fs;
-use std::io::{self, Write};
+use std::io::Write;
 use std::path::Path;
 
 use crate::cli::Compression;
+use crate::errors::OBSCargoError;
+use crate::errors::OBSCargoErrorKind;
 use crate::utils::cargo_command;
 use crate::utils::compress;
 
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 
-pub fn update(prjdir: impl AsRef<Path>, manifest_path: impl AsRef<Path>) -> io::Result<()> {
+pub fn update(
+    prjdir: impl AsRef<Path>,
+    manifest_path: impl AsRef<Path>,
+) -> Result<(), OBSCargoError> {
     info!("⏫ Updating dependencies before vendor");
     let update_options: Vec<OsString> = vec![
         "-vv".into(),
@@ -28,7 +33,10 @@ pub fn update(prjdir: impl AsRef<Path>, manifest_path: impl AsRef<Path>) -> io::
 
     cargo_command("update", &update_options, &prjdir).map_err(|e| {
         error!(err = %e);
-        io::Error::new(io::ErrorKind::Other, "Unable to execute cargo")
+        OBSCargoError::new(
+            OBSCargoErrorKind::VendorError,
+            "Unable to execute cargo".to_string(),
+        )
     })?;
     info!("⏫ Successfully ran cargo update");
     Ok(())
@@ -39,7 +47,7 @@ pub fn vendor(
     cargo_config: impl AsRef<Path>,
     manifest_path: impl AsRef<Path>,
     extra_manifest_paths: &[impl AsRef<Path>],
-) -> io::Result<()> {
+) -> Result<(), OBSCargoError> {
     let mut vendor_options: Vec<OsString> = vec![
         "-vv".into(),
         "--manifest-path".into(),
@@ -55,13 +63,29 @@ pub fn vendor(
 
     let cargo_vendor_output = cargo_command("vendor", &vendor_options, &prjdir).map_err(|e| {
         error!(err = %e);
-        io::Error::new(io::ErrorKind::Other, "Unable to execute cargo")
+        OBSCargoError::new(
+            OBSCargoErrorKind::VendorError,
+            "Unable to execute cargo".to_string(),
+        )
     })?;
 
-    let mut file_cargo_config = fs::File::create(cargo_config.as_ref())?;
+    let mut file_cargo_config = fs::File::create(cargo_config.as_ref()).map_err(|err| {
+        error!(?err, "Failed to create file for cargo config");
+        OBSCargoError::new(
+            OBSCargoErrorKind::VendorError,
+            "failed to create cargo config file".to_string(),
+        )
+    })?;
     // Write the stdout which is used by the package later.
-    file_cargo_config.write_all(cargo_vendor_output.as_bytes())?;
-
+    file_cargo_config
+        .write_all(cargo_vendor_output.as_bytes())
+        .map_err(|err| {
+            error!(?err, "Failed to write to file for cargo config");
+            OBSCargoError::new(
+                OBSCargoErrorKind::VendorError,
+                "failed to write to file for cargo config".to_string(),
+            )
+        })?;
     Ok(())
 }
 
@@ -70,7 +94,7 @@ pub fn compress(
     prjdir: impl AsRef<Path>,
     paths_to_archive: &[impl AsRef<Path>],
     compression: &Compression,
-) -> io::Result<()> {
+) -> Result<(), OBSCargoError> {
     info!("📦 Archiving vendored dependencies...");
 
     // RATIONALE: We copy Cargo.lock by default, updated or not updated
@@ -96,7 +120,13 @@ pub fn compress(
                     "🔦 Compressed tarball for vendor exists AND will be replaced."
                 );
             }
-            compress::targz(&vendor_out, &prjdir, paths_to_archive)?;
+            compress::targz(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                error!(?err, "gz compression failed");
+                OBSCargoError::new(
+                    OBSCargoErrorKind::VendorCompressionFailed,
+                    "gz compression failed".to_string(),
+                )
+            })?;
             debug!("Compressed to {}", vendor_out.to_string_lossy());
         }
         Compression::Xz => {
@@ -107,7 +137,13 @@ pub fn compress(
                     "🔦 Compressed tarball for vendor exists AND will be replaced."
                 );
             }
-            compress::tarxz(&vendor_out, &prjdir, paths_to_archive)?;
+            compress::tarxz(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                error!(?err, "xz compression failed");
+                OBSCargoError::new(
+                    OBSCargoErrorKind::VendorCompressionFailed,
+                    "xz compression failed".to_string(),
+                )
+            })?;
             debug!("Compressed to {}", vendor_out.to_string_lossy());
         }
         Compression::Zst => {
@@ -118,7 +154,13 @@ pub fn compress(
                     "🔦 Compressed tarball for vendor exists AND will be replaced."
                 );
             }
-            compress::tarzst(&vendor_out, &prjdir, paths_to_archive)?;
+            compress::tarzst(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                error!(?err, "zst compression failed");
+                OBSCargoError::new(
+                    OBSCargoErrorKind::VendorCompressionFailed,
+                    "zst compression failed".to_string(),
+                )
+            })?;
             debug!("Compressed to {}", vendor_out.to_string_lossy());
         }
     };
@@ -127,7 +169,7 @@ pub fn compress(
     Ok(())
 }
 
-pub fn is_workspace(src: &Path) -> io::Result<bool> {
+pub fn is_workspace(src: &Path) -> Result<bool, OBSCargoError> {
     if let Ok(manifest) = fs::read_to_string(src) {
         if let Ok(manifest_data) = toml::from_str::<toml::Value>(&manifest) {
             if manifest_data.get("workspace").is_some() {
@@ -137,13 +179,16 @@ pub fn is_workspace(src: &Path) -> io::Result<bool> {
             };
         };
     }
-    return Err(io::Error::new(
-        io::ErrorKind::NotFound,
-        src.to_string_lossy(),
-    ));
+    Err(OBSCargoError::new(
+        OBSCargoErrorKind::VendorError,
+        format!(
+            "failed to check manifest file at path {}",
+            src.to_string_lossy()
+        ),
+    ))
 }
 
-pub fn has_dependencies(src: &Path) -> io::Result<bool> {
+pub fn has_dependencies(src: &Path) -> Result<bool, OBSCargoError> {
     if let Ok(manifest) = fs::read_to_string(src) {
         if let Ok(manifest_data) = toml::from_str::<toml::Value>(&manifest) {
             if manifest_data.get("dependencies").is_some()
@@ -155,8 +200,11 @@ pub fn has_dependencies(src: &Path) -> io::Result<bool> {
             };
         };
     }
-    return Err(io::Error::new(
-        io::ErrorKind::NotFound,
-        src.to_string_lossy(),
-    ));
+    Err(OBSCargoError::new(
+        OBSCargoErrorKind::VendorError,
+        format!(
+            "failed to check manifest file at path {}",
+            src.to_string_lossy()
+        ),
+    ))
 }
