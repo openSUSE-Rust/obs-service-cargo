@@ -166,7 +166,11 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> io::Result<()> {
         vendor_dir.as_ref(),
     ];
 
-    vendor::compress(outdir, prjdir, &paths_to_archive, compression)?;
+    if vendor_dir.exists() {
+        vendor::compress(outdir, prjdir, &paths_to_archive, compression)?;
+    } else {
+        info!("😌 No dependencies, no need to vendor!");
+    }
 
     // And we're golden!
     Ok(())
