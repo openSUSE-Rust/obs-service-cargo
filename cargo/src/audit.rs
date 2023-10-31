@@ -62,7 +62,7 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), OBSCargoError> {
         info!("🎉 Cargo audit passed!");
         Ok(())
     } else {
-        error!("Vulnerabilities found in application dependencies. These must be actioned to proceed with vendoring.");
+        error!("🛑 Vulnerabilities found in application dependencies. These must be actioned to proceed with vendoring.");
         Err(OBSCargoError::new(OBSCargoErrorKind::AuditNeedsAction,
             "Vulnerabilities found in application dependencies. These must be actioned to proceed with vendoring.".to_string(),
         ))
