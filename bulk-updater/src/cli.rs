@@ -27,11 +27,21 @@ pub struct BulkUpdaterOpts {
     #[arg(
         long,
         default_value = "home:firstyear:branches",
-        help = "Custom basepath to run bulk updater."
+        help = "Run bulk updater in this OBS project."
     )]
     basepath: PathBuf,
-    #[arg(long, default_value_t = false, help = "Yolo the bulk updates.")]
+    #[arg(
+        long,
+        default_value_t = false,
+        help = "Wheter to YOLO the bulk updates."
+    )]
     yolo: bool,
+    #[arg(
+        long,
+        default_value_t = false,
+        help = "Whether to submit the packages manually or not."
+    )]
+    findout: bool,
     #[arg(
         long,
         default_value = "Automatic update of vendored dependencies",
@@ -75,7 +85,8 @@ impl BulkUpdaterOpts {
                 "📤 Submitting package in progress at {}",
                 updated_pkgpath.to_string_lossy()
             );
-            let submitted_pkgpath = operations::attempt_submit(pkgpath, &self.message, self.yolo)?;
+            let submitted_pkgpath =
+                operations::attempt_submit(pkgpath, &self.message, self.yolo, self.findout)?;
 
             tracing::info!(
                 "📥 Submitted package at {}",

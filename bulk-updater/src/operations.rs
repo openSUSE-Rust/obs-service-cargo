@@ -63,89 +63,118 @@ pub fn checkout_or_update(pkgname: &str, basepath: &Path) -> io::Result<PathBuf>
         let out = osc_command(&pkgpath, &arguments)?;
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
-            tracing::info!("✅ -- osc revert operation passed");
+            tracing::info!("✅ -- osc revert operation success");
+
             tracing::info!("stdout -- {}", command_output);
         } else {
             let command_output = String::from_utf8_lossy(&out.stderr);
             tracing::info!("🚨 -- osc revert operation failed");
+
             tracing::info!("stderr -- {}", command_output);
         };
         let arguments = vec!["clean", "."];
         let out = osc_command(&pkgpath, &arguments)?;
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
-            tracing::info!("✅ -- osc clean operation passed");
+            tracing::info!("✅ -- osc clean operation success");
+
             tracing::info!("stdout -- {}", command_output);
         } else {
             let command_output = String::from_utf8_lossy(&out.stderr);
             tracing::info!("🚨 -- osc clean operation failed");
+
             tracing::info!("stderr -- {}", command_output);
         };
         let arguments = vec!["update", "."];
         let out = osc_command(&pkgpath, &arguments)?;
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
-            tracing::info!("✅ -- osc update operation passed");
+            tracing::info!("✅ -- osc update operation success");
+
             tracing::info!("stdout -- {}", command_output);
         } else {
             let command_output = String::from_utf8_lossy(&out.stderr);
             tracing::info!("🚨 -- osc update operation failed");
+
             tracing::info!("stderr -- {}", command_output);
         };
     } else {
         let arguments = vec!["bco", "."];
         let out = osc_command(&pkgpath, &arguments)?;
+
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
-            tracing::info!("✅ -- osc bco operation passed");
+            tracing::info!("✅ -- osc bco operation success");
+
             tracing::info!("stdout -- {}", command_output);
         } else {
             let command_output = String::from_utf8_lossy(&out.stderr);
             tracing::info!("🚨 -- osc bco operation failed");
+
             tracing::info!("stderr -- {}", command_output);
         };
-    }
+    };
     Ok(pkgpath)
 }
 
-pub fn attempt_submit(pkgpath: &Path, message: &str, yolo: bool) -> io::Result<PathBuf> {
+pub fn attempt_submit(
+    pkgpath: &Path,
+    message: &str,
+    yolo: bool,
+    findout: bool,
+) -> io::Result<PathBuf> {
     let pkgpath_str = pkgpath.to_string_lossy();
     if yolo {
         let arguments = vec!["vc", "-m", message];
         let out = osc_command(pkgpath, &arguments)?;
+
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
-            tracing::info!("✅ -- osc vc operation passed");
+            tracing::info!("✅ -- osc vc operation success");
+
             tracing::info!("stdout -- {}", command_output);
         } else {
             let command_output = String::from_utf8_lossy(&out.stderr);
             tracing::info!("🚨 -- osc vc operation failed");
+
             tracing::info!("stderr -- {}", command_output);
         };
+
         let arguments = vec!["ci", "-m", message];
         let out = osc_command(pkgpath, &arguments)?;
+
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
-            tracing::info!("✅ -- osc ci operation passed");
+            tracing::info!("✅ -- osc ci operation success");
+
             tracing::info!("stdout -- {}", command_output);
         } else {
             let command_output = String::from_utf8_lossy(&out.stderr);
             tracing::info!("🚨 -- osc ci operation failed");
+
             tracing::info!("stderr -- {}", command_output);
         };
+
         let arguments = vec!["sr", "-m", message];
         let out = osc_command(pkgpath, &arguments)?;
-        if out.status.success() {
-            let command_output = String::from_utf8_lossy(&out.stdout);
-            tracing::info!("✅ -- osc sr operation passed");
-            tracing::info!("stdout -- {}", command_output);
+
+        if findout {
+            if out.status.success() {
+                let command_output = String::from_utf8_lossy(&out.stdout);
+                tracing::info!("✅ -- osc sr operation success");
+
+                tracing::info!("stdout -- {}", command_output);
+            } else {
+                let command_output = String::from_utf8_lossy(&out.stderr);
+                tracing::info!("🚨 -- osc sr operation failed");
+
+                tracing::info!("stderr -- {}", command_output);
+            };
         } else {
-            let command_output = String::from_utf8_lossy(&out.stderr);
-            tracing::info!("🚨 -- osc sr operation failed");
-            tracing::info!("stderr -- {}", command_output);
+            tracing::info!("🫡 -- You must manually run `osc sr -m {message}`");
         };
     } else {
-        tracing::info!("🤌 You must manually run the following in {pkgpath_str}:\n`osc vc -m {message}`\n`osc ci -m {message}`\n`osc sr -m {message}`");
+        tracing::info!("💫 You must manually run the following in {pkgpath_str}:\n`osc vc -m {message}`\n`osc ci -m {message}`\n`osc sr -m {message}`");
     };
     Ok(pkgpath.to_path_buf())
 }
@@ -299,6 +328,6 @@ pub fn attempt_update(pkgpath: &Path, colorize: clap::ColorChoice) -> io::Result
             io::ErrorKind::InvalidInput,
             "service file may contain incomplete cargo vendor service parameters",
         ));
-    }
+    };
     Ok(pkgpath.to_path_buf())
 }
