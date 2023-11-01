@@ -41,7 +41,7 @@ fn do_services(pkgpath: &Path) -> io::Result<()> {
         .output()
         .map_err(|err| {
             tracing::error!(err = ?err, "Unable to run nsjail");
-            io::Error::new(io::ErrorKind::Interrupted, "Unable to run nsjail")
+            err
         })?;
     if full_command.status.success() {
         let command_output = String::from_utf8_lossy(&full_command.stdout);
