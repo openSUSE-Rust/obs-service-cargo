@@ -155,10 +155,9 @@ pub fn attempt_submit(
             tracing::info!("stderr -- {}", command_output);
         };
 
-        let arguments = vec!["sr", "-m", message];
-        let out = osc_command(pkgpath, &arguments)?;
-
         if findout {
+            let arguments = vec!["sr", "-m", message];
+            let out = osc_command(pkgpath, &arguments)?;
             if out.status.success() {
                 let command_output = String::from_utf8_lossy(&out.stdout);
                 tracing::info!("✅ -- osc sr operation success");
