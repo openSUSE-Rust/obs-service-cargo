@@ -69,7 +69,7 @@ impl BulkUpdaterOpts {
                 "🔼 Attempting to update in progress at {}",
                 pkgpath.to_string_lossy()
             );
-            let updated_pkgpath = operations::attempt_update(pkgpath)?;
+            let updated_pkgpath = operations::attempt_update(pkgpath, self.color)?;
             tracing::info!("✅ Updated package at {}", pkgpath.to_string_lossy());
             tracing::info!(
                 "📤 Submitting package in progress at {}",

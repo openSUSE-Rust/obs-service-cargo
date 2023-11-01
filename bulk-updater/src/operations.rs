@@ -202,7 +202,7 @@ fn does_have_cargo_vendor(pkgpath: &Path) -> io::Result<Service> {
     }
 }
 
-pub fn attempt_update(pkgpath: &Path) -> io::Result<PathBuf> {
+pub fn attempt_update(pkgpath: &Path, colorize: clap::ColorChoice) -> io::Result<PathBuf> {
     let cargo_vendor_params = does_have_cargo_vendor(pkgpath).map_err(|err| {
         tracing::error!(
             "❌ Error -- {} is not setup for cargo vendor!",
@@ -281,7 +281,7 @@ pub fn attempt_update(pkgpath: &Path) -> io::Result<PathBuf> {
             cargotoml: cargotomls,
             update,
             outdir,
-            color: clap::ColorChoice::default(),
+            color: colorize,
             i_accept_the_risk: accept_risks,
         };
         srcpath
