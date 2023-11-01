@@ -159,12 +159,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "bulk-update"
+name = "bulk-updater"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "obs-service-cargo",
  "quick-xml",
  "serde",
+ "terminfo",
  "tracing",
  "tracing-subscriber",
 ]

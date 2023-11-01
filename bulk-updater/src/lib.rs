@@ -24,9 +24,6 @@
 #![deny(clippy::manual_let_else)]
 #![allow(clippy::unreachable)]
 
-pub mod audit;
 pub mod cli;
-pub mod consts;
-mod errors;
-pub mod utils;
-pub mod vendor;
+pub mod operations;
+pub(crate) mod services;
