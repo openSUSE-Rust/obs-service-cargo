@@ -1,5 +1,5 @@
 [package]
-name = "bulk-update"
+name = "bulk-updater"
 description = "OBS Service Cargo Bulk Updater."
 version = "0.1.0"
 authors.workspace = true
