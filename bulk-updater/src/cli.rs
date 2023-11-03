@@ -64,8 +64,7 @@ pub struct BulkUpdaterOpts {
 impl BulkUpdaterOpts {
     pub fn run(self) -> io::Result<()> {
         use rayon::prelude::*;
-        // let mut pkgpaths: Vec<PathBuf> = Vec::new();
-        // let mut to_submit_pkgpaths: Vec<PathBuf> = Vec::new();
+
         let out_packages: Vec<(PathBuf, io::Result<PathBuf>)> = self
             .packages
             .par_iter()
@@ -144,6 +143,7 @@ impl BulkUpdaterOpts {
             })
             .collect();
 
+        // Show the list of packages that we are not able to submit
         let _failed_to_submit_packages =
             attempted_submit_packages
                 .par_iter()

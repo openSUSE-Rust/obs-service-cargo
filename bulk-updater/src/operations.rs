@@ -13,10 +13,10 @@ use std::process;
 use std::process::Output;
 use std::{fs, io};
 
-fn do_services(pkgpath: &Path) -> io::Result<()> {
+fn do_services(package_path: &Path) -> io::Result<()> {
     let cwd = std::env::current_dir()?;
-    let pkgpath_binding = cwd.join(pkgpath);
-    let cwd_plus_pkgpath = pkgpath_binding.as_os_str().to_string_lossy();
+    let cwd_plus_package_path_binding = cwd.join(package_path);
+    let cwd_plus_package_path_string = cwd_plus_package_path_binding.as_os_str().to_string_lossy();
     let bindmount_option = format!(
         "{}:{}",
         cwd.as_os_str().to_string_lossy(),
@@ -27,7 +27,7 @@ fn do_services(pkgpath: &Path) -> io::Result<()> {
         "--config",
         "scan.cfg",
         "--cwd",
-        &cwd_plus_pkgpath,
+        &cwd_plus_package_path_string,
         "--bindmount",
         &bindmount_option,
         "/usr/bin/osc",
@@ -43,14 +43,22 @@ fn do_services(pkgpath: &Path) -> io::Result<()> {
             tracing::error!(err = ?err, "Unable to run nsjail");
             err
         })?;
+
     if full_command.status.success() {
         let command_output = String::from_utf8_lossy(&full_command.stdout);
+
         tracing::info!("✅ -- services passed");
         tracing::info!("stdout -- {}", command_output);
     } else {
         let command_output = String::from_utf8_lossy(&full_command.stderr);
+
         tracing::info!("🚨 -- services failed");
         tracing::info!("stderr -- {}", command_output);
+
+        return Err(io::Error::new(
+            io::ErrorKind::Interrupted,
+            "Services failed to run",
+        ));
     }
     Ok(())
 }
@@ -188,15 +196,15 @@ pub fn attempt_submit(
     Ok(package_path.to_path_buf())
 }
 
-fn osc_command(pkgpath: &Path, arguments: &[&str]) -> io::Result<Output> {
+fn osc_command(package_path: &Path, arguments: &[&str]) -> io::Result<Output> {
     process::Command::new("osc")
         .args(arguments)
-        .current_dir(pkgpath)
+        .current_dir(package_path)
         .output()
 }
 
-fn does_have_cargo_vendor(pkgpath: &Path) -> io::Result<Service> {
-    let service_file = pkgpath.join("_service");
+fn does_have_cargo_vendor(package_path: &Path) -> io::Result<Service> {
+    let service_file = package_path.join("_service");
     if !service_file.exists() {
         Err(io::Error::new(
             io::ErrorKind::NotFound,
