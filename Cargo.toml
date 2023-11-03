@@ -23,17 +23,17 @@ license = "MPL-2.0"
 
 [workspace.dependencies]
 rustsec = "^0.28.2"
-clap = "4.4.0"
-glob = "0.3.1"
+clap = "~4.4.0"
+glob = "~0.3.1"
 tracing = { version = "^0.1.37", features = [
     "max_level_trace",
     "release_max_level_debug",
 ] }
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-quick-xml = "0.30"
+tracing-subscriber = { version = "^0.3.17", features = ["env-filter"] }
+quick-xml = "~0.30"
 # Pin to the most recent version before or after 1.0.172
 # https://github.com/serde-rs/serde/issues/2538 is a security risk.
-serde = ">=1.0.184"
+serde = "~1.0.184"
 
 [workspace.metadata.services]
 assets = [ "./cargo_vendor.service", "./cargo_audit.service" ]
