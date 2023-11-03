@@ -33,13 +33,14 @@ pub struct BulkUpdaterOpts {
     #[arg(
         long,
         default_value_t = false,
-        help = "Wheter to YOLO the bulk updates."
+        help = "Whether to yolo commit to the OBS branches."
     )]
     yolo: bool,
     #[arg(
         long,
         default_value_t = false,
-        help = "Whether to submit the packages manually or not."
+        requires = "yolo",
+        help = "Whether to findout by submitting requests for all committed branches. Requires yolo."
     )]
     findout: bool,
     #[arg(
@@ -62,37 +63,99 @@ pub struct BulkUpdaterOpts {
 
 impl BulkUpdaterOpts {
     pub fn run(self) -> io::Result<()> {
-        let mut pkgpaths: Vec<PathBuf> = Vec::new();
-        for pkgname in self.packages.iter() {
-            tracing::info!(
-                "⏫ Checkout or update in progress for {}",
-                pkgname.to_string_lossy()
-            );
-            pkgpaths.push(operations::checkout_or_update(
-                &pkgname.to_string_lossy(),
-                &self.basepath,
-            )?);
-            tracing::info!("🥳 Updated {}", pkgname.to_string_lossy());
-        }
-        for pkgpath in pkgpaths.iter() {
-            tracing::info!(
-                "🔼 Attempting to update in progress at {}",
-                pkgpath.to_string_lossy()
-            );
-            let updated_pkgpath = operations::attempt_update(pkgpath, self.color)?;
-            tracing::info!("✅ Updated package at {}", pkgpath.to_string_lossy());
-            tracing::info!(
-                "📤 Submitting package in progress at {}",
-                updated_pkgpath.to_string_lossy()
-            );
-            let submitted_pkgpath =
-                operations::attempt_submit(pkgpath, &self.message, self.yolo, self.findout)?;
+        use rayon::prelude::*;
+        // let mut pkgpaths: Vec<PathBuf> = Vec::new();
+        // let mut to_submit_pkgpaths: Vec<PathBuf> = Vec::new();
+        let out_packages: Vec<(PathBuf, io::Result<PathBuf>)> = self
+            .packages
+            .par_iter()
+            .map(|package_name| -> (PathBuf, io::Result<PathBuf>) {
+                (
+                    package_name.to_path_buf(),
+                    operations::checkout_or_update(&package_name.to_string_lossy(), &self.basepath),
+                )
+            })
+            .collect();
 
-            tracing::info!(
-                "📥 Submitted package at {}",
-                submitted_pkgpath.to_string_lossy()
-            );
-        }
+        // Show the list of packages that we are not able to check out
+        let _erred_out_packages = out_packages.par_iter().map(|(pkgname, result)| {
+            if result.is_err() {
+                tracing::error!(
+                    "❌ Package {} failed to check out or update!",
+                    pkgname.to_string_lossy()
+                );
+            }
+        });
+
+        // Then we get those that went successful
+        let okay_checkout_packages: Vec<_> = out_packages
+            .par_iter()
+            .filter(|(_, result)| result.is_ok())
+            .collect();
+
+        let attempted_update_packages: Vec<_> = okay_checkout_packages
+            .par_iter()
+            .map(|(_old_package_path, result)| match result {
+                Ok(new_package_path) => (
+                    new_package_path,
+                    operations::attempt_update(new_package_path, self.color),
+                ),
+                Err(_) => unreachable!(),
+            })
+            .collect();
+
+        // Show the list of packages that we are not able to update
+        let _failed_to_update_packages =
+            attempted_update_packages
+                .par_iter()
+                .map(|(new_package_path, result)| {
+                    if result.is_err() {
+                        tracing::error!(
+                            "❌ Package {} failed to update!",
+                            new_package_path.to_string_lossy()
+                        );
+                    }
+                });
+
+        // We only need the package path since it will be reused anyway
+        let updated_packages: Vec<_> = attempted_update_packages
+            .par_iter()
+            .filter_map(|(package_path, result)| {
+                if result.is_ok() {
+                    Some(package_path.to_path_buf())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let attempted_submit_packages: Vec<_> = updated_packages
+            .par_iter()
+            .map(|updated_package_path| {
+                (
+                    updated_package_path,
+                    operations::attempt_submit(
+                        updated_package_path,
+                        &self.message,
+                        self.yolo,
+                        self.findout,
+                    ),
+                )
+            })
+            .collect();
+
+        let _failed_to_submit_packages =
+            attempted_submit_packages
+                .par_iter()
+                .map(|(package_path, result)| {
+                    if result.is_err() {
+                        tracing::error!(
+                            "❌ Package {} failed to update!",
+                            package_path.to_string_lossy()
+                        );
+                    }
+                });
+
         Ok(())
     }
 }

@@ -16,3 +16,4 @@ serde = { workspace = true, features = ["derive", "alloc"] }
 tracing.workspace = true
 tracing-subscriber.workspace = true
 terminfo = "0.8.0"
+rayon = "1.8"

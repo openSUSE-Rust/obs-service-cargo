@@ -58,6 +58,8 @@ fn main() -> std::io::Result<()> {
         tracing::error!(?err, "Failed to run bulk updater!");
         err
     })?;
-    tracing::info!("🥳 Successfully ran OBS Cargo Bulk Updater");
+
+    // Not "Successfully" since some operations will fail.
+    tracing::info!("🥳 Finished running OBS Cargo Bulk Updater");
     Ok(())
 }

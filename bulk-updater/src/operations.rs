@@ -55,12 +55,17 @@ fn do_services(pkgpath: &Path) -> io::Result<()> {
     Ok(())
 }
 
-pub fn checkout_or_update(pkgname: &str, basepath: &Path) -> io::Result<PathBuf> {
-    let pkgpath = std::path::PathBuf::from(format!("{}:{}", basepath.to_string_lossy(), pkgname));
-    if pkgpath.exists() {
-        tracing::info!("osc revert {}", pkgpath.to_string_lossy());
+pub fn checkout_or_update(package_name: &str, basepath: &Path) -> io::Result<PathBuf> {
+    let package_path =
+        std::path::PathBuf::from(format!("{}:{}", basepath.to_string_lossy(), package_name));
+    tracing::info!(
+        "⏫ Checkout or update in progress for {}",
+        package_path.to_string_lossy()
+    );
+    if package_path.exists() {
+        tracing::info!("osc revert {}", package_path.to_string_lossy());
         let arguments = vec!["revert", "."];
-        let out = osc_command(&pkgpath, &arguments)?;
+        let out = osc_command(&package_path, &arguments)?;
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
             tracing::info!("✅ -- osc revert operation success");
@@ -73,7 +78,7 @@ pub fn checkout_or_update(pkgname: &str, basepath: &Path) -> io::Result<PathBuf>
             tracing::info!("stderr -- {}", command_output);
         };
         let arguments = vec!["clean", "."];
-        let out = osc_command(&pkgpath, &arguments)?;
+        let out = osc_command(&package_path, &arguments)?;
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
             tracing::info!("✅ -- osc clean operation success");
@@ -86,7 +91,7 @@ pub fn checkout_or_update(pkgname: &str, basepath: &Path) -> io::Result<PathBuf>
             tracing::info!("stderr -- {}", command_output);
         };
         let arguments = vec!["update", "."];
-        let out = osc_command(&pkgpath, &arguments)?;
+        let out = osc_command(&package_path, &arguments)?;
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
             tracing::info!("✅ -- osc update operation success");
@@ -100,7 +105,7 @@ pub fn checkout_or_update(pkgname: &str, basepath: &Path) -> io::Result<PathBuf>
         };
     } else {
         let arguments = vec!["bco", "."];
-        let out = osc_command(&pkgpath, &arguments)?;
+        let out = osc_command(&package_path, &arguments)?;
 
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
@@ -114,19 +119,22 @@ pub fn checkout_or_update(pkgname: &str, basepath: &Path) -> io::Result<PathBuf>
             tracing::info!("stderr -- {}", command_output);
         };
     };
-    Ok(pkgpath)
+    Ok(package_path)
 }
 
 pub fn attempt_submit(
-    pkgpath: &Path,
+    package_path: &Path,
     message: &str,
     yolo: bool,
     findout: bool,
 ) -> io::Result<PathBuf> {
-    let pkgpath_str = pkgpath.to_string_lossy();
+    tracing::info!(
+        "📤 Submitting package in progress at {}",
+        package_path.to_string_lossy()
+    );
     if yolo {
         let arguments = vec!["vc", "-m", message];
-        let out = osc_command(pkgpath, &arguments)?;
+        let out = osc_command(package_path, &arguments)?;
 
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
@@ -141,7 +149,7 @@ pub fn attempt_submit(
         };
 
         let arguments = vec!["ci", "-m", message];
-        let out = osc_command(pkgpath, &arguments)?;
+        let out = osc_command(package_path, &arguments)?;
 
         if out.status.success() {
             let command_output = String::from_utf8_lossy(&out.stdout);
@@ -157,7 +165,7 @@ pub fn attempt_submit(
 
         if findout {
             let arguments = vec!["sr", "-m", message];
-            let out = osc_command(pkgpath, &arguments)?;
+            let out = osc_command(package_path, &arguments)?;
             if out.status.success() {
                 let command_output = String::from_utf8_lossy(&out.stdout);
                 tracing::info!("✅ -- osc sr operation success");
@@ -169,13 +177,15 @@ pub fn attempt_submit(
 
                 tracing::info!("stderr -- {}", command_output);
             };
+
+            tracing::info!("📥 Submitted package at {}", package_path.to_string_lossy());
         } else {
             tracing::info!("🫡 -- You must manually run `osc sr -m {message}`");
         };
     } else {
-        tracing::info!("💫 You must manually run the following in {pkgpath_str}:\n`osc vc -m {message}`\n`osc ci -m {message}`\n`osc sr -m {message}`");
+        tracing::info!("💫 You must manually run the following in {}:\n`osc vc -m {}`\n`osc ci -m {}`\n`osc sr -m {}`", package_path.to_string_lossy(), message, message, message);
     };
-    Ok(pkgpath.to_path_buf())
+    Ok(package_path.to_path_buf())
 }
 
 fn osc_command(pkgpath: &Path, arguments: &[&str]) -> io::Result<Output> {
@@ -230,20 +240,24 @@ fn does_have_cargo_vendor(pkgpath: &Path) -> io::Result<Service> {
     }
 }
 
-pub fn attempt_update(pkgpath: &Path, colorize: clap::ColorChoice) -> io::Result<PathBuf> {
-    let cargo_vendor_params = does_have_cargo_vendor(pkgpath).map_err(|err| {
+pub fn attempt_update(package_path: &Path, colorize: clap::ColorChoice) -> io::Result<PathBuf> {
+    tracing::info!(
+        "🔼 Attempting to update in progress at {}",
+        package_path.to_string_lossy()
+    );
+    let cargo_vendor_params = does_have_cargo_vendor(package_path).map_err(|err| {
         tracing::error!(
             "❌ Error -- {} is not setup for cargo vendor!",
-            pkgpath.to_string_lossy()
+            package_path.to_string_lossy()
         );
         err
     })?;
     tracing::info!(
         ?cargo_vendor_params,
         "✅ Success -- {} is setup for cargo vendor!",
-        pkgpath.to_string_lossy()
+        package_path.to_string_lossy()
     );
-    do_services(pkgpath)?;
+    do_services(package_path)?;
 
     // Now start update then vendor
     // Ignore `update` param declared in service file. We attempt to update hence `attempt_update`
@@ -254,7 +268,7 @@ pub fn attempt_update(pkgpath: &Path, colorize: clap::ColorChoice) -> io::Result
         let mut accept_risks: Vec<String> = Vec::new();
         let mut src: String = String::new();
         let mut tag: Option<String> = None;
-        let outdir = pkgpath.to_path_buf();
+        let outdir = package_path.to_path_buf();
         for param in params.iter() {
             if let Some(name) = param.name.clone() {
                 if name == "compression" {
@@ -328,5 +342,7 @@ pub fn attempt_update(pkgpath: &Path, colorize: clap::ColorChoice) -> io::Result
             "service file may contain incomplete cargo vendor service parameters",
         ));
     };
-    Ok(pkgpath.to_path_buf())
+
+    tracing::info!("✅ Updated package at {}", package_path.to_string_lossy());
+    Ok(package_path.to_path_buf())
 }

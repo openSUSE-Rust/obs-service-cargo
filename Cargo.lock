@@ -165,6 +165,7 @@ dependencies = [
  "clap",
  "obs-service-cargo",
  "quick-xml",
+ "rayon",
  "serde",
  "terminfo",
  "tracing",
