@@ -89,17 +89,19 @@ impl BulkUpdaterOpts {
         // Then we get those that went successful
         let okay_checkout_packages: Vec<_> = out_packages
             .par_iter()
-            .filter(|(_, result)| result.is_ok())
+            .filter_map(|(_, result)| match result {
+                Ok(checked_out_package) => Some(checked_out_package),
+                Err(_) => None,
+            })
             .collect();
 
         let attempted_update_packages: Vec<_> = okay_checkout_packages
             .par_iter()
-            .map(|(_old_package_path, result)| match result {
-                Ok(new_package_path) => (
-                    new_package_path,
-                    operations::attempt_update(new_package_path, self.color),
-                ),
-                Err(_) => unreachable!(),
+            .map(|checked_out_package_path| {
+                (
+                    checked_out_package_path,
+                    operations::attempt_update(checked_out_package_path, self.color),
+                )
             })
             .collect();
 
@@ -107,11 +109,11 @@ impl BulkUpdaterOpts {
         let _failed_to_update_packages =
             attempted_update_packages
                 .par_iter()
-                .map(|(new_package_path, result)| {
+                .map(|(package_path, result)| {
                     if result.is_err() {
                         tracing::error!(
                             "❌ Package {} failed to update!",
-                            new_package_path.to_string_lossy()
+                            package_path.to_string_lossy()
                         );
                     }
                 });
