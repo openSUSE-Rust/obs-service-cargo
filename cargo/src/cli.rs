@@ -29,7 +29,7 @@ use tracing::{debug, error, info, trace, warn, Level};
     about = "OBS Source Service to vendor all crates.io and dependencies for Rust project locally",
     after_long_help = "Set verbosity and tracing through `RUST_LOG` environmental variable e.g. `RUST_LOG=trace`
 
-Bugs can be reported on GitHub: https://github.com/uncomfyhalomacro/obs-service-cargo_vendor-rs/issues",
+Bugs can be reported on GitHub: https://github.com/openSUSE/obs-service-cargo_vendor/issues",
     max_term_width = 120
 )]
 pub struct Opts {

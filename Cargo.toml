@@ -1,12 +1,12 @@
 [workspace]
 members = [
   "cargo",
-  "bulk-update",
+  "bulk-updater",
 ]
 
 default-members = [
   "cargo",
-  "bulk-update",
+  "bulk-updater",
 ]
 
 resolver = "2"
