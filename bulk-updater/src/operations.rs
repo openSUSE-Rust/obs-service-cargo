@@ -63,7 +63,7 @@ fn do_services(package_path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-pub fn checkout_or_update(package_name: &str, basepath: &Path) -> io::Result<PathBuf> {
+pub fn osc_checkout_or_update(package_name: &str, basepath: &Path) -> io::Result<PathBuf> {
     let package_path =
         std::path::PathBuf::from(format!("{}:{}", basepath.to_string_lossy(), package_name));
     tracing::info!(
@@ -130,7 +130,7 @@ pub fn checkout_or_update(package_name: &str, basepath: &Path) -> io::Result<Pat
     Ok(package_path)
 }
 
-pub fn attempt_submit(
+pub fn attempt_osc_operation_with_optional_submit(
     package_path: &Path,
     message: &str,
     yolo: bool,
@@ -248,7 +248,10 @@ fn does_have_cargo_vendor(package_path: &Path) -> io::Result<Service> {
     }
 }
 
-pub fn attempt_update(package_path: &Path, colorize: clap::ColorChoice) -> io::Result<PathBuf> {
+pub fn attempt_cargo_update_before_revendor(
+    package_path: &Path,
+    colorize: clap::ColorChoice,
+) -> io::Result<PathBuf> {
     tracing::info!(
         "🔼 Attempting to update in progress at {}",
         package_path.to_string_lossy()

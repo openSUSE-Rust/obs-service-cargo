@@ -71,7 +71,10 @@ impl BulkUpdaterOpts {
             .map(|package_name| -> (PathBuf, io::Result<PathBuf>) {
                 (
                     package_name.to_path_buf(),
-                    operations::checkout_or_update(&package_name.to_string_lossy(), &self.basepath),
+                    operations::osc_checkout_or_update(
+                        &package_name.to_string_lossy(),
+                        &self.basepath,
+                    ),
                 )
             })
             .collect();
@@ -95,47 +98,50 @@ impl BulkUpdaterOpts {
             })
             .collect();
 
-        let attempted_update_packages: Vec<_> = okay_checkout_packages
+        let attempted_package_cargo_update_before_revendors: Vec<_> = okay_checkout_packages
             .par_iter()
             .map(|checked_out_package_path| {
                 (
                     checked_out_package_path,
-                    operations::attempt_update(checked_out_package_path, self.color),
+                    operations::attempt_cargo_update_before_revendor(
+                        checked_out_package_path,
+                        self.color,
+                    ),
                 )
             })
             .collect();
 
         // Show the list of packages that we are not able to update
-        let _failed_to_update_packages =
-            attempted_update_packages
-                .par_iter()
-                .map(|(package_path, result)| {
-                    if result.is_err() {
-                        tracing::error!(
-                            "❌ Package {} failed to update!",
-                            package_path.to_string_lossy()
-                        );
-                    }
-                });
+        let _failed_to_cargo_update_packages = attempted_package_cargo_update_before_revendors
+            .par_iter()
+            .map(|(package_path, result)| {
+                if result.is_err() {
+                    tracing::error!(
+                        "❌ Package {} failed to update!",
+                        package_path.to_string_lossy()
+                    );
+                }
+            });
 
         // We only need the package path since it will be reused anyway
-        let updated_packages: Vec<_> = attempted_update_packages
-            .par_iter()
-            .filter_map(|(package_path, result)| {
-                if result.is_ok() {
-                    Some(package_path.to_path_buf())
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let cargo_updated_and_revendored_packages: Vec<_> =
+            attempted_package_cargo_update_before_revendors
+                .par_iter()
+                .filter_map(|(package_path, result)| {
+                    if result.is_ok() {
+                        Some(package_path.to_path_buf())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
 
-        let attempted_submit_packages: Vec<_> = updated_packages
+        let attempted_package_submissions: Vec<_> = cargo_updated_and_revendored_packages
             .par_iter()
             .map(|updated_package_path| {
                 (
                     updated_package_path,
-                    operations::attempt_submit(
+                    operations::attempt_osc_operation_with_optional_submit(
                         updated_package_path,
                         &self.message,
                         self.yolo,
@@ -147,7 +153,7 @@ impl BulkUpdaterOpts {
 
         // Show the list of packages that we are not able to submit
         let _failed_to_submit_packages =
-            attempted_submit_packages
+            attempted_package_submissions
                 .par_iter()
                 .map(|(package_path, result)| {
                     if result.is_err() {
