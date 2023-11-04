@@ -17,24 +17,29 @@ fn do_services(package_path: &Path) -> io::Result<()> {
     let cwd = std::env::current_dir()?;
     tracing::debug!("Current cwd is {}", cwd.to_string_lossy());
     let cwd_plus_package_path_binding = cwd.join(package_path);
-    let cwd_plus_package_path_string = cwd_plus_package_path_binding.as_os_str().to_string_lossy();
-    let bindmount_option = format!(
-        "{}:{}",
-        cwd.as_os_str().to_string_lossy(),
-        cwd.as_os_str().to_string_lossy()
+    tracing::debug!(
+        "Newly set package path is {}",
+        cwd_plus_package_path_binding.to_string_lossy()
     );
+    let scan_dot_cfg = cwd.join("scan.cfg");
+    let scan_dot_cfg_string = scan_dot_cfg.to_string_lossy();
+    let cwd_plus_package_path_string = cwd_plus_package_path_binding.to_string_lossy();
+    let bindmount_option = format!("{}:{}", cwd.to_string_lossy(), cwd.to_string_lossy());
     let cmd_arguments = vec![
         "--really_quiet",
         "--config",
-        "scan.cfg",
+        &scan_dot_cfg_string,
         "--cwd",
         &cwd_plus_package_path_string,
         "--bindmount",
         &bindmount_option,
+        "--",
         "/usr/bin/osc",
         "service",
         "ra",
     ];
+
+    tracing::debug!("Full command: {:?}", cmd_arguments);
 
     let full_command = process::Command::new("nsjail")
         .args(cmd_arguments)
