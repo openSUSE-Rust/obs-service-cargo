@@ -15,6 +15,7 @@ use std::{fs, io};
 
 fn do_services(package_path: &Path) -> io::Result<()> {
     let cwd = std::env::current_dir()?;
+    tracing::debug!("Current cwd is {}", cwd.to_string_lossy());
     let cwd_plus_package_path_binding = cwd.join(package_path);
     let cwd_plus_package_path_string = cwd_plus_package_path_binding.as_os_str().to_string_lossy();
     let bindmount_option = format!(
@@ -71,6 +72,7 @@ pub fn osc_checkout_or_update(package_name: &str, basepath: &Path) -> io::Result
         package_path.to_string_lossy()
     );
     if package_path.exists() {
+        tracing::debug!("{} exists.", package_path.to_string_lossy());
         tracing::info!("osc revert {}", package_path.to_string_lossy());
         let arguments = vec!["revert", "."];
         let out = osc_command(&package_path, &arguments)?;
@@ -112,6 +114,7 @@ pub fn osc_checkout_or_update(package_name: &str, basepath: &Path) -> io::Result
             tracing::info!("stderr -- {}", command_output);
         };
     } else {
+        tracing::debug!("{} does not exist.", package_path.to_string_lossy());
         let arguments = vec!["bco", "."];
         let out = osc_command(&package_path, &arguments)?;
 
@@ -324,8 +327,10 @@ pub fn attempt_cargo_update_before_revendor(
         } else if compression == "xz" {
             comp_type = Compression::Xz;
         }
+
+        // ensure package path and source is joined
         let srcpath = Src {
-            src: PathBuf::from(&src),
+            src: package_path.join(&src),
         };
         let new_opts = Opts {
             src: srcpath.clone(),
