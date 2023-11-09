@@ -104,6 +104,10 @@ Options:
 
 ```
 
+# Other utilities
+
+- Bulk Updater (WIP). Allows you to update Rust software packages locally.
+
 # Limitations
 
 There may be some corner/edge (whatever-you-call-it) cases that will not work with **OBS Service Cargo**. Please open a bug 
