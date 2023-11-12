@@ -43,11 +43,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         error!(err = ?e, "Unable to access terminfo db. This is a bug!");
         io::Error::new(
             io::ErrorKind::Other,
-            "Unable to access terminfo db. This is a bug!",
+            "Unable to access terminfo db. This is a bug! Setting color option to false!",
         )
-    })?;
+    });
 
-    let is_termcolorsupported = terminfodb.get::<cap::MaxColors>().is_some();
+    let is_termcolorsupported = match terminfodb {
+        Ok(hasterminfodb) => hasterminfodb.get::<cap::MaxColors>().is_some(),
+        Err(_) => false,
+    };
     let to_color = matches!(std::io::stdout().is_terminal(), true if {
         let coloroption = &args.color;
         match coloroption {
