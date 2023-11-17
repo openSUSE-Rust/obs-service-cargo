@@ -69,17 +69,14 @@ pub fn vendor(
         )
     })?;
 
-    match cargo_config.as_ref().parent() {
-        Some(p_path) => {
-            fs::create_dir_all(p_path).map_err(|err| {
-                error!(?err, "Failed to create parent dir for cargo config");
-                OBSCargoError::new(
-                    OBSCargoErrorKind::VendorError,
-                    "failed to create parent dir for cargo config".to_string(),
-                )
-            })?;
-        }
-        _ => {}
+    if let Some(p_path) = cargo_config.as_ref().parent() {
+        fs::create_dir_all(p_path).map_err(|err| {
+            error!(?err, "Failed to create parent dir for cargo config");
+            OBSCargoError::new(
+                OBSCargoErrorKind::VendorError,
+                "failed to create parent dir for cargo config".to_string(),
+            )
+        })?;
     }
 
     let mut file_cargo_config = fs::File::create(cargo_config.as_ref()).map_err(|err| {
