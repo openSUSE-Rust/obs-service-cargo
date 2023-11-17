@@ -95,6 +95,9 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
     // This is all pre-processing, which is affected by the single/multi Cargo.toml
     // case. We do all this first.
 
+    // Assume we have deps
+    let mut hasdeps = true;
+
     // Now switch on the multi vs single case.
     if manifest_files.is_empty() {
         // Single file
@@ -106,7 +109,9 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
             info!("📗 Project does not use a workspace!");
         };
 
-        let hasdeps = vendor::has_dependencies(&first_manifest)?;
+        // It's a workspace, or single toml, so we can actually check this.
+        // in multiple crates we can't.
+        hasdeps = vendor::has_dependencies(&first_manifest)?;
 
         let should_vendor = if hasdeps && isworkspace {
             debug!("Workspace has dependencies!");
@@ -172,9 +177,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         vendor_dir.as_ref(),
     ];
 
-    if vendor_dir.exists()
-        && (vendor::has_dependencies(&first_manifest)? || vendor::is_workspace(&first_manifest)?)
-    {
+    if vendor_dir.exists() && hasdeps {
         vendor::compress(outdir, prjdir, &paths_to_archive, compression)?;
     } else {
         info!("😌 No dependencies, no need to vendor!");
