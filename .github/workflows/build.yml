@@ -1,0 +1,26 @@
+name: Build OBS Service Cargo
+
+on: [push, pull_request]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    - name: Build
+      run: |
+        rm Cargo.lock
+        cargo build --workspace --release
+    - name: Check formatting
+      run: |
+        cargo fmt -- --check
+    - name: Run tests
+      run: |
+        cargo test --release
+
