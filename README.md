@@ -64,6 +64,9 @@ Use only `cargotoml` in situations where you need to also vendor a subcrate. Thi
 > </services>
 > ```
 
+> [!IMPORTANT]
+> If a project uses a workspace, you don't actually need to do this unless the workspace manifest is part of a subproject.
+
 Once you are ready, run the following command locally:
 
 ```bash
@@ -77,12 +80,37 @@ osc add vendor.tar.zst
 ```
 
 > [!IMPORTANT]
-> If using `cargotoml`, the vendored tarball is named after their parent directories e.g. `rust/pv/Cargo.toml` -> `pv.vendor.tar.zst`,
-> and has its own `cargo_config` file as well e.g. `rust/pv/Cargo.toml` -> `pv_cargo_config`.
-
-> [!IMPORTANT]
 > Some Rust software such as the infamous https://github.com/elliot40404/bonk do not have any dependencies so they may not generate a vendored tarball.
 > The service will give you an output of information about it by checking the manifest file.
+
+# What is inside `vendor.tar.<zst,gz,xz>`?
+
+The files inside the vendored tarball contains the following:
+- a lockfile `Cargo.lock`
+- a `.cargo/config`
+- the crates that were fetched during the vendor process.
+
+When extracted, it will have the following paths when extracted.
+
+```
+.
+├── .cargo/
+│   └── config
+├── Cargo.lock
+└── vendor/
+```
+
+This means, a `%prep` section may look like this
+
+```
+%prep
+%autosetup -a1
+```
+
+No need to copy a `cargo_config` or a lockfile to somewhere else or add it as part of the sources in the specfile. *They are all part of the vendored tarball now*.
+
+> [!NOTE]
+> If desired, you may use this knowledge for weird projects that have weird build configurations. 
 
 # Parameters
 
@@ -94,7 +122,7 @@ Usage: cargo_vendor [OPTIONS] --src <SRC> --outdir <OUTDIR>
 Options:
       --src <SRC>                  Where to find sources. Source is either a directory or a source tarball AND cannot be both. [aliases: srctar, srcdir]
       --compression <COMPRESSION>  What compression algorithm to use. [default: zst] [possible values: gz, xz, zst]
-      --tag <TAG>                  Tag some files for multi-vendor and multi-cargo_config projects
+      --tag <TAG>                  Tag some files for multi-vendor and multi-cargo_config projects. DEPRECATED. DO NOT USE.
       --cargotoml <CARGOTOML>      Other cargo manifest files to sync with during vendor
       --update <UPDATE>            Update dependencies or not [default: true] [possible values: true, false]
       --outdir <OUTDIR>            Where to output vendor.tar* and cargo_config
