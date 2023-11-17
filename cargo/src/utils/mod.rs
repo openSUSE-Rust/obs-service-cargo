@@ -156,7 +156,6 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
             return Ok(());
         }
 
-        // Then we update `has_deps` to be the same as `should_vendor`.
         hasdeps = should_vendor;
 
         if update {
@@ -169,7 +168,33 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         // Okay, we are ready to go now.
     } else if update {
         warn!("⚠️  Unable to update when multiple Cargo.toml files are specified. Ignoring `update` parameter with value set to `{}`.", update);
-    }
+
+        // Then we check if at least one of the manifest files contains a dependency.
+        // We yolo it if it is a workspace.
+        info!("Starting to check if additional manifest have dependencies.");
+        hasdeps = manifest_files.iter().any(|manifest_file| {
+            debug!(
+                "⭕ Checking additional manifest if it contains a dependency: {}",
+                manifest_file.display()
+            );
+            vendor::has_dependencies(manifest_file)
+                .map_err(|err| {
+                    error!(error = %err);
+                    err
+                })
+                .is_ok_and(|istrue| istrue)
+                || vendor::is_workspace(manifest_file)
+                    .map_err(|err| {
+                        error!(error = %err);
+                        err
+                    })
+                    .is_ok_and(|istrue| istrue)
+        });
+
+        if hasdeps {
+            info!("🗼 At least one of the provided manifests have dependencies or is at least a workspace.");
+        };
+    };
 
     // Audit the Cargo.lock file.
     let reports =
@@ -185,23 +210,31 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
 
     process_reports(reports)?;
 
-    vendor(prjdir, &cargo_config, &first_manifest, &manifest_files)?;
+    if hasdeps {
+        vendor(prjdir, &cargo_config, &first_manifest, &manifest_files)?;
 
-    // Finally, compress everything together.
-    let compression: &Compression = &args.compression;
-    debug!("Compression is of {}", &compression);
+        // Finally, compress everything together.
+        let compression: &Compression = &args.compression;
+        debug!("Compression is of {}", &compression);
 
-    let paths_to_archive: [&Path; 3] = [
-        cargo_config.as_ref(),
-        cargo_lock.as_ref(),
-        vendor_dir.as_ref(),
-    ];
+        let paths_to_archive: [&Path; 3] = [
+            cargo_config.as_ref(),
+            cargo_lock.as_ref(),
+            vendor_dir.as_ref(),
+        ];
 
-    if vendor_dir.exists() && hasdeps {
-        vendor::compress(outdir, prjdir, &paths_to_archive, compression)?;
+        if vendor_dir.exists() {
+            vendor::compress(outdir, prjdir, &paths_to_archive, compression)?;
+        } else {
+            error!("Vendor dir does not exist! This is a bug!");
+            return Err(OBSCargoError::new(
+                OBSCargoErrorKind::VendorError,
+                "Vendor directory not found when attempting to vendor.".to_string(),
+            ));
+        };
     } else {
         info!("😌 No dependencies, no need to vendor!");
-    }
+    };
 
     // And we're golden!
     Ok(())
