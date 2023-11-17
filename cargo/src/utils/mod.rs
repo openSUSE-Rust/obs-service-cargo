@@ -87,8 +87,28 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
 
     // Setup some common paths we'll use from here out.
     let outdir = args.outdir.to_owned();
-    let cargo_lock = prjdir.join("Cargo.lock");
-    // let cargo_config = prjdir.join("cargo_config");
+    let first_manifest_parent_path = first_manifest.parent();
+
+    // Lockfiles are weird. The behavior is to generate
+    // the lockfile at the parent dir of the `--manifest-path`
+    // parameter of `cargo vendor`, and NOT where `cargo vendor`
+    // was invoked. If it is a subcrate that is part of a workspace,
+    // the lockfile is regenerated from where the workspace
+    // manifest is.
+    // WARN For now we do a simple logic to get the lockfile path.
+    // TODO Check if a manifest file is part of a workspace
+    // so in that way, we can determine where the lockfile is
+    let cargo_lock = match first_manifest_parent_path {
+        Some(custom_path) => {
+            let lockfilepath = custom_path.join("Cargo.lock");
+            if lockfilepath.exists() {
+                lockfilepath
+            } else {
+                prjdir.join("Cargo.lock")
+            }
+        }
+        None => prjdir.join("Cargo.lock"),
+    };
     let cargo_config = prjdir.join(".cargo/config");
     let vendor_dir = prjdir.join("vendor");
     let update = args.update;
