@@ -67,7 +67,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
     let mut manifest_files: Vec<PathBuf> = if !args.cargotoml.is_empty() {
         debug!("Using manually specified Cargo.toml files.");
         debug!(?args.cargotoml);
-        args.cargotoml.iter().map(|p| p.into()).collect()
+        args.cargotoml.iter().map(|p| prjdir.join(p)).collect()
     } else {
         debug!("Assuming Cargo.toml in root of the projectdir");
         vec![prjdir.join("Cargo.toml")]
