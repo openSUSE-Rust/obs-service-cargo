@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::fs;
 use std::io::Write;
@@ -16,6 +17,9 @@ use crate::errors::OBSCargoError;
 use crate::errors::OBSCargoErrorKind;
 use crate::utils::cargo_command;
 use crate::utils::compress;
+
+use serde::Deserialize;
+use serde::Serialize;
 
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
@@ -198,16 +202,33 @@ pub fn is_workspace(src: &Path) -> Result<bool, OBSCargoError> {
     ))
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct TomlManifest {
+    dependencies: Option<BTreeMap<String, toml::Value>>,
+    dev_dependencies: Option<BTreeMap<String, toml::Value>>,
+}
+
 pub fn has_dependencies(src: &Path) -> Result<bool, OBSCargoError> {
     if let Ok(manifest) = fs::read_to_string(src) {
-        if let Ok(manifest_data) = toml::from_str::<toml::Value>(&manifest) {
-            if manifest_data.get("dependencies").is_some()
-                || manifest_data.get("dev-dependencies").is_some()
-            {
-                return Ok(true);
-            } else {
-                return Ok(false);
-            };
+        match toml::from_str::<TomlManifest>(&manifest) {
+            Ok(manifest_data) => {
+                debug!("Manifest TOML data: {:?}", manifest_data);
+                return Ok(match manifest_data.dependencies {
+                    Some(deps) => !deps.is_empty(),
+                    None => false,
+                } || match manifest_data.dev_dependencies {
+                    Some(deps) => !deps.is_empty(),
+                    None => false,
+                });
+            }
+            Err(err) => {
+                error!("Failed to deserialize TOML manifest file: {}", err);
+                return Err(OBSCargoError::new(
+                    OBSCargoErrorKind::VendorError,
+                    "Failed to deserialize TOML manifest file".to_string(),
+                ));
+            }
         };
     }
     Err(OBSCargoError::new(
