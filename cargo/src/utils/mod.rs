@@ -136,6 +136,9 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
             return Ok(());
         }
 
+        // Then we update `has_deps` to be the same as `should_vendor`.
+        hasdeps = should_vendor;
+
         if update {
             vendor::update(prjdir, &first_manifest)?
         } else {
