@@ -160,7 +160,7 @@ dependencies = [
 
 [[package]]
 name = "bulk-updater"
-version = "0.8.8"
+version = "0.8.9"
 dependencies = [
  "clap",
  "obs-service-cargo",
@@ -1721,7 +1721,7 @@ dependencies = [
 
 [[package]]
 name = "obs-service-cargo"
-version = "0.8.8"
+version = "0.8.9"
 dependencies = [
  "clap",
  "flate2",
