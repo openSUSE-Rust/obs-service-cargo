@@ -148,11 +148,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         }
         // Okay, we are ready to go now.
     } else if update {
-        warn!("⚠️  Unable to update when multiple Cargo.toml files are specified.");
-        return Err(OBSCargoError::new(
-            OBSCargoErrorKind::VendorError,
-            "Unable to update when multiple Cargo.toml files are specified.".to_string(),
-        ));
+        warn!("⚠️  Unable to update when multiple Cargo.toml files are specified. Ignoring `update` parameter with value set to `{}`.", update);
     }
 
     // Audit the Cargo.lock file.
