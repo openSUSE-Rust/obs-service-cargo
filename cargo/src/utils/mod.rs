@@ -151,11 +151,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
             false
         };
 
-        if !should_vendor {
-            warn!("🔥 No dependencies for project were found, skipping vendoring. If you think this is an error, please check your configuration.");
-            return Ok(());
-        }
-
+        // hasdeps should be equal now with should_vendor.
         hasdeps = should_vendor;
 
         if update {
@@ -233,7 +229,8 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
             ));
         };
     } else {
-        info!("😌 No dependencies, no need to vendor!");
+        warn!("🔥 No dependencies for project were found, skipping vendoring. If you think this is an error, please check your configuration.");
+        return Ok(());
     };
 
     // And we're golden!
