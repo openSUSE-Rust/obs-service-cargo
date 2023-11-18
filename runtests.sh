@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -euo pipefail
 
 SCRIPTPATH="$( cd "$(dirname "$0")" || exit ; pwd -P )"
 
