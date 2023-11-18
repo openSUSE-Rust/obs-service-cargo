@@ -26,4 +26,5 @@ jobs:
         cargo fmt -- --check
     - name: Run sample projects to test
       run: |
-          ./runtests.sh
+        chmod +x runtests.sh
+        ./runtests.sh
