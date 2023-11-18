@@ -38,6 +38,27 @@ serde = "~1.0.184"
 [workspace.metadata.services]
 assets = [ "./cargo_vendor.service", "./cargo_audit.service" ]
 
+[workspace.lints.rust]
+warnings = "deny"
+unused_extern_crates = "warn"
+
+[workspace.lints.clippy]
+# Enable some groups of clippy lints.
+suspicious = "deny"
+perf = "deny"
+# Specific lints to enforce.
+todo = "warn"
+unimplemented = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+await_holding_lock = "deny"
+needless_pass_by_value = "deny"
+trivially_copy_pass_by_ref = "deny"
+disallowed_types = "deny"
+manual_let_else = "deny"
+unreachable = "allow"
+
 [profile.release]
 lto = true          # Enable Link Time Optimization.
 debug = true        # Include debug symbols. If you are going to complain for big binary sizes, there is a release-stripped option :P
