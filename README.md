@@ -88,7 +88,8 @@ osc add vendor.tar.zst
 # What is inside `vendor.tar.<zst,gz,xz>`?
 
 The files inside the vendored tarball contains the following:
-- a lockfile `Cargo.lock`
+- a lockfile `Cargo.lock`. Sometimes it does not exist if the project directory is super different e.g. flux
+- other lockfiles and their respective directories. See more [here](#about-lockfiles)
 - a `.cargo/config`
 - the crates that were fetched during the vendor process.
 
@@ -99,6 +100,7 @@ When extracted, it will have the following paths when extracted.
 ├── .cargo/
 │   └── config
 ├── Cargo.lock
+├──.<Path to other Cargo.locks in their respective subcrates/subprojects>
 └── vendor/
 ```
 
@@ -113,6 +115,23 @@ No need to copy a `cargo_config` or a lockfile to somewhere else or add it as pa
 
 > [!NOTE]
 > If desired, you may use this knowledge for weird projects that have weird build configurations. 
+
+# About lockfiles
+
+OBS Cargo Vendor does a boring way to check for lockfiles:
+
+1. If a manifest is not a workspace manifest, it's likely the lockfile
+is in the directory of where the manifest is
+2. If a manifest is part or a member of a workspace manifest, then it's
+likely that the lockfile is on the path of where the workspace manifest
+is.
+
+So we just eagerly take all manifest paths from the parameters, and
+just check if there are any lockfiles there. And then we slap their full
+paths to be part of the vendored tarball. So a path that looks like
+`rust/pv/Cargo.lock` may also be reflected in the vendored tarball. Thus,
+if extracted, it will go to the desired path `rust/pv/Cargo.lock` from
+the root folder of the project.
 
 # Parameters
 
