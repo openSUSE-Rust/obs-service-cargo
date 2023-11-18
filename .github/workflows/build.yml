@@ -20,7 +20,7 @@ jobs:
     - name: Build
       run: |
         rm Cargo.lock
-        cargo build --workspace --release
+        cargo build --release --all-features
     - name: Check formatting
       run: |
         cargo fmt -- --check
