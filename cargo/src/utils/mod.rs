@@ -170,46 +170,59 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         };
     };
 
-    let mut other_cargo_locks: Vec<PathBuf> = manifest_files
-        .iter()
-        .map(|manifest_path| {
-            manifest_path
-                .parent()
-                .unwrap_or(Path::new("/"))
-                .join("Cargo.lock")
-        })
-        .filter(|lockfile_path| lockfile_path.exists())
-        .collect();
+    // NOTE
+    // Two things to know:
+    // 1. If a manifest is not a workspace manifest, it's likely the lockfile
+    // is in the directory of where the manifest is
+    // 2. If a manifest is part or a member of a workspace manifest, then it's
+    // likely that the lockfile is on the path of where the workspace manifest
+    // is.
+    //
+    // So we just eagerly take all manifest paths from the parameters, and
+    // just check if there are any lockfiles there.
+    //
+    // We canonicalize the path first so we won't get any gotchas if we are
+    // looking for the parent path.
+    //
+    // And then we only accept if there is `Some` kind of value there and ignore
+    // if there is `None`.
+    let mut cargo_locks: Vec<PathBuf> = Vec::new();
 
-    debug!("Other cargo locks: {:?}", other_cargo_locks);
+    for manifest_file in manifest_files.iter() {
+        let manifest_f = manifest_file.canonicalize().map_err(|err| {
+            error!("Failed to canonicalize path: {}", err);
+            OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+        })?;
 
-    match first_manifest.parent() {
-        Some(custom_path) => {
-            let lockfilepath = custom_path.join("Cargo.lock");
-            if lockfilepath.exists() {
-                debug!("Path to first cargo lock: {}", lockfilepath.display());
-                other_cargo_locks.push(lockfilepath);
+        let lockfile_path = manifest_f.parent().map(|path_f| path_f.join("Cargo.lock"));
+        if let Some(lockfile_p) = lockfile_path {
+            if lockfile_p.exists() {
+                cargo_locks.push(lockfile_p)
             };
-        }
-        None => {
-            let lockfilepath = prjdir.join("Cargo.lock");
-            if lockfilepath.exists() {
-                debug!("Path to first cargo lock: {}", lockfilepath.display());
-                other_cargo_locks.push(lockfilepath);
-            };
-        }
+        };
+    }
+
+    // NOTE
+    // And then we check if the first manifest also has a lockfile.
+    if let Some(custom_path) = first_manifest.parent() {
+        let lockfilepath = custom_path.join("Cargo.lock");
+        if lockfilepath.exists() {
+            debug!("Path to first cargo lock: {}", lockfilepath.display());
+            cargo_locks.push(lockfilepath);
+        };
     };
 
+    debug!("All cargo locks: {:?}", cargo_locks);
+
     // Audit the Cargo.lock file.
-    let reports = perform_cargo_audit(&other_cargo_locks, &args.i_accept_the_risk).map_err(
-        |rustsec_err| {
+    let reports =
+        perform_cargo_audit(&cargo_locks, &args.i_accept_the_risk).map_err(|rustsec_err| {
             error!(?rustsec_err, "Unable to complete cargo audit");
             OBSCargoError::new(
                 OBSCargoErrorKind::AuditError,
                 "Unable to complete cargo audit".to_string(),
             )
-        },
-    )?;
+        })?;
 
     debug!(?reports);
 
@@ -224,7 +237,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
 
         let mut paths_to_archive: Vec<PathBuf> = vec![cargo_config, vendor_dir.clone()];
 
-        paths_to_archive.append(&mut other_cargo_locks);
+        paths_to_archive.append(&mut cargo_locks);
 
         debug!("All paths to archive {:#?}", paths_to_archive);
 
