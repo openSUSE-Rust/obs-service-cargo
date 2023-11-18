@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 SCRIPTPATH="$( cd "$(dirname "$0")" || exit ; pwd -P )"
 
 echo "# Downloading bonk"
