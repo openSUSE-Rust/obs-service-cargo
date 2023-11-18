@@ -87,28 +87,6 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
 
     // Setup some common paths we'll use from here out.
     let outdir = args.outdir.to_owned();
-    let first_manifest_parent_path = first_manifest.parent();
-
-    // Lockfiles are weird. The behavior is to generate
-    // the lockfile at the parent dir of the `--manifest-path`
-    // parameter of `cargo vendor`, and NOT where `cargo vendor`
-    // was invoked. If it is a subcrate that is part of a workspace,
-    // the lockfile is regenerated from where the workspace
-    // manifest is.
-    // WARN For now we do a simple logic to get the lockfile path.
-    // TODO Check if a manifest file is part of a workspace
-    // so in that way, we can determine where the lockfile is
-    let cargo_lock = match first_manifest_parent_path {
-        Some(custom_path) => {
-            let lockfilepath = custom_path.join("Cargo.lock");
-            if lockfilepath.exists() {
-                lockfilepath
-            } else {
-                prjdir.join("Cargo.lock")
-            }
-        }
-        None => prjdir.join("Cargo.lock"),
-    };
     let cargo_config = prjdir.join(".cargo/config");
     let vendor_dir = prjdir.join("vendor");
     let update = args.update;
@@ -192,15 +170,46 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         };
     };
 
+    let mut other_cargo_locks: Vec<PathBuf> = manifest_files
+        .iter()
+        .map(|manifest_path| {
+            manifest_path
+                .parent()
+                .unwrap_or(Path::new("/"))
+                .join("Cargo.lock")
+        })
+        .filter(|lockfile_path| lockfile_path.exists())
+        .collect();
+
+    debug!("Other cargo locks: {:?}", other_cargo_locks);
+
+    match first_manifest.parent() {
+        Some(custom_path) => {
+            let lockfilepath = custom_path.join("Cargo.lock");
+            if lockfilepath.exists() {
+                debug!("Path to first cargo lock: {}", lockfilepath.display());
+                other_cargo_locks.push(lockfilepath);
+            };
+        }
+        None => {
+            let lockfilepath = prjdir.join("Cargo.lock");
+            if lockfilepath.exists() {
+                debug!("Path to first cargo lock: {}", lockfilepath.display());
+                other_cargo_locks.push(lockfilepath);
+            };
+        }
+    };
+
     // Audit the Cargo.lock file.
-    let reports =
-        perform_cargo_audit(&[&cargo_lock], &args.i_accept_the_risk).map_err(|rustsec_err| {
+    let reports = perform_cargo_audit(&other_cargo_locks, &args.i_accept_the_risk).map_err(
+        |rustsec_err| {
             error!(?rustsec_err, "Unable to complete cargo audit");
             OBSCargoError::new(
                 OBSCargoErrorKind::AuditError,
                 "Unable to complete cargo audit".to_string(),
             )
-        })?;
+        },
+    )?;
 
     debug!(?reports);
 
@@ -213,11 +222,11 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         let compression: &Compression = &args.compression;
         debug!("Compression is of {}", &compression);
 
-        let paths_to_archive: [&Path; 3] = [
-            cargo_config.as_ref(),
-            cargo_lock.as_ref(),
-            vendor_dir.as_ref(),
-        ];
+        let mut paths_to_archive: Vec<PathBuf> = vec![cargo_config, vendor_dir.clone()];
+
+        paths_to_archive.append(&mut other_cargo_locks);
+
+        debug!("All paths to archive {:#?}", paths_to_archive);
 
         if vendor_dir.exists() {
             vendor::compress(outdir, prjdir, &paths_to_archive, compression)?;
