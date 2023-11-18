@@ -52,6 +52,10 @@ should now be in openSUSE, you can "accept a risk" of a RUSTSEC ID by adding a n
 
 Use only `cargotoml` in situations where you need to also vendor a subcrate. This is useful for certain projects with no root manifest like the warning below.
 
+When adding a `cargotoml` parameter, make sure *it is after the root folder*. For example, your project has a root folder named `s390-tools`, and then you should
+omit `s390-tools` and proceed to the files or subfolders next to it. So a manifest file located at `s390-tools/rust/utils/Cargo.toml` will have
+the following `cargotoml` parameter value of `rust/utils/Cargo.toml`.
+
 > [!WARNING]
 > Certain projects may not have a root manifest file, thus, each directory may be a separate subproject e.g. https://github.com/ibm-s390-linux/s390-tools 
 > and may need some thinking.
