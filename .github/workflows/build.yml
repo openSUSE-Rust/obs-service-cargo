@@ -11,19 +11,24 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+
     - name: Install dependencies
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y libzstd-dev
+        sudo apt-get install -y libzstd-dev zstd
+
     - name: Build
       run: |
-        rm Cargo.lock
+        cargo update
         cargo build --release --all-features
+
     - name: Check formatting
       run: |
         cargo fmt -- --check
+
     - name: Run sample projects to test
       run: |
         chmod +x runtests.sh
