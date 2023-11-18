@@ -13,8 +13,7 @@ curl -LJ0 "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz"
 
 echo "# Generating tarball"
 "${SCRIPTPATH}"/target/release/cargo_vendor --src /tmp/bonk-0.3.2.tar.gz --outdir /tmp
-echo "# Removing vendored tarball"
-rm /tmp/vendor.tar.zst
+echo "# No tarball to remove"
 
 echo "# Generating tarball"
 "${SCRIPTPATH}"/target/release/cargo_vendor --src /tmp/s390-tools-2.29.0.tar.gz --outdir /tmp --cargotoml rust/pvsecret/Cargo.toml --cargotoml rust/utils/Cargo.toml --cargotoml rust/pv/Cargo.toml
