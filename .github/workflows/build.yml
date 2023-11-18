@@ -26,10 +26,4 @@ jobs:
         cargo fmt -- --check
     - name: Run sample projects to test
       run: |
-        curl -LJ0 "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz" --output /tmp/bonk-0.3.2.tar.gz
-        curl -LJ0 "https://github.com/ibm-s390-linux/s390-tools/archive/refs/tags/v2.29.0.tar.gz" --output /tmp/s390-tools-2.29.0.tar.gz
-        curl -LJ0 "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz" --output /tmp/flux-0.194.4.tar
-        ./target/release/cargo_vendor --src /tmp/bonk-0.3.2.tar.gz --outdir /tmp
-        ./target/release/cargo_vendor --src /tmp/s390-tools-2.29.0.tar.gz --outdir /tmp --cargotoml rust/pvsecret/Cargo.toml --cargotoml rust/utils/Cargo.toml --cargotoml rust/pv/Cargo.toml
-        ./target/release/cargo_vendor --src /tmp/flux-0.194.4.tar.gz --outdir /tmp --cargotoml libflux/Cargo.toml
-
+          ./runtests.sh
