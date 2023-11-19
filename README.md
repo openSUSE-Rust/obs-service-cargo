@@ -159,6 +159,12 @@ Options:
 
 ```
 
+# List of possible scenarios when vendoring fails
+
+- `cargo` issues. Sometimes deleting `~/.cargo` will solve your issues.
+- Wrong permissions. You may not have a permission to access a file or folder.
+- There are updates of this project. Please call us out on that 🤣
+
 # Other utilities
 
 - Bulk Updater (WIP). Allows you to update Rust software packages locally.
