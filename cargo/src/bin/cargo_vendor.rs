@@ -61,20 +61,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("🎢 Starting OBS Service Cargo Vendor.");
     debug!(?args);
 
-    if args.tag.is_some() {
-        error!("⚠️  tags are no longer supported for vendoring.");
-        eprintln!(
-            r#"
-When you have multiple Cargo.toml's in a project, you can specify them with
-
-    <param name=\"cargotoml\">first/Cargo.toml</param>"
-    <param name=\"cargotoml\">second/Cargo.toml</param>"
-
-This will create a single vendor.tar that will work with both projects.
-"#
-        );
-    }
-
     warn!("⚠️  Cargo Vendor has been rewritten in rust!");
     eprintln!(
         r#"

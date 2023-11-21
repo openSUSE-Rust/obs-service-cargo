@@ -108,6 +108,7 @@ pub fn compress(
     prjdir: impl AsRef<Path>,
     paths_to_archive: &[impl AsRef<Path>],
     compression: &Compression,
+    tag: Option<&str>,
 ) -> Result<(), OBSCargoError> {
     info!("📦 Archiving vendored dependencies...");
 
@@ -124,7 +125,12 @@ pub fn compress(
     // NOTE: 3. If they are not members, we slap that file into their own compressed vendored
     //          tarball
 
-    let mut vendor_out = outpath.as_ref().join("vendor");
+    let tar_name = match tag {
+        Some(t) => format!("vendor-{}", t),
+        None => "vendor".to_string(),
+    };
+
+    let mut vendor_out = outpath.as_ref().join(tar_name);
     match compression {
         Compression::Gz => {
             vendor_out.set_extension("tar.gz");
