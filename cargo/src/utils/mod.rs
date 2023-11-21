@@ -242,7 +242,13 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         debug!("All paths to archive {:#?}", paths_to_archive);
 
         if vendor_dir.exists() {
-            vendor::compress(outdir, prjdir, &paths_to_archive, compression)?;
+            vendor::compress(
+                outdir,
+                prjdir,
+                &paths_to_archive,
+                compression,
+                args.tag.as_deref(),
+            )?;
         } else {
             error!("Vendor dir does not exist! This is a bug!");
             return Err(OBSCargoError::new(
