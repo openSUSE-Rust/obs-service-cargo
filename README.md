@@ -139,6 +139,48 @@ paths to be part of the vendored tarball. So a path that looks like
 if extracted, it will go to the desired path `rust/pv/Cargo.lock` from
 the root folder of the project.
 
+# How to do multiple vendors
+
+It is possible to do multiple vendored tarballs by using the `--tag` parameter. This allows you to rename your vendored
+in various contexts e.g. projects that are not part of one whole workspace. Example:
+
+```xml
+<services>
+  <service name="cargo_vendor" mode="manual">
+        <param name="src">s390-tools-2.29.0.tar.gz</param>
+        <!-- omit root directory name -->
+        <param name="cargotoml">rust/pv/Cargo.toml</param>
+        <param name="i-accept-the-risk">RUSTSEC-2023-0044</param>
+        <param name="tag">rust-pv</param>
+        <param name="update">true</param>
+  </service>
+  <service name="cargo_vendor" mode="manual">
+        <!-- omit root directory name -->
+        <param name="src">s390-tools-2.29.0.tar.gz</param>
+        <param name="cargotoml">rust/pvsecret/Cargo.toml</param>
+        <param name="i-accept-the-risk">RUSTSEC-2023-0044</param>
+        <param name="tag">pvsecret</param>
+        <param name="update">true</param>
+  </service>
+  <service name="cargo_vendor" mode="manual">
+        <!-- omit root directory name -->
+        <param name="src">s390-tools-2.29.0.tar.gz</param>
+        <param name="cargotoml">rust/utils/Cargo.toml</param>
+        <param name="i-accept-the-risk">RUSTSEC-2023-0044</param>
+        <param name="tag">utils</param>
+        <param name="update">true</param>
+  </service>
+  <service name="cargo_audit" mode="manual" />
+</services>
+```
+
+This will produce the following tarballs:
+
+- `vendor-rust-pv.tar.zst`
+- `vendor-pvsecret.tar.zst`
+- `vendor-utils.tar.zst`
+
+Thus, this allows you to have many vendored tarballs by using the `--tag` parameter.
 # Parameters
 
 ```
@@ -149,7 +191,7 @@ Usage: cargo_vendor [OPTIONS] --src <SRC> --outdir <OUTDIR>
 Options:
       --src <SRC>                  Where to find sources. Source is either a directory or a source tarball AND cannot be both. [aliases: srctar, srcdir]
       --compression <COMPRESSION>  What compression algorithm to use. [default: zst] [possible values: gz, xz, zst]
-      --tag <TAG>                  Tag some files for multi-vendor and multi-cargo_config projects. DEPRECATED. DO NOT USE.
+      --tag <TAG>                  Tag some files for multi-vendor and multi-cargo_config projects.
       --cargotoml <CARGOTOML>      Other cargo manifest files to sync with during vendor
       --update <UPDATE>            Update dependencies or not [default: true] [possible values: true, false]
       --outdir <OUTDIR>            Where to output vendor.tar* and cargo_config
