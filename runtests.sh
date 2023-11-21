@@ -24,3 +24,12 @@ echo "# Generating tarball"
 "${SCRIPTPATH}"/target/release/cargo_vendor --src /tmp/flux-0.194.4.tar.gz --outdir /tmp --cargotoml libflux/Cargo.toml
 echo "# Removing vendored tarball"
 rm /tmp/vendor.tar.zst
+
+echo "# Test tagging"
+"${SCRIPTPATH}"/target/release/cargo_vendor --src /tmp/s390-tools-2.29.0.tar.gz --outdir /tmp --cargotoml rust/pvsecret/Cargo.toml --cargotoml rust/utils/Cargo.toml --cargotoml rust/pv/Cargo.toml --tag "rust-component"
+
+if [ ! -f "vendor-rust-component.tar.zst" ]
+then
+    # Fail
+    exit 1
+fi
