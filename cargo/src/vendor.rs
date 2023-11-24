@@ -213,6 +213,7 @@ pub fn is_workspace(src: &Path) -> Result<bool, OBSCargoError> {
 struct TomlManifest {
     dependencies: Option<BTreeMap<String, toml::Value>>,
     dev_dependencies: Option<BTreeMap<String, toml::Value>>,
+    target: Option<BTreeMap<String, toml::Value>>,
 }
 
 pub fn has_dependencies(src: &Path) -> Result<bool, OBSCargoError> {
@@ -224,6 +225,9 @@ pub fn has_dependencies(src: &Path) -> Result<bool, OBSCargoError> {
                     Some(deps) => !deps.is_empty(),
                     None => false,
                 } || match manifest_data.dev_dependencies {
+                    Some(deps) => !deps.is_empty(),
+                    None => false,
+                } || match manifest_data.target {
                     Some(deps) => !deps.is_empty(),
                     None => false,
                 });
