@@ -13,7 +13,7 @@ curl -LJ0 "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz"
 
 echo "# Downloading VBox-Starter"
 
-curl -LJ0 "https://gitlab.com/catsfood/VBox-Starter/-/archive/v3.1.0/VBox-Starter-v3.1.0.tar.gz" --output-dir /tmp
+curl -LJ0 "https://gitlab.com/catsfood/VBox-Starter/-/archive/v3.1.0/VBox-Starter-v3.1.0.tar.gz" --output /tmp/VBox-Starter-v3.1.0.tar.gz
 
 echo "# Generating tarball"
 "${SCRIPTPATH}"/target/release/cargo_vendor --src /tmp/bonk-0.3.2.tar.gz --outdir /tmp
