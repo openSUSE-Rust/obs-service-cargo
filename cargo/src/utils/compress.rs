@@ -72,7 +72,10 @@ pub fn targz(
 ) -> Result<(), io::Error> {
     use flate2::write::GzEncoder;
     use flate2::Compression;
-    let outtar = fs::File::create(outpath.as_ref())?;
+    let outtar = fs::File::create(outpath.as_ref()).map_err(|err| {
+        error!(outpath = ?outpath.as_ref(), "Unable to create outtar");
+        err
+    })?;
     let encoder = GzEncoder::new(outtar, Compression::default());
     let mut builder = tar::Builder::new(encoder);
     tar_builder(&mut builder, prjdir, archive_files)
@@ -84,7 +87,10 @@ pub fn tarzst(
     archive_files: &[impl AsRef<Path>],
 ) -> Result<(), io::Error> {
     use zstd::Encoder;
-    let outtar = fs::File::create(outpath.as_ref())?;
+    let outtar = fs::File::create(outpath.as_ref()).map_err(|err| {
+        error!(outpath = ?outpath.as_ref(), "Unable to create outtar");
+        err
+    })?;
     let mut enc_builder = Encoder::new(outtar, 19)?;
     enc_builder.include_checksum(true)?;
     let threads: u32 = std::thread::available_parallelism()?.get() as u32;
@@ -103,7 +109,10 @@ pub fn tarxz(
     use xz2::stream::Check::Crc32;
     use xz2::stream::MtStreamBuilder;
     use xz2::write::XzEncoder;
-    let outtar = fs::File::create(outpath.as_ref())?;
+    let outtar = fs::File::create(outpath.as_ref()).map_err(|err| {
+        error!(outpath = ?outpath.as_ref(), "Unable to create outtar");
+        err
+    })?;
     let threads: u32 = std::thread::available_parallelism()?.get() as u32;
     let enc_builder = MtStreamBuilder::new()
         .preset(6)
