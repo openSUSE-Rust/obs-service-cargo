@@ -82,6 +82,7 @@ pub enum Compression {
     Xz,
     #[default]
     Zst,
+    Bz2,
 }
 
 #[derive(Debug)]
@@ -121,6 +122,7 @@ impl Display for Compression {
             Compression::Gz => "gz",
             Compression::Xz => "xz",
             Compression::Zst => "zst",
+            Compression::Bz2 => "bz2",
         };
         write!(f, "{}", msg)
     }
@@ -152,6 +154,7 @@ pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Res
         Compression::Gz => utils::decompress::targz(outdir, src),
         Compression::Xz => utils::decompress::tarxz(outdir, src),
         Compression::Zst => utils::decompress::tarzst(outdir, src),
+        Compression::Bz2 => utils::decompress::tarbz2(outdir, src),
     }
 }
 

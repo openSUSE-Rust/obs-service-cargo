@@ -114,10 +114,15 @@ pub fn tarxz(
     tar_builder(&mut builder, prjdir, archive_files)
 }
 
-pub fn tarbz(
+pub fn tarbz2(
     outpath: impl AsRef<Path>,
     prjdir: impl AsRef<Path>,
     archive_files: &[impl AsRef<Path>],
 ) -> io::Result<()> {
-    Ok(())
+    use bzip2::write::BzEncoder;
+    use bzip2::Compression;
+    let outtar = fs::File::create(outpath.as_ref())?;
+    let encoder = BzEncoder::new(outtar, Compression::best());
+    let mut builder = tar::Builder::new(encoder);
+    tar_builder(&mut builder, prjdir, archive_files)
 }
