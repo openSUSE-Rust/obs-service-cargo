@@ -19,7 +19,7 @@ pub fn tar_builder<T: Write>(
     builder: &mut tar::Builder<T>,
     prjdir: impl AsRef<Path>,
     archive_files: &[impl AsRef<Path>],
-) -> Result<(), io::Error> {
+) -> io::Result<()> {
     for f in archive_files.iter().map(|p| p.as_ref()) {
         // Each path is relative to prjdir. So we can split the
         // prjdir prefix to get the relative archive path.
@@ -68,7 +68,7 @@ pub fn targz(
     outpath: impl AsRef<Path>,
     prjdir: impl AsRef<Path>,
     archive_files: &[impl AsRef<Path>],
-) -> Result<(), io::Error> {
+) -> io::Result<()> {
     use flate2::write::GzEncoder;
     use flate2::Compression;
     let outtar = fs::File::create(outpath.as_ref())?;
@@ -81,7 +81,7 @@ pub fn tarzst(
     outpath: impl AsRef<Path>,
     prjdir: impl AsRef<Path>,
     archive_files: &[impl AsRef<Path>],
-) -> Result<(), io::Error> {
+) -> io::Result<()> {
     use zstd::Encoder;
     let outtar = fs::File::create(outpath.as_ref())?;
     let mut enc_builder = Encoder::new(outtar, 19)?;
@@ -97,7 +97,7 @@ pub fn tarxz(
     outpath: impl AsRef<Path>,
     prjdir: impl AsRef<Path>,
     archive_files: &[impl AsRef<Path>],
-) -> Result<(), io::Error> {
+) -> io::Result<()> {
     // Crc32 is simpler/faster and often hardware accelerated.
     use xz2::stream::Check::Crc32;
     use xz2::stream::MtStreamBuilder;
@@ -112,4 +112,12 @@ pub fn tarxz(
     let encoder = XzEncoder::new_stream(outtar, enc_builder);
     let mut builder = tar::Builder::new(encoder);
     tar_builder(&mut builder, prjdir, archive_files)
+}
+
+pub fn tarbz(
+    outpath: impl AsRef<Path>,
+    prjdir: impl AsRef<Path>,
+    archive_files: &[impl AsRef<Path>],
+) -> io::Result<()> {
+    Ok(())
 }

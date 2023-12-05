@@ -24,6 +24,7 @@ terminfo = "~0.8.0"
 toml = "~0.7.6"
 xz2 = "^0.1.7"
 zstd = { version = "~0.12.4", features = ["pkg-config", "zstdmt"] }
+bzip2 = { version = "~0.4" }
 
 [lints]
 workspace = true
