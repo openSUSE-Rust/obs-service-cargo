@@ -61,8 +61,7 @@ pub fn tar_builder<T: Write>(
         }
     }
 
-    builder.finish()?;
-    Ok(())
+    Ok(builder.finish()?)
 }
 
 pub fn targz(

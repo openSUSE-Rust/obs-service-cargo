@@ -33,6 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(hasterminfodb) => hasterminfodb.get::<cap::MaxColors>().is_some(),
         Err(_) => false,
     };
+
     let to_color = matches!(std::io::stdout().is_terminal(), true if {
         let coloroption = &args.color;
         match coloroption {
@@ -78,11 +79,8 @@ This rewrite introduces some small changes to how vendoring functions for your p
 "#
     );
 
-    match args.src.run_vendor(&args) {
-        Ok(_) => Ok(()),
-        Err(err) => {
-            error!("{}", err);
-            Err(err.into())
-        }
-    }
+    Ok(args.src.run_vendor(&args).map_err(|err| {
+        error!("{}", err);
+        err
+    })?)
 }

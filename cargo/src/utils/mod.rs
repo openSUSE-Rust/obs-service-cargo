@@ -32,7 +32,7 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: &Path) -> Result<(), io::Error> 
     debug!("Copying sources");
     debug!(?dst);
     fs::create_dir_all(dst)?;
-    for entry in fs::read_dir(src)? {
+    Ok(for entry in fs::read_dir(src)? {
         let entry = entry?;
         let ty = entry.file_type()?;
         trace!(?entry);
@@ -59,8 +59,7 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: &Path) -> Result<(), io::Error> 
             trace!(?ty, "Is file?");
             fs::copy(&entry.path(), &mut dst.join(&entry.file_name()))?;
         };
-    }
-    Ok(())
+    })
 }
 
 pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {

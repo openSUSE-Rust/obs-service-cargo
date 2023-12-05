@@ -35,15 +35,16 @@ pub fn update(
         manifest_path.as_ref().into(),
     ];
 
-    cargo_command("update", &update_options, &prjdir).map_err(|e| {
-        error!(err = %e);
-        OBSCargoError::new(
-            OBSCargoErrorKind::VendorError,
-            "Unable to execute cargo".to_string(),
-        )
-    })?;
-    info!("⏫ Successfully ran cargo update");
-    Ok(())
+    Ok({
+        cargo_command("update", &update_options, &prjdir).map_err(|e| {
+            error!(err = %e);
+            OBSCargoError::new(
+                OBSCargoErrorKind::VendorError,
+                "Unable to execute cargo".to_string(),
+            )
+        })?;
+        info!("⏫ Successfully ran cargo update");
+    })
 }
 
 pub fn vendor(
@@ -91,7 +92,7 @@ pub fn vendor(
         )
     })?;
     // Write the stdout which is used by the package later.
-    file_cargo_config
+    Ok(file_cargo_config
         .write_all(cargo_vendor_output.as_bytes())
         .map_err(|err| {
             error!(?err, "Failed to write to file for cargo config");
@@ -99,8 +100,7 @@ pub fn vendor(
                 OBSCargoErrorKind::VendorError,
                 "failed to write to file for cargo config".to_string(),
             )
-        })?;
-    Ok(())
+        })?)
 }
 
 pub fn compress(
@@ -131,62 +131,62 @@ pub fn compress(
     };
 
     let mut vendor_out = outpath.as_ref().join(tar_name);
-    match compression {
-        Compression::Gz => {
-            vendor_out.set_extension("tar.gz");
-            if vendor_out.exists() {
-                warn!(
-                    replacing = ?vendor_out,
-                    "🔦 Compressed tarball for vendor exists AND will be replaced."
-                );
+    Ok({
+        match compression {
+            Compression::Gz => {
+                vendor_out.set_extension("tar.gz");
+                if vendor_out.exists() {
+                    warn!(
+                        replacing = ?vendor_out,
+                        "🔦 Compressed tarball for vendor exists AND will be replaced."
+                    );
+                }
+                compress::targz(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                    error!(?err, "gz compression failed");
+                    OBSCargoError::new(
+                        OBSCargoErrorKind::VendorCompressionFailed,
+                        "gz compression failed".to_string(),
+                    )
+                })?;
+                debug!("Compressed to {}", vendor_out.to_string_lossy());
             }
-            compress::targz(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
-                error!(?err, "gz compression failed");
-                OBSCargoError::new(
-                    OBSCargoErrorKind::VendorCompressionFailed,
-                    "gz compression failed".to_string(),
-                )
-            })?;
-            debug!("Compressed to {}", vendor_out.to_string_lossy());
-        }
-        Compression::Xz => {
-            vendor_out.set_extension("tar.xz");
-            if vendor_out.exists() {
-                warn!(
-                    replacing = ?vendor_out,
-                    "🔦 Compressed tarball for vendor exists AND will be replaced."
-                );
+            Compression::Xz => {
+                vendor_out.set_extension("tar.xz");
+                if vendor_out.exists() {
+                    warn!(
+                        replacing = ?vendor_out,
+                        "🔦 Compressed tarball for vendor exists AND will be replaced."
+                    );
+                }
+                compress::tarxz(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                    error!(?err, "xz compression failed");
+                    OBSCargoError::new(
+                        OBSCargoErrorKind::VendorCompressionFailed,
+                        "xz compression failed".to_string(),
+                    )
+                })?;
+                debug!("Compressed to {}", vendor_out.to_string_lossy());
             }
-            compress::tarxz(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
-                error!(?err, "xz compression failed");
-                OBSCargoError::new(
-                    OBSCargoErrorKind::VendorCompressionFailed,
-                    "xz compression failed".to_string(),
-                )
-            })?;
-            debug!("Compressed to {}", vendor_out.to_string_lossy());
-        }
-        Compression::Zst => {
-            vendor_out.set_extension("tar.zst");
-            if vendor_out.exists() {
-                warn!(
-                    replacing = ?vendor_out,
-                    "🔦 Compressed tarball for vendor exists AND will be replaced."
-                );
+            Compression::Zst => {
+                vendor_out.set_extension("tar.zst");
+                if vendor_out.exists() {
+                    warn!(
+                        replacing = ?vendor_out,
+                        "🔦 Compressed tarball for vendor exists AND will be replaced."
+                    );
+                }
+                compress::tarzst(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                    error!(?err, "zst compression failed");
+                    OBSCargoError::new(
+                        OBSCargoErrorKind::VendorCompressionFailed,
+                        "zst compression failed".to_string(),
+                    )
+                })?;
+                debug!("Compressed to {}", vendor_out.to_string_lossy());
             }
-            compress::tarzst(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
-                error!(?err, "zst compression failed");
-                OBSCargoError::new(
-                    OBSCargoErrorKind::VendorCompressionFailed,
-                    "zst compression failed".to_string(),
-                )
-            })?;
-            debug!("Compressed to {}", vendor_out.to_string_lossy());
         }
-    };
-    debug!("Finished creating {} compressed tarball", compression);
-
-    Ok(())
+        debug!("Finished creating {} compressed tarball", compression);
+    })
 }
 
 pub fn is_workspace(src: &Path) -> Result<bool, OBSCargoError> {

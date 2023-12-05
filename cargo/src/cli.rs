@@ -317,12 +317,8 @@ impl Vendor for Src {
             }
         };
         drop(newworkdir);
-        match tmpdir.close() {
-            Ok(_) => Ok(()),
-            Err(err) => Err(OBSCargoError::new(
-                OBSCargoErrorKind::VendorError,
-                err.to_string(),
-            )),
-        }
+        Ok(tmpdir
+            .close()
+            .map_err(|err| OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string()))?)
     }
 }
