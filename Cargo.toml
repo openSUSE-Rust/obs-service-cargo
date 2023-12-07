@@ -12,7 +12,7 @@ default-members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.8.19"
+version = "0.8.20"
 description = "OBS Source Service and utilities for Rust software packaging."
 authors = [
   "Soc Virnyl Estela <socvirnyl.estela@uncomfyhalomacro.pl>",
