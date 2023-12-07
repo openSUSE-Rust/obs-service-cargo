@@ -12,8 +12,10 @@ echo "# Downloading flux"
 curl -LJ0 "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz" --output /tmp/flux-0.194.4.tar.gz
 
 echo "# Downloading VBox-Starter"
-
 curl -LJ0 "https://gitlab.com/catsfood/VBox-Starter/-/archive/v3.1.0/VBox-Starter-v3.1.0.tar.gz" --output /tmp/VBox-Starter-v3.1.0.tar.gz
+
+echo "# Downloading pdns"
+curl -LJ0 "https://downloads.powerdns.com/releases/pdns-recursor-5.0.0-rc1.tar.bz2" --output /tmp/pdns-recursor-5.0.0-rc1.tar.bz2
 
 echo "# Generating tarball"
 "${SCRIPTPATH}"/target/release/cargo_vendor --src /tmp/bonk-0.3.2.tar.gz --outdir /tmp
@@ -31,6 +33,11 @@ rm /tmp/vendor.tar.zst
 
 echo "# Generating tarball"
 "${SCRIPTPATH}"/target/release/cargo_vendor --src /tmp/VBox-Starter-v3.1.0.tar.gz --outdir /tmp
+echo "# Removing vendored tarball"
+rm /tmp/vendor.tar.zst
+
+echo "# Generating tarball"
+"${SCRIPTPATH}"/target/release/cargo_vendor /tmp/pdns-recursor-5.0.0-rc1.tar.bz2 --outdir /tmp --cargotoml settings/rust/Cargo.toml
 echo "# Removing vendored tarball"
 rm /tmp/vendor.tar.zst
 
