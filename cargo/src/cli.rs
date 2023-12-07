@@ -10,7 +10,9 @@ use std::fmt::{self, Display};
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::consts::{GZ_MIME, SUPPORTED_MIME_TYPES, VENDOR_PATH_PREFIX, XZ_MIME, ZST_MIME};
+use crate::consts::{
+    BZ2_MIME, GZ_MIME, SUPPORTED_MIME_TYPES, VENDOR_PATH_PREFIX, XZ_MIME, ZST_MIME,
+};
 use crate::errors::OBSCargoError;
 use crate::errors::OBSCargoErrorKind;
 use crate::utils;
@@ -174,6 +176,8 @@ impl Vendor for Src {
                                     Ok(SupportedFormat::Compressed(Compression::Xz, actual_src))
                                 } else if known.mime_type().eq(ZST_MIME) {
                                     Ok(SupportedFormat::Compressed(Compression::Zst, actual_src))
+                                } else if known.mime_type().eq(BZ2_MIME) {
+                                    Ok(SupportedFormat::Compressed(Compression::Bz2, actual_src))
                                 } else {
                                     unreachable!()
                                 }
