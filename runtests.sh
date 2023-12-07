@@ -37,7 +37,7 @@ echo "# Removing vendored tarball"
 rm /tmp/vendor.tar.zst
 
 echo "# Generating tarball"
-"${SCRIPTPATH}"/target/release/cargo_vendor /tmp/pdns-recursor-5.0.0-rc1.tar.bz2 --outdir /tmp --cargotoml settings/rust/Cargo.toml
+"${SCRIPTPATH}"/target/release/cargo_vendor --src /tmp/pdns-recursor-5.0.0-rc1.tar.bz2 --outdir /tmp --cargotoml settings/rust/Cargo.toml
 echo "# Removing vendored tarball"
 rm /tmp/vendor.tar.zst
 
