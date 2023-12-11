@@ -130,7 +130,10 @@ pub fn tarbz2(
 ) -> io::Result<()> {
     use bzip2::write::BzEncoder;
     use bzip2::Compression;
-    let outtar = fs::File::create(outpath.as_ref())?;
+    let outtar = fs::File::create(outpath.as_ref()).map_err(|err| {
+        error!(outpath = ?outpath.as_ref(), "Unable to create outtar");
+        err
+    })?;
     let encoder = BzEncoder::new(outtar, Compression::best());
     let mut builder = tar::Builder::new(encoder);
     tar_builder(&mut builder, prjdir, archive_files)
