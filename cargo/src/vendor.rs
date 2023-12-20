@@ -92,7 +92,7 @@ pub fn vendor(
         )
     })?;
     // Write the stdout which is used by the package later.
-    Ok(file_cargo_config
+    file_cargo_config
         .write_all(cargo_vendor_output.as_bytes())
         .map_err(|err| {
             error!(?err, "Failed to write to file for cargo config");
@@ -100,7 +100,7 @@ pub fn vendor(
                 OBSCargoErrorKind::VendorError,
                 "failed to write to file for cargo config".to_string(),
             )
-        })?)
+        })
 }
 
 pub fn compress(
