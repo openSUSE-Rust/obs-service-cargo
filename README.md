@@ -7,6 +7,10 @@
 This is a Rust written variant for https://github.com/openSUSE/obs-service-cargo_vendor and https://github.com/obs-service-cargo_audit.
 
 > [!IMPORTANT]
+> The original obs-service-cargo_audit is now deprecated as the vendoring process now
+> includes audit.
+
+> [!IMPORTANT]
 > An informative tutorial for packaging Rust software in openSUSE can be found at https://en.opensuse.org/openSUSE:Packaging_Rust_Software.
 
 ## How to use OBS Service `cargo vendor`
