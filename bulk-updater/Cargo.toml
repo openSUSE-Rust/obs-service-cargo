@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 quick-xml = { workspace = true, features = ["overlapped-lists", "serialize"] }
-obs-service-cargo = { path = "../cargo", version = "^0.8" }
+obs-service-cargo = { path = "../cargo", version = "0" }
 clap = { workspace = true, features = ["derive"] }
 serde = { workspace = true, features = ["derive", "alloc"] }
 tracing.workspace = true
