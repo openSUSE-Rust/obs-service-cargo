@@ -228,7 +228,13 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
     process_reports(reports)?;
 
     if hasdeps {
-        vendor(prjdir, &cargo_config, &first_manifest, &manifest_files)?;
+        vendor(
+            prjdir,
+            &cargo_config,
+            &first_manifest,
+            &manifest_files,
+            args.filter,
+        )?;
 
         // Finally, compress everything together.
         let compression: &Compression = &args.compression;

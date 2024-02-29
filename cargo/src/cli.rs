@@ -53,6 +53,8 @@ pub struct Opts {
     pub cargotoml: Vec<PathBuf>,
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Update dependencies or not")]
     pub update: bool,
+    #[arg(long, default_value_t = false, action = clap::ArgAction::Set, help = "EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies.")]
+    pub filter: bool,
     #[arg(long, help = "Where to output vendor.tar* and cargo_config")]
     pub outdir: PathBuf,
     #[arg(

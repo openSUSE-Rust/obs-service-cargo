@@ -52,27 +52,60 @@ pub fn vendor(
     cargo_config: impl AsRef<Path>,
     manifest_path: impl AsRef<Path>,
     extra_manifest_paths: &[impl AsRef<Path>],
+    filter: bool,
 ) -> Result<(), OBSCargoError> {
-    let mut vendor_options: Vec<OsString> = vec![
-        "-vv".into(),
-        "--manifest-path".into(),
-        manifest_path.as_ref().into(),
-    ];
+    let mut vendor_options: Vec<OsString> =
+        vec!["--manifest-path".into(), manifest_path.as_ref().into()];
 
+    let mut using_sync = false;
     for ex_path in extra_manifest_paths {
         vendor_options.push("--sync".into());
         vendor_options.push(ex_path.as_ref().into());
+        using_sync = true;
     }
+
+    // cargo-vendor-filterer doesn't yet support `--sync` (will have it in the next release, hopefully).
+    // In the meantime, or, if filtering is explicitly disabled, use the normal vendor-subcommand.
+    let using_vendor_filterer = filter && !using_sync;
+    if filter && !using_vendor_filterer {
+        warn!(
+            "⚠️ Cannot use 'filter' in this crate yet. Falling back to regular, unfiltered vendoring."
+        );
+    }
+
+    let cargo_subcommand = if using_vendor_filterer {
+        info!("Filter set to true. Only vendoring crates for platforms *-unknown-linux-gnu and wasm32-*");
+        vendor_options.push("--platform=*-unknown-linux-gnu".into());
+        // Some crates compile their plugins to WASM, so we need those dependencies as well.
+        // Conservatively adding them everywhere, even if they are not needed everywhere.
+        // But the impact should be small.
+        vendor_options.push("--platform=wasm32-wasi".into());
+        vendor_options.push("--platform=wasm32-unknown-unknown".into());
+        // We are conservative here and vendor all possible features, even
+        // if they are not used in the spec. But we can't know.
+        // Maybe make this configurable?
+        vendor_options.push("--all-features=true".into());
+        // vendor-filterer could theoretically also create the tarballs for us,
+        // with using `--format=tar.zstd` for example. But we need to include
+        // additional files and it also doesn't support all compression-schemes.
+        vendor_options.push("--format=dir".into());
+        "vendor-filterer"
+    } else {
+        // cargo-vendor-filterer doesn't support `-vv`
+        vendor_options.push("-vv".into());
+        "vendor"
+    };
 
     debug!(?vendor_options);
 
-    let cargo_vendor_output = cargo_command("vendor", &vendor_options, &prjdir).map_err(|e| {
-        error!(err = %e);
-        OBSCargoError::new(
-            OBSCargoErrorKind::VendorError,
-            "Unable to execute cargo".to_string(),
-        )
-    })?;
+    let cargo_vendor_output =
+        cargo_command(cargo_subcommand, &vendor_options, &prjdir).map_err(|e| {
+            error!(err = %e);
+            OBSCargoError::new(
+                OBSCargoErrorKind::VendorError,
+                "Unable to execute cargo".to_string(),
+            )
+        })?;
 
     if let Some(p_path) = cargo_config.as_ref().parent() {
         fs::create_dir_all(p_path).map_err(|err| {
