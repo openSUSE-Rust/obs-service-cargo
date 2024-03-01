@@ -16,6 +16,7 @@ glob.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
 
+walkdir = "2.4"
 flate2 = { version = "1.0.27" }
 infer = "^0.15.0"
 tar = "~0.4.40"

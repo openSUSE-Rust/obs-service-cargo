@@ -15,43 +15,67 @@ use tar;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
 
+/// Create a deterministic tar-header for creating reproducible tarballs
+fn create_deterministic_header(path: impl AsRef<Path>) -> Result<tar::Header, io::Error> {
+    let metadata = path.as_ref().symlink_metadata()?;
+    let mut h = tar::Header::new_gnu();
+    h.set_metadata_in_mode(&metadata, tar::HeaderMode::Deterministic);
+    h.set_mtime(0);
+    h.set_uid(0);
+    h.set_gid(0);
+    h.set_cksum();
+    Ok(h)
+}
+
+fn add_path_to_archive<T: Write>(
+    builder: &mut tar::Builder<T>,
+    path: &Path,
+    prjdir: &Path,
+) -> io::Result<()> {
+    let mut h = create_deterministic_header(path)?;
+    // Each path is relative to prjdir. So we can split the
+    // prjdir prefix to get the relative archive path.
+    let subpath = path.strip_prefix(prjdir).map_err(|err| {
+        error!(
+            ?err,
+            "THIS IS A BUG. Unable to proceed. {} is not within {}.",
+            path.to_string_lossy(),
+            prjdir.to_string_lossy()
+        );
+        io::Error::new(io::ErrorKind::Other, path.to_string_lossy())
+    })?;
+
+    if path.is_file() {
+        let src = std::fs::File::open(path).map(std::io::BufReader::new)?;
+        builder.append_data(&mut h, subpath, src)?;
+    } else if path.is_symlink() {
+        let target = path.read_link()?;
+        builder.append_link(&mut h, subpath, target)?;
+    } else if path.is_dir() {
+        // Adding the dir as an empty node
+        builder.append_data(&mut h, subpath, std::io::Cursor::new([]))?;
+    } else {
+        error!("Ignoring unexpected special file: {:?}", path);
+    }
+    debug!("Added {} to archive", path.to_string_lossy());
+    Ok(())
+}
+
 pub fn tar_builder<T: Write>(
     builder: &mut tar::Builder<T>,
     prjdir: impl AsRef<Path>,
     archive_files: &[impl AsRef<Path>],
 ) -> io::Result<()> {
+    // Only metadata that is directly relevant to the identity of a file will be included.
+    // In particular, ownership and mod/access times are excluded.
+    builder.mode(tar::HeaderMode::Deterministic);
     for f in archive_files.iter().map(|p| p.as_ref()) {
-        // Each path is relative to prjdir. So we can split the
-        // prjdir prefix to get the relative archive path.
-        let f_rel_path = match f.strip_prefix(&prjdir) {
-            Ok(f_rel) => f_rel,
-            Err(err) => {
-                error!(
-                    ?err,
-                    "THIS IS A BUG. Unable to proceed. {} is not within {}.",
-                    f.to_string_lossy(),
-                    prjdir.as_ref().to_string_lossy()
-                );
-                return Err(io::Error::new(io::ErrorKind::Other, f.to_string_lossy()));
-            }
-        };
-
         if f.exists() {
-            if f.is_file() {
-                debug!(?f, "Path to is file!");
-                let mut addf = fs::File::open(f)?;
-                builder.append_file(f_rel_path, &mut addf)?;
-                debug!("Added {} to archive", f.to_string_lossy());
-            } else if f.is_dir() {
-                builder.append_dir_all(f_rel_path, f)?;
-                debug!("Added {} to archive", f.to_string_lossy());
-            } else {
-                error!(
-                    "THIS IS A BUG. Unable to proceed. {} is not a file or directory",
-                    f.to_string_lossy()
-                );
-                return Err(io::Error::new(io::ErrorKind::Other, f.to_string_lossy()));
-            };
+            // Using walkdir for deterministic ordering of the files
+            for entry in walkdir::WalkDir::new(f).sort_by_file_name() {
+                let entry = entry?;
+                add_path_to_archive(builder, entry.path(), prjdir.as_ref())?;
+            }
         } else {
             error!(
                 "THIS IS A BUG. Unable to proceed. {} does not exist.",

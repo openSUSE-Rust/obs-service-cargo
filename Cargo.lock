@@ -1759,6 +1759,7 @@ dependencies = [
  "toml 0.7.8",
  "tracing",
  "tracing-subscriber",
+ "walkdir",
  "xz2",
  "zstd",
 ]
