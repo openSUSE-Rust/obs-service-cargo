@@ -19,8 +19,11 @@ jobs:
         rustup update
     - name: Build
       run: |
-        cargo update
-        cargo build --release --all-features
+        # Disable `cargo update` until a new version of rustsec is being released
+        # See: https://github.com/rustsec/rustsec/issues/1130
+        # cargo update
+        # cargo build --release --all-features 
+        cargo build --release --all-features --locked
     - name: Check formatting
       run: |
         cargo fmt -- --check
