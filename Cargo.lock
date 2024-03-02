@@ -160,7 +160,7 @@ dependencies = [
 
 [[package]]
 name = "bulk-updater"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "clap",
  "obs-service-cargo",
@@ -1738,7 +1738,7 @@ dependencies = [
 
 [[package]]
 name = "obs-service-cargo"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "bzip2",
  "clap",
