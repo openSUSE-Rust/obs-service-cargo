@@ -8,7 +8,6 @@ license.workspace = true
 
 [dependencies]
 rustsec = { workspace = true }
-
 clap = { workspace = true, features = ["derive"] }
 quick-xml = { workspace = true, features = ["serialize"] }
 serde = { workspace = true, features = ["derive"] }
@@ -16,15 +15,15 @@ glob.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
 
-flate2 = { version = "1.0.27" }
-infer = "^0.15.0"
-tar = "~0.4.40"
-tempfile = "~3.8.0"
-terminfo = "~0.8.0"
-toml = "~0.7.6"
-xz2 = "^0.1.7"
-zstd = { version = "~0.12.4", features = ["pkg-config", "zstdmt"] }
-bzip2 = { version = "~0.4" }
+flate2 = { version = "1.0" }
+infer = "0.15"
+tar = "0.4"
+tempfile = "3.8"
+terminfo = "0.8"
+toml = "0.7"
+xz2 = "0.1"
+zstd = { version = "0.12", features = ["pkg-config", "zstdmt"] }
+bzip2 = { version = "0.4" }
 
 [lints]
 workspace = true
