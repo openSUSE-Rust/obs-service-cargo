@@ -24,6 +24,7 @@ toml = "0.7"
 xz2 = "0.1"
 zstd = { version = "0.12", features = ["pkg-config", "zstdmt"] }
 bzip2 = { version = "0.4" }
+walkdir = "2.4"
 
 [lints]
 workspace = true
