@@ -1754,6 +1754,7 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+ "walkdir",
  "xz2",
  "zstd",
 ]
