@@ -31,4 +31,9 @@
   <parameter name="cargotoml">
     <description>Specify a Cargo.toml to use. Can be specified multiple times. Default will autodetect.</description>
   </parameter>
+  <parameter name="filter">
+    <description>EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies.</description>
+    <allowedvalue>false</allowedvalue>
+    <allowedvalue>true</allowedvalue>
+  </parameter>
 </service>

@@ -287,6 +287,7 @@ pub fn attempt_cargo_update_before_revendor(
         let mut accept_risks: Vec<String> = Vec::new();
         let mut src: String = String::new();
         let mut tag: Option<String> = None;
+        let mut filter = false; // Still experimental, so default=false for now
         let outdir = package_path.to_path_buf();
         for param in params.iter() {
             if let Some(name) = param.name.clone() {
@@ -315,6 +316,11 @@ pub fn attempt_cargo_update_before_revendor(
                 if name == "i-accept-the-risk" {
                     if let Some(text) = &param.text {
                         accept_risks.push(String::from(text));
+                    }
+                };
+                if name == "filter" {
+                    if let Some(val) = param.text.as_ref().and_then(|t| t.parse::<bool>().ok()) {
+                        filter = val;
                     }
                 };
             }
@@ -346,6 +352,7 @@ pub fn attempt_cargo_update_before_revendor(
             outdir,
             color: colorize,
             i_accept_the_risk: accept_risks,
+            filter,
         };
         srcpath
             .run_vendor(&new_opts)
