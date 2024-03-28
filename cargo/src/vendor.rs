@@ -57,23 +57,12 @@ pub fn vendor(
     let mut vendor_options: Vec<OsString> =
         vec!["--manifest-path".into(), manifest_path.as_ref().into()];
 
-    let mut using_sync = false;
     for ex_path in extra_manifest_paths {
         vendor_options.push("--sync".into());
         vendor_options.push(ex_path.as_ref().into());
-        using_sync = true;
     }
 
-    // cargo-vendor-filterer doesn't yet support `--sync` (will have it in the next release, hopefully).
-    // In the meantime, or, if filtering is explicitly disabled, use the normal vendor-subcommand.
-    let using_vendor_filterer = filter && !using_sync;
-    if filter && !using_vendor_filterer {
-        warn!(
-            "⚠️ Cannot use 'filter' in this crate yet. Falling back to regular, unfiltered vendoring."
-        );
-    }
-
-    let cargo_subcommand = if using_vendor_filterer {
+    let cargo_subcommand = if filter {
         info!("Filter set to true. Only vendoring crates for platforms *-unknown-linux-gnu and wasm32-*");
         vendor_options.push("--platform=*-unknown-linux-gnu".into());
         // Some crates compile their plugins to WASM, so we need those dependencies as well.
