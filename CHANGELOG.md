@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Documentation
 
 - Add CONTRIBUTORS.md [0f71a3a](https://github.com/openSUSE/obs-service-cargo_vendor/commit/0f71a3afe832f710d76307ac154e8bc87d06157b)
+- Update CHANGELOG [83e98c2](https://github.com/openSUSE/obs-service-cargo_vendor/commit/83e98c2736fc0b15356f454c3ea4f59133ac0cec)
 
 ### Miscellaneous Tasks
 
