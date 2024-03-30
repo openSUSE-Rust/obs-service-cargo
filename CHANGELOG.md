@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2024-03-30
+
+### Documentation
+
+- Add CONTRIBUTORS.md [0f71a3a](https://github.com/openSUSE/obs-service-cargo_vendor/commit/0f71a3afe832f710d76307ac154e8bc87d06157b)
+
+### Miscellaneous Tasks
+
+- Add changelog with git-cliff [ee6cd1f](https://github.com/openSUSE/obs-service-cargo_vendor/commit/ee6cd1f926a7041478661c893b3fd9ffba3cef4e)
+
+### Appreciation
+
+- All who contributed code to this project should be listed [1b58973](https://github.com/openSUSE/obs-service-cargo_vendor/commit/1b5897348a3f43f3ddde065899fde9b72af26346)
+
 ## [1.2.1] - 2024-03-07
 
 ### Miscellaneous Tasks
@@ -246,4 +260,5 @@ All notable changes to this project will be documented in this file.
 ### Readme
 
 - Correct OBS links and add attributions (#1) [12b2ff6](https://github.com/openSUSE/obs-service-cargo_vendor/commit/12b2ff6a28cdff11a63530530583bbfeed4de6ba)
+
 
