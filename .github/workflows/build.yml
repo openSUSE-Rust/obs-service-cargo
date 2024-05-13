@@ -24,6 +24,9 @@ jobs:
     - name: Check formatting
       run: |
         cargo fmt -- --check
+    - name: Check clippy
+      run: |
+        cargo clippy
     - name: Run sample projects to test
       run: |
         chmod +x runtests.sh
