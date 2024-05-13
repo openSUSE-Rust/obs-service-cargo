@@ -31,14 +31,12 @@ fn main() -> std::io::Result<()> {
         Ok(hasterminfodb) => hasterminfodb.get::<cap::MaxColors>().is_some(),
         Err(_) => false,
     };
-    let to_color = matches!(std::io::stdout().is_terminal(), true if {
-        let coloroption = &args.color;
-        match coloroption {
+    let to_color = std::io::stdout().is_terminal()
+        && match &args.color {
             clap::ColorChoice::Auto => is_termcolorsupported,
             clap::ColorChoice::Always => true,
             clap::ColorChoice::Never => false,
-        }
-    });
+        };
 
     let filter_layer = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 

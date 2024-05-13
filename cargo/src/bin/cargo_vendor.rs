@@ -34,14 +34,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(_) => false,
     };
 
-    let to_color = matches!(std::io::stdout().is_terminal(), true if {
-        let coloroption = &args.color;
-        match coloroption {
+    let to_color = std::io::stdout().is_terminal()
+        && match &args.color {
             clap::ColorChoice::Auto => is_termcolorsupported,
             clap::ColorChoice::Always => true,
             clap::ColorChoice::Never => false,
-        }
-    });
+        };
 
     let filter_layer = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
