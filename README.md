@@ -229,3 +229,7 @@ report at https://github.com/openSUSE/obs-service-cargo_vendor/issues. We will t
 project is to help automate some tasks when packaging Rust software. We won't assume we can automate where we can a locate a project's root manifest file `Cargo.toml`.
 Thus, at best, please indicate it with `cargotoml` parameter. In the mean time, this will work, *hopefully*, in most projects since most projects have
 a root manifest file.
+
+## Reproducibility
+
+This project does not and will not support reproducible builds as a feature. If you submit a PR to enable those features, we may accept it but we will not maintain or guarantee that it will continue to work in the future. 
