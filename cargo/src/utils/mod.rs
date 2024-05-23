@@ -329,7 +329,6 @@ pub fn cargo_command<S: AsRef<OsStr>>(
     subcommand: &str,
     options: &[S],
     curdir: impl AsRef<Path>,
-    // TODO ExecutionError should also have error output as String :)
 ) -> Result<String, ExecutionError> {
     let cmd = std::process::Command::new("cargo")
         .arg(subcommand)
