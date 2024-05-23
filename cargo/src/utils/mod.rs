@@ -91,7 +91,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
 
     // Setup some common paths we'll use from here out.
     let outdir = args.outdir.to_owned();
-    let cargo_config = prjdir.join(".cargo/config");
+    let cargo_config = prjdir.join(".cargo/config.toml");
     let vendor_dir = prjdir.join("vendor");
     let update = args.update;
 
