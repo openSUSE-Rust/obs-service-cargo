@@ -7,6 +7,7 @@ pub enum OBSCargoErrorKind {
     VendorCompressionFailed,
     VendorError,
     AuditError,
+    LockFileError,
 }
 
 impl OBSCargoErrorKind {
@@ -17,6 +18,7 @@ impl OBSCargoErrorKind {
             AuditNeedsAction => "security audit is actionable",
             VendorError => "cargo vendor process failed",
             VendorCompressionFailed => "compress vendored dependencies failed",
+            LockFileError => "lockfile generation failed",
         }
     }
 }
