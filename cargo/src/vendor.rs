@@ -68,7 +68,7 @@ pub fn generate_lockfile(manifest_path: impl AsRef<Path>) -> Result<(), OBSCargo
     };
 
     Ok({
-        cargo_command("generate_lockfile", &lockfile_options, parent_path).map_err(|e| {
+        cargo_command("generate-lockfile", &lockfile_options, parent_path).map_err(|e| {
             error!(err = %e);
             OBSCargoError::new(
                 OBSCargoErrorKind::LockFileError,
