@@ -84,11 +84,6 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
     debug!(?first_manifest);
     debug!(?manifest_files);
 
-    // Let's ensure the lockfiles are generated even if they don't exist
-    // This guarantees that the dependencies used are properly recorded
-    generate_lockfile(&first_manifest)?;
-    manifest_files.iter().try_for_each(generate_lockfile)?;
-
     // Setup some common paths we'll use from here out.
     let outdir = args.outdir.to_owned();
     let cargo_config = prjdir.join(".cargo/config.toml");
@@ -192,6 +187,8 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
     // if there is `None`.
     let mut cargo_locks: Vec<PathBuf> = Vec::new();
 
+    // Let's ensure the lockfiles are generated even if they don't exist
+    // This guarantees that the dependencies used are properly recorded
     for manifest_file in manifest_files.iter() {
         let manifest_f = manifest_file.canonicalize().map_err(|err| {
             error!("Failed to canonicalize path: {}", err);
@@ -201,7 +198,19 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         let lockfile_path = manifest_f.parent().map(|path_f| path_f.join("Cargo.lock"));
         if let Some(lockfile_p) = lockfile_path {
             if lockfile_p.exists() {
+                debug!("Path to extra lockfile: {}", lockfile_p.display());
                 cargo_locks.push(lockfile_p)
+            } else {
+                debug!("Path to extra lockfile not found: {}", lockfile_p.display());
+                if generate_lockfile(&lockfile_p).is_ok() {
+                    info!(
+                        "🔒 Cargo lockfile created for extra lockfile at path: {}",
+                        lockfile_p.display()
+                    );
+                    cargo_locks.push(lockfile_p)
+                } else {
+                    debug!("Path didn't generate manifest: {}", lockfile_p.display());
+                }
             };
         };
     }
@@ -213,6 +222,20 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         if lockfilepath.exists() {
             debug!("Path to first cargo lock: {}", lockfilepath.display());
             cargo_locks.push(lockfilepath);
+        } else {
+            debug!(
+                "Path to first cargo lock not found: {}",
+                lockfilepath.display()
+            );
+            if generate_lockfile(&first_manifest).is_ok() {
+                info!(
+                    "🔒 Cargo lockfile created for first lockfile at path: {}",
+                    lockfilepath.display()
+                );
+                cargo_locks.push(lockfilepath);
+            } else {
+                debug!("Path didn't generate manifest: {}", lockfilepath.display());
+            };
         };
     };
 
