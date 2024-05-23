@@ -20,7 +20,7 @@ use std::path::PathBuf;
 use crate::cli::{Compression, Opts};
 use crate::errors::OBSCargoError;
 use crate::errors::OBSCargoErrorKind;
-use crate::vendor::{self, vendor};
+use crate::vendor::{self, generate_lockfile, vendor};
 
 use crate::audit::{perform_cargo_audit, process_reports};
 
@@ -83,6 +83,11 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
 
     debug!(?first_manifest);
     debug!(?manifest_files);
+
+    // Let's ensure the lockfiles are generated even if they don't exist
+    // This guarantees that the dependencies used are properly recorded
+    generate_lockfile(&first_manifest)?;
+    manifest_files.iter().try_for_each(generate_lockfile)?;
 
     // Setup some common paths we'll use from here out.
     let outdir = args.outdir.to_owned();

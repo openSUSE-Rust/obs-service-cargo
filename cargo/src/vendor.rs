@@ -47,6 +47,38 @@ pub fn update(
     })
 }
 
+pub fn generate_lockfile(manifest_path: impl AsRef<Path>) -> Result<(), OBSCargoError> {
+    let lockfile_options: Vec<OsString> = vec![
+        "-vv".into(),
+        "--manifest-path".into(),
+        manifest_path.as_ref().into(),
+    ];
+
+    let parent_path = if let Some(the_parent) = manifest_path.as_ref().parent() {
+        the_parent.to_path_buf()
+    } else {
+        let guess_path = std::env::current_dir().map_err(|e| {
+            error!(err = %e);
+            OBSCargoError::new(
+                OBSCargoErrorKind::LockFileError,
+                "Getting parent path for lockfile generation failed".into(),
+            )
+        })?;
+        guess_path.to_path_buf()
+    };
+
+    Ok({
+        cargo_command("generate_lockfile", &lockfile_options, parent_path).map_err(|e| {
+            error!(err = %e);
+            OBSCargoError::new(
+                OBSCargoErrorKind::LockFileError,
+                "Unable to generate a lockfile".into(),
+            )
+        })?;
+        info!("🔒 Successfully generated lockfile")
+    })
+}
+
 pub fn vendor(
     prjdir: impl AsRef<Path>,
     cargo_config: impl AsRef<Path>,
