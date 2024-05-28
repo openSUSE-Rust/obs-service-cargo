@@ -110,10 +110,14 @@ pub fn vendor(
         // with using `--format=tar.zstd` for example. But we need to include
         // additional files and it also doesn't support all compression-schemes.
         vendor_options.push("--format=dir".into());
+        info!("⚠️ Using fvendor-filterer, lockfile verification not supported")
         "vendor-filterer"
     } else {
         // cargo-vendor-filterer doesn't support `-vv`
         vendor_options.push("-vv".into());
+        // Enforce lock is up-to-date despite the fact we are regenerating the locks
+        // NOTE: Only vendor has the --locked option
+        vendor_options.push("--locked".into());
         "vendor"
     };
 
