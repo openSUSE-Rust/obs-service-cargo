@@ -73,7 +73,7 @@ pub fn vendor(
         // We are conservative here and vendor all possible features, even
         // if they are not used in the spec. But we can't know.
         // Maybe make this configurable?
-        vendor_options.push("--all-features=true".into());
+        vendor_options.push("--all-features".into());
         // vendor-filterer could theoretically also create the tarballs for us,
         // with using `--format=tar.zstd` for example. But we need to include
         // additional files and it also doesn't support all compression-schemes.
