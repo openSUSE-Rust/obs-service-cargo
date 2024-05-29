@@ -202,7 +202,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
                 cargo_locks.push(lockfile_p)
             } else {
                 debug!("Path to extra lockfile not found: {}", lockfile_p.display());
-                if generate_lockfile(&lockfile_p).is_ok() {
+                if generate_lockfile(manifest_file).is_ok() {
                     info!(
                         "🔒 Cargo lockfile created for extra lockfile at path: {}",
                         lockfile_p.display()
