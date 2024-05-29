@@ -3,6 +3,7 @@
 set -euo pipefail
 
 SCRIPTPATH="$( cd "$(dirname "$0")" || exit ; pwd -P )"
+export RUST_LOG=debug
 
 echo "# Downloading bonk"
 curl -LJ0 "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz" --output /tmp/bonk-0.3.2.tar.gz
