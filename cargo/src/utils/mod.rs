@@ -262,6 +262,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
             &first_manifest,
             &manifest_files,
             args.filter,
+            args.respect_lockfile,
         )?;
 
         // Finally, compress everything together.

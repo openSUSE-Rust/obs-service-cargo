@@ -85,6 +85,7 @@ pub fn vendor(
     manifest_path: impl AsRef<Path>,
     extra_manifest_paths: &[impl AsRef<Path>],
     filter: bool,
+    respect_lockfile: bool,
 ) -> Result<(), OBSCargoError> {
     let mut vendor_options: Vec<OsString> =
         vec!["--manifest-path".into(), manifest_path.as_ref().into()];
@@ -110,14 +111,18 @@ pub fn vendor(
         // with using `--format=tar.zstd` for example. But we need to include
         // additional files and it also doesn't support all compression-schemes.
         vendor_options.push("--format=dir".into());
-        info!("⚠️ Using vendor-filterer, lockfile verification not supported");
+        if respect_lockfile {
+            info!("⚠️ Using vendor-filterer, lockfile verification not supported");
+        };
         "vendor-filterer"
     } else {
         // cargo-vendor-filterer doesn't support `-vv`
         vendor_options.push("-vv".into());
         // Enforce lock is up-to-date despite the fact we are regenerating the locks
-        // NOTE: Only vendor has the --locked option
-        vendor_options.push("--locked".into());
+        if respect_lockfile {
+            // NOTE: Only vendor has the --locked option
+            vendor_options.push("--locked".into());
+        };
         "vendor"
     };
 

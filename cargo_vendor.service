@@ -36,4 +36,9 @@
     <allowedvalue>false</allowedvalue>
     <allowedvalue>true</allowedvalue>
   </parameter>
+  <parameter name="respect-lockfile">
+    <description>Attempt to respect lockfile if it exists. Otherwise, attempt to regenerate lockfile and attempt to respect the new lockfile.</description>
+    <allowedvalue>false</allowedvalue>
+    <allowedvalue>true</allowedvalue>
+  </parameter>
 </service>

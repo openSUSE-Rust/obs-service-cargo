@@ -288,6 +288,7 @@ pub fn attempt_cargo_update_before_revendor(
         let mut src: String = String::new();
         let mut tag: Option<String> = None;
         let mut filter = false; // Still experimental, so default=false for now
+        let mut respect_lockfile = true;
         let outdir = package_path.to_path_buf();
         for param in params.iter() {
             if let Some(name) = param.name.clone() {
@@ -323,6 +324,11 @@ pub fn attempt_cargo_update_before_revendor(
                         filter = val;
                     }
                 };
+                if name == "respect_lockfile" {
+                    if let Some(val) = param.text.as_ref().and_then(|t| t.parse::<bool>().ok()) {
+                        respect_lockfile = val;
+                    }
+                };
             }
         }
         if compression.is_empty() || src.is_empty() {
@@ -353,6 +359,7 @@ pub fn attempt_cargo_update_before_revendor(
             color: colorize,
             i_accept_the_risk: accept_risks,
             filter,
+            respect_lockfile,
         };
         srcpath
             .run_vendor(&new_opts)
