@@ -57,7 +57,7 @@ fn add_path_to_archive<T: Write>(
     } else {
         error!("Ignoring unexpected special file: {:?}", path);
     }
-    debug!("Added {} to archive", path.to_string_lossy());
+    trace!("Added {} to archive", path.to_string_lossy());
     Ok(())
 }
 
