@@ -71,6 +71,8 @@ pub struct Opts {
         help = "A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it."
     )]
     pub i_accept_the_risk: Vec<String>,
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Respect lockfile or not if it exists. Otherwise, regenerate the lockfile and try to respect the lockfile.")]
+    pub respect_lockfile: bool,
 }
 
 impl AsRef<Opts> for Opts {

@@ -143,6 +143,14 @@ paths to be part of the vendored tarball. So a path that looks like
 if extracted, it will go to the desired path `rust/pv/Cargo.lock` from
 the root folder of the project.
 
+## Respecting lockfiles
+
+A new option is added to respect lockfiles. This means that vendored tarballs
+are expected to have the same metadata inside the `Cargo.lock`.
+
+> ![WARNING] `cargo-vendor-filterer` is not supported for lockfile validation/verification
+at this time.
+
 # How to do multiple vendors
 
 It is possible to do multiple vendored tarballs by using the `--tag` parameter. This allows you to rename your vendored

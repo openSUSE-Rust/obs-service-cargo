@@ -47,12 +47,45 @@ pub fn update(
     })
 }
 
+pub fn generate_lockfile(manifest_path: impl AsRef<Path>) -> Result<(), OBSCargoError> {
+    let lockfile_options: Vec<OsString> = vec![
+        "-vv".into(),
+        "--manifest-path".into(),
+        manifest_path.as_ref().into(),
+    ];
+
+    let parent_path = if let Some(the_parent) = manifest_path.as_ref().parent() {
+        the_parent.to_path_buf()
+    } else {
+        let guess_path = std::env::current_dir().map_err(|e| {
+            error!(err = %e);
+            OBSCargoError::new(
+                OBSCargoErrorKind::LockFileError,
+                "Getting parent path for lockfile generation failed".into(),
+            )
+        })?;
+        guess_path.to_path_buf()
+    };
+
+    Ok({
+        cargo_command("generate-lockfile", &lockfile_options, parent_path).map_err(|e| {
+            error!(err = %e);
+            OBSCargoError::new(
+                OBSCargoErrorKind::LockFileError,
+                "Unable to generate a lockfile".into(),
+            )
+        })?;
+        info!("🔒 Successfully generated lockfile")
+    })
+}
+
 pub fn vendor(
     prjdir: impl AsRef<Path>,
     cargo_config: impl AsRef<Path>,
     manifest_path: impl AsRef<Path>,
     extra_manifest_paths: &[impl AsRef<Path>],
     filter: bool,
+    respect_lockfile: bool,
 ) -> Result<(), OBSCargoError> {
     let mut vendor_options: Vec<OsString> =
         vec!["--manifest-path".into(), manifest_path.as_ref().into()];
@@ -78,10 +111,18 @@ pub fn vendor(
         // with using `--format=tar.zstd` for example. But we need to include
         // additional files and it also doesn't support all compression-schemes.
         vendor_options.push("--format=dir".into());
+        if respect_lockfile {
+            info!("⚠️ Using vendor-filterer, lockfile verification not supported");
+        };
         "vendor-filterer"
     } else {
         // cargo-vendor-filterer doesn't support `-vv`
         vendor_options.push("-vv".into());
+        // Enforce lock is up-to-date despite the fact we are regenerating the locks
+        if respect_lockfile {
+            // NOTE: Only vendor has the --locked option
+            vendor_options.push("--locked".into());
+        };
         "vendor"
     };
 
