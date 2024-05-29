@@ -148,8 +148,10 @@ the root folder of the project.
 A new option is added to respect lockfiles. This means that vendored tarballs
 are expected to have the same metadata inside the `Cargo.lock`.
 
-> [!WARNING] `cargo-vendor-filterer` is not supported for lockfile validation/verification
-at this time.
+
+> [!WARNING]
+> `cargo-vendor-filterer` is not supported for lockfile validation/verification
+
 
 # How to do multiple vendors
 
