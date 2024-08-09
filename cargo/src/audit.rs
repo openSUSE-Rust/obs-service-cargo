@@ -32,7 +32,10 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), OBSCargoError> {
             if report.vulnerabilities.count == 1 {
                 warn!("⚠️  {} vulnerability found.", report.vulnerabilities.count);
             } else {
-                warn!("⚠️  {} vulnerabilities found.", report.vulnerabilities.count);
+                warn!(
+                    "⚠️  {} vulnerabilities found.",
+                    report.vulnerabilities.count
+                );
             }
 
             for vuln in report.vulnerabilities.list {
