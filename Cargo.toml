@@ -59,6 +59,7 @@ disallowed_types = "deny"
 manual_let_else = "deny"
 unreachable = "allow"
 unit_arg = "allow"
+lint_groups_priority = "allow"
 
 [profile.release]
 lto = true          # Enable Link Time Optimization.
