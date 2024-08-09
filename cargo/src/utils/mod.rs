@@ -39,7 +39,7 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: &Path) -> Result<(), io::Error> 
         trace!(?ty);
         if ty.is_dir() {
             trace!(?ty, "Is directory?");
-            copy_dir_all(&entry.path(), &dst.join(&entry.file_name()))?;
+            copy_dir_all(entry.path(), &dst.join(entry.file_name()))?;
 
         // Should we respect symlinks?
         // } else if ty.is_symlink() {
@@ -57,7 +57,7 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: &Path) -> Result<(), io::Error> 
         // Be pedantic or you get symlink error
         } else if ty.is_file() {
             trace!(?ty, "Is file?");
-            fs::copy(&entry.path(), &mut dst.join(&entry.file_name()))?;
+            fs::copy(entry.path(), dst.join(entry.file_name()))?;
         };
     })
 }
