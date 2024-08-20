@@ -48,8 +48,6 @@ pub struct Opts {
         long,
         help = "Tag some files for multi-vendor and multi-cargo_config projects"
     )]
-    pub tag: Option<String>,
-    #[arg(long, help = "Other cargo manifest files to sync with during vendor")]
     pub cargotoml: Vec<PathBuf>,
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Update dependencies or not")]
     pub update: bool,
