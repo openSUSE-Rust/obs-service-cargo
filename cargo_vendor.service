@@ -12,18 +12,18 @@
     <description>Legacy argument, no longer used. Values: vendor. Default: vendor</description>
   </parameter>
   <parameter name="src">
-    <description>Where to find sources. Source is either a directory or a source tarball AND cannot be both.</description>
+    <description>Where to find sources. Source is either a directory OR a source tarball AND cannot be both.</description>
   </parameter>
   <parameter name="outdir">
-    <description>Specify where to put the vendor tarball and cargo_config file</description>
+    <description>Specify where to put the vendor tarball</description>
   </parameter>
   <parameter name="update">
     <description>Specify whether to run a cargo update before vendor. Default: False</description>
     <allowedvalue>false</allowedvalue>
     <allowedvalue>true</allowedvalue>
   </parameter>
-  <parameter name="tag">
-    <description>Specify a string to append to the tarball and cargo_config filenames</description>
+  <parameter name="update-crate">
+    <description>Specify whether to run a cargo update before vendor on a specified crate. Can be called multiple times. This will override the update parameter. Default: False</description>
   </parameter>
   <parameter name="compression">
     <description>Specify the vendor tarball compression method. Default: "zst".</description>
@@ -31,14 +31,15 @@
   <parameter name="cargotoml">
     <description>Specify a Cargo.toml to use. Can be specified multiple times. Default will autodetect.</description>
   </parameter>
-  <parameter name="filter">
-    <description>EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies.</description>
+  <parameter name="respect-lockfile">
+    <description>Attempt to respect lockfile of a provided path exists. Otherwise, attempt to regenerate lockfile and attempt to respect the new lockfile. Default: None</description>
+  </parameter>
+  <parameter name="non-interactive">
+    <description>Specify if the user wants to set no interaction and use defaults. Default: True</description>
     <allowedvalue>false</allowedvalue>
     <allowedvalue>true</allowedvalue>
   </parameter>
-  <parameter name="respect-lockfile">
-    <description>Attempt to respect lockfile if it exists. Otherwise, attempt to regenerate lockfile and attempt to respect the new lockfile.</description>
-    <allowedvalue>false</allowedvalue>
-    <allowedvalue>true</allowedvalue>
+  <parameter name="i-accept-the-risk">
+    <description>Specify if the user wants to accept the risk of a RUSTSEC Advisory ID from cargo audit report.</description>
   </parameter>
 </service>
