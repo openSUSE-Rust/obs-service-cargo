@@ -16,7 +16,7 @@ use crate::cli::Compression;
 use crate::errors::OBSCargoError;
 use crate::errors::OBSCargoErrorKind;
 use crate::utils::cargo_command;
-use crate::utils::compress;
+use libroast::compress;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -204,7 +204,7 @@ pub fn compress(
                         "🔦 Compressed tarball for vendor exists AND will be replaced."
                     );
                 }
-                compress::targz(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                compress::targz(&vendor_out, &prjdir, paths_to_archive, true).map_err(|err| {
                     error!(?err, "gz compression failed");
                     OBSCargoError::new(
                         OBSCargoErrorKind::VendorCompressionFailed,
@@ -221,7 +221,7 @@ pub fn compress(
                         "🔦 Compressed tarball for vendor exists AND will be replaced."
                     );
                 }
-                compress::tarxz(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                compress::tarxz(&vendor_out, &prjdir, paths_to_archive, true).map_err(|err| {
                     error!(?err, "xz compression failed");
                     OBSCargoError::new(
                         OBSCargoErrorKind::VendorCompressionFailed,
@@ -238,7 +238,7 @@ pub fn compress(
                         "🔦 Compressed tarball for vendor exists AND will be replaced."
                     );
                 }
-                compress::tarzst(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                compress::tarzst(&vendor_out, &prjdir, paths_to_archive, true).map_err(|err| {
                     error!(?err, "zst compression failed");
                     OBSCargoError::new(
                         OBSCargoErrorKind::VendorCompressionFailed,
@@ -255,7 +255,7 @@ pub fn compress(
                         "🔦 Compressed tarball for vendor exists AND will be replaced."
                     );
                 }
-                compress::tarbz2(&vendor_out, &prjdir, paths_to_archive).map_err(|err| {
+                compress::tarbz2(&vendor_out, &prjdir, paths_to_archive, true).map_err(|err| {
                     error!(?err, "bz2 compression failed");
                     OBSCargoError::new(
                         OBSCargoErrorKind::VendorCompressionFailed,

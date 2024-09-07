@@ -19,6 +19,7 @@ use crate::utils;
 
 use clap::{Parser, ValueEnum};
 use infer;
+use libroast::decompress;
 
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
@@ -157,10 +158,10 @@ pub trait Vendor {
 
 pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Result<()> {
     match comp_type {
-        Compression::Gz => utils::decompress::targz(outdir, src),
-        Compression::Xz => utils::decompress::tarxz(outdir, src),
-        Compression::Zst => utils::decompress::tarzst(outdir, src),
-        Compression::Bz2 => utils::decompress::tarbz2(outdir, src),
+        Compression::Gz => decompress::targz(outdir, src),
+        Compression::Xz => decompress::tarxz(outdir, src),
+        Compression::Zst => decompress::tarzst(outdir, src),
+        Compression::Bz2 => decompress::tarbz2(outdir, src),
     }
 }
 

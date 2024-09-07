@@ -7,9 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 // SPDX-License-Identifier: MPL-2.0
 
-pub mod compress;
-pub mod decompress;
-
 use std::ffi::OsStr;
 use std::fmt::{self, Debug, Display};
 use std::fs;
