@@ -338,10 +338,7 @@ pub fn process_globs(src: &Path) -> io::Result<PathBuf> {
     // Take the last item.
     globs
         .pop()
-        .map(|item| {
-            info!("🍿 Vendoring for src '{}'", item.display());
-            item
-        })
+        .inspect(|item| info!("🍿 Vendoring for src '{}'", item.display()))
         .ok_or_else(|| {
             error!("No files/directories matched src glob input");
             io::Error::new(
