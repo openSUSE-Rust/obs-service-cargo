@@ -264,12 +264,11 @@ pub fn attempt_cargo_update_before_revendor(
         "🔼 Attempting to update in progress at {}",
         package_path.to_string_lossy()
     );
-    let cargo_vendor_params = does_have_cargo_vendor(package_path).map_err(|err| {
+    let cargo_vendor_params = does_have_cargo_vendor(package_path).inspect_err(|_| {
         tracing::error!(
             "❌ Error -- {} is not setup for cargo vendor!",
             package_path.to_string_lossy()
-        );
-        err
+        )
     })?;
     tracing::info!(
         ?cargo_vendor_params,
