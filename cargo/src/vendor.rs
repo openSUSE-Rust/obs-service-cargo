@@ -90,6 +90,8 @@ pub fn vendor(
     let mut vendor_options: Vec<OsString> =
         vec!["--manifest-path".into(), manifest_path.as_ref().into()];
 
+    vendor_options.push("--versioned-dirs".into());
+
     for ex_path in extra_manifest_paths {
         vendor_options.push("--sync".into());
         vendor_options.push(ex_path.as_ref().into());
