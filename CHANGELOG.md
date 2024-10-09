@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2024-10-08
+
+### Clippy
+
+- Use inspect when map returns the original item (#98) [7a62324](https://github.com/openSUSE/obs-service-cargo_vendor/commit/7a623244fa741f1061840f433bc7211e0b3f6674)
+
+### Minor
+
+- Add `--versioned-dirs` flag [1e728a2](https://github.com/openSUSE/obs-service-cargo_vendor/commit/1e728a2804ed064e7280697523124381e9c5e0af)
+
+## [1.3.6] - 2024-06-06
+
+### Bug Fixes
+
+- Vendor-filterer --all-features rather than --all-features=true (#87) [89b17bf](https://github.com/openSUSE/obs-service-cargo_vendor/commit/89b17bf80fbb416c415a247ea675818506b14b94)
+
+### Documentation
+
+- Fix warning indicator [8ef870e](https://github.com/openSUSE/obs-service-cargo_vendor/commit/8ef870e9ec4572925af6c694843b133612babb97)
+- Fix again the warn indicator [837ac22](https://github.com/openSUSE/obs-service-cargo_vendor/commit/837ac221a05c63b8b6fca275c27d66e3554fd708)
+- Fix warning indicator (#89) [6effe77](https://github.com/openSUSE/obs-service-cargo_vendor/commit/6effe77bfdcc4036c4915dc83586b2aed589829d)
+
+### Internet_points
+
+- Add Pi-Cla (#88) [be74488](https://github.com/openSUSE/obs-service-cargo_vendor/commit/be7448838b011aa07fef649de866fdf533928cb3)
+
+## [1.3.2] - 2024-05-02
+
+### Miscellaneous Tasks
+
+- Update to v1.3.2 [57973e0](https://github.com/openSUSE/obs-service-cargo_vendor/commit/57973e030aef5a841bb8a89dca92c4fb5ca13df1)
+
+## [1.3.1] - 2024-03-30
+
+### Miscellaneous Tasks
+
+- 1.3.1 [0aaa39b](https://github.com/openSUSE/obs-service-cargo_vendor/commit/0aaa39b4523163a1eeddbe7202063ec28e302046)
+
 ## [1.3.0] - 2024-03-30
 
 ### Documentation
