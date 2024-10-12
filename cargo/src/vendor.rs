@@ -12,10 +12,10 @@ use std::fs;
 use std::io::Write;
 use std::path::Path;
 
-use libroast::common::Compression;
 use crate::errors::OBSCargoError;
 use crate::errors::OBSCargoErrorKind;
 use crate::utils::cargo_command;
+use libroast::common::Compression;
 use libroast::compress;
 
 use serde::Deserialize;

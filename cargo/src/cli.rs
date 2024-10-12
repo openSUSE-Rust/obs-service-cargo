@@ -13,8 +13,8 @@ use crate::consts::VENDOR_PATH_PREFIX;
 use crate::errors::OBSCargoError;
 use crate::errors::OBSCargoErrorKind;
 use crate::utils;
-use libroast::common::{SupportedFormat, UnsupportedFormat};
 use libroast::common::Compression;
+use libroast::common::{SupportedFormat, UnsupportedFormat};
 
 use clap::Parser;
 use libroast::decompress;
