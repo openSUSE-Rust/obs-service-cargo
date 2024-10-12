@@ -7,7 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::services::{Service, Services};
-use obs_service_cargo::cli::{Compression, Opts, Src, Vendor};
+use libroast::common::Compression;
+use obs_service_cargo::cli::{Opts, Src, Vendor};
 use std::path::{Path, PathBuf};
 use std::process;
 use std::process::Output;

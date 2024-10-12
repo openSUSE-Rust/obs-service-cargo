@@ -14,7 +14,7 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
-use crate::cli::{Compression, Opts};
+use crate::cli::Opts;
 use crate::errors::OBSCargoError;
 use crate::errors::OBSCargoErrorKind;
 use crate::vendor::{self, generate_lockfile, vendor};
@@ -22,6 +22,7 @@ use crate::vendor::{self, generate_lockfile, vendor};
 use crate::audit::{perform_cargo_audit, process_reports};
 
 use glob::glob;
+use libroast::common::Compression;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 

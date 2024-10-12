@@ -6,19 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::fmt::{self, Display};
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::consts::{
-    BZ2_MIME, GZ_MIME, SUPPORTED_MIME_TYPES, VENDOR_PATH_PREFIX, XZ_MIME, ZST_MIME,
-};
+use crate::consts::VENDOR_PATH_PREFIX;
 use crate::errors::OBSCargoError;
 use crate::errors::OBSCargoErrorKind;
 use crate::utils;
+use libroast::common::{SupportedFormat, UnsupportedFormat};
+use libroast::common::Compression;
 
-use clap::{Parser, ValueEnum};
-use infer;
+use clap::Parser;
 use libroast::decompress;
 
 #[allow(unused_imports)]
@@ -83,58 +81,6 @@ impl AsRef<Opts> for Opts {
     }
 }
 
-#[derive(ValueEnum, Default, Debug, Clone, Copy)]
-pub enum Compression {
-    Gz,
-    Xz,
-    #[default]
-    Zst,
-    Bz2,
-}
-
-#[derive(Debug)]
-pub enum SupportedFormat {
-    Compressed(Compression, PathBuf),
-    Dir(PathBuf),
-}
-
-impl Display for SupportedFormat {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let msg = match self {
-            SupportedFormat::Compressed(comp_type, src) => {
-                format!("Compression: {}, Src: {}", comp_type, src.display())
-            }
-            SupportedFormat::Dir(src) => format!("Directory: {}", src.display()),
-        };
-        write!(f, "{}", msg)
-    }
-}
-
-#[derive(Debug)]
-pub struct UnsupportedFormat {
-    pub ext: String,
-}
-
-impl Display for UnsupportedFormat {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Unsupported archive format {}", self.ext)
-    }
-}
-
-impl std::error::Error for UnsupportedFormat {}
-
-impl Display for Compression {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let msg = match self {
-            Compression::Gz => "gz",
-            Compression::Xz => "xz",
-            Compression::Zst => "zst",
-            Compression::Bz2 => "bz2",
-        };
-        write!(f, "{}", msg)
-    }
-}
-
 #[derive(clap::Args, Debug, Clone)]
 pub struct Src {
     #[arg(
@@ -170,39 +116,7 @@ impl Vendor for Src {
         if let Ok(actual_src) = utils::process_globs(&self.src) {
             debug!(?actual_src, "Source got from glob pattern");
             if actual_src.is_file() {
-                match infer::get_from_path(&actual_src) {
-                    Ok(kind) => match kind {
-                        Some(known) => {
-                            if SUPPORTED_MIME_TYPES.contains(&known.mime_type()) {
-                                trace!(?known);
-                                if known.mime_type().eq(GZ_MIME) {
-                                    Ok(SupportedFormat::Compressed(Compression::Gz, actual_src))
-                                } else if known.mime_type().eq(XZ_MIME) {
-                                    Ok(SupportedFormat::Compressed(Compression::Xz, actual_src))
-                                } else if known.mime_type().eq(ZST_MIME) {
-                                    Ok(SupportedFormat::Compressed(Compression::Zst, actual_src))
-                                } else if known.mime_type().eq(BZ2_MIME) {
-                                    Ok(SupportedFormat::Compressed(Compression::Bz2, actual_src))
-                                } else {
-                                    unreachable!()
-                                }
-                            } else {
-                                Err(UnsupportedFormat {
-                                    ext: known.mime_type().to_string(),
-                                })
-                            }
-                        }
-                        None => Err(UnsupportedFormat {
-                            ext: "`File type is not known`".to_string(),
-                        }),
-                    },
-                    Err(err) => {
-                        error!(?err);
-                        Err(UnsupportedFormat {
-                            ext: "`Cannot read file`".to_string(),
-                        })
-                    }
-                }
+                libroast::is_supported_format(&actual_src)
             } else {
                 Ok(SupportedFormat::Dir(actual_src))
             }

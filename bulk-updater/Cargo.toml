@@ -13,6 +13,7 @@ quick-xml = { workspace = true, features = ["overlapped-lists", "serialize"] }
 obs-service-cargo = { path = "../cargo" }
 clap = { workspace = true, features = ["derive"] }
 serde = { workspace = true, features = ["derive", "alloc"] }
+libroast = { git = "https://github.com/openSUSE-Rust/roast", version = "^3" }
 tracing.workspace = true
 tracing-subscriber.workspace = true
 terminfo = "^0.8.0"
