@@ -1680,8 +1680,9 @@ dependencies = [
 
 [[package]]
 name = "libroast"
-version = "3.2.0"
-source = "git+https://github.com/openSUSE-Rust/roast#66d10363f98cf841f2b6bb7e1da437dfcc9faef7"
+version = "3.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26f180287c483df884d6243e797b20d13df08f9daa49a0e874738f50274dba1c"
 dependencies = [
  "bzip2",
  "clap",
