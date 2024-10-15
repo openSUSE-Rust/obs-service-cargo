@@ -107,9 +107,9 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
 name = "async-compression"
-version = "0.4.14"
+version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "998282f8f49ccd6116b0ed8a4de0fbd3151697920e7c7533416d6e25e76434a7"
+checksum = "e26a9844c659a2a293d239c7910b752f8487fe122c6c8bd1659bf85a6507c302"
 dependencies = [
  "flate2",
  "futures-core",
@@ -170,7 +170,7 @@ dependencies = [
 
 [[package]]
 name = "bulk-updater"
-version = "2.0.0"
+version = "3.0.0"
 dependencies = [
  "clap",
  "libroast",
@@ -1680,9 +1680,9 @@ dependencies = [
 
 [[package]]
 name = "libroast"
-version = "3.2.2"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26f180287c483df884d6243e797b20d13df08f9daa49a0e874738f50274dba1c"
+checksum = "22dbbcdad3be334afd9cf2d105fef0481cb33e8b3adf48179eb6a6e3a20158f5"
 dependencies = [
  "bzip2",
  "clap",
@@ -1844,7 +1844,7 @@ dependencies = [
 
 [[package]]
 name = "obs-service-cargo"
-version = "2.0.0"
+version = "3.0.0"
 dependencies = [
  "bzip2",
  "clap",
@@ -2315,9 +2315,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-pki-types"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e696e35370c65c9c541198af4543ccd580cf17fc25d8e05c5a242b202488c55"
+checksum = "16f1201b3c9a7ee8039bcadc17b7e605e2945b27eee7631788c1bd2b0643674b"
 
 [[package]]
 name = "rustls-webpki"

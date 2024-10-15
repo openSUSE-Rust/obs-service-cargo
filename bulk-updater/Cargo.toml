@@ -13,7 +13,7 @@ quick-xml = { workspace = true, features = ["overlapped-lists", "serialize"] }
 obs-service-cargo = { path = "../cargo" }
 clap = { workspace = true, features = ["derive"] }
 serde = { workspace = true, features = ["derive", "alloc"] }
-libroast = { version = "^3" }
+libroast.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 terminfo = "^0.8.0"

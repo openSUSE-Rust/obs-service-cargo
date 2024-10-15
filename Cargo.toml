@@ -1,33 +1,28 @@
 [workspace]
-members = [
-  "cargo",
-  "bulk-updater",
-]
+members = ["cargo", "bulk-updater"]
 
-default-members = [
-  "cargo",
-  "bulk-updater",
-]
+default-members = ["cargo", "bulk-updater"]
 
 resolver = "2"
 
 [workspace.package]
-version = "2.0.0"
+version = "3.0.0"
 description = "OBS Source Service and utilities for Rust software packaging."
 authors = [
-  "Soc Virnyl Estela <socvirnyl.estela@uncomfyhalomacro.pl>",
-  "William Brown <william@blackhats.net.au>",
+        "Soc Virnyl Estela <socvirnyl.estela@uncomfyhalomacro.pl>",
+        "William Brown <william@blackhats.net.au>",
 ]
 edition = "2021"
 license = "MPL-2.0"
 
 [workspace.dependencies]
 rustsec = "0.29"
+libroast = "3.3.0"
 clap = "4.4"
 glob = "0.3"
 tracing = { version = "0.1", features = [
-    "max_level_trace",
-    "release_max_level_debug",
+        "max_level_trace",
+        "release_max_level_debug",
 ] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 quick-xml = "0.30"
@@ -36,7 +31,7 @@ quick-xml = "0.30"
 serde = "1.0"
 
 [workspace.metadata.services]
-assets = [ "./cargo_vendor.service", "./cargo_audit.service" ]
+assets = ["./cargo_vendor.service", "./cargo_audit.service"]
 
 [workspace.lints.rust]
 warnings = "deny"
@@ -62,11 +57,11 @@ unit_arg = "allow"
 lint_groups_priority = "allow"
 
 [profile.release]
-lto = true          # Enable Link Time Optimization.
-debug = true        # Include debug symbols. If you are going to complain for big binary sizes, there is a release-stripped option :P
-codegen-units = 8   # Default. Little gains if set to 1 so why bother?
-panic = 'abort'     # Abort on panic.
-strip = false       # Strip symbols from binary.
+lto = true        # Enable Link Time Optimization.
+debug = true      # Include debug symbols. If you are going to complain for big binary sizes, there is a release-stripped option :P
+codegen-units = 8 # Default. Little gains if set to 1 so why bother?
+panic = 'abort'   # Abort on panic.
+strip = false     # Strip symbols from binary.
 
 [profile.release-stripped]
 inherits = "release"

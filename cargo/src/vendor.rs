@@ -213,7 +213,10 @@ pub fn compress(
                         "gz compression failed".to_string(),
                     )
                 })?;
-                debug!("Compressed to {}", vendor_out.to_string_lossy());
+                debug!(
+                    "Compressed and archived to {}",
+                    vendor_out.to_string_lossy()
+                );
             }
             Compression::Xz => {
                 vendor_out.set_extension("tar.xz");
@@ -230,7 +233,10 @@ pub fn compress(
                         "xz compression failed".to_string(),
                     )
                 })?;
-                debug!("Compressed to {}", vendor_out.to_string_lossy());
+                debug!(
+                    "Compressed and archived to {}",
+                    vendor_out.to_string_lossy()
+                );
             }
             Compression::Zst => {
                 vendor_out.set_extension("tar.zst");
@@ -247,7 +253,10 @@ pub fn compress(
                         "zst compression failed".to_string(),
                     )
                 })?;
-                debug!("Compressed to {}", vendor_out.to_string_lossy());
+                debug!(
+                    "Compressed and archived to {}",
+                    vendor_out.to_string_lossy()
+                );
             }
             Compression::Bz2 => {
                 vendor_out.set_extension("tar.bz2");
@@ -264,7 +273,27 @@ pub fn compress(
                         "bz2 compression failed".to_string(),
                     )
                 })?;
-                debug!("Compressed to {}", vendor_out.to_string_lossy());
+                debug!(
+                    "Compressed and archived to {}",
+                    vendor_out.to_string_lossy()
+                );
+            }
+            Compression::Not => {
+                vendor_out.set_extension("tar");
+                if vendor_out.exists() {
+                    warn!(
+                        replacing = ?vendor_out,
+                        "🔦 Uncompressed vanilla tarball for vendor exists AND will be replaced."
+                    );
+                }
+                compress::tarbz2(&vendor_out, &prjdir, paths_to_archive, true).map_err(|err| {
+                    error!(?err, "bz2 compression failed");
+                    OBSCargoError::new(
+                        OBSCargoErrorKind::VendorCompressionFailed,
+                        "archiving vendor source failed".to_string(),
+                    )
+                })?;
+                debug!("Archived to {}", vendor_out.to_string_lossy());
             }
         }
         debug!("Finished creating {} compressed tarball", compression);

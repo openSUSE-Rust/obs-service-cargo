@@ -2,7 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2024-10-15
+
+### Features
+
+- Support uncompressed tarballs or with `.tar` extension [f41ad85](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/f41ad859816da723ef909cb9d6276104129b0c62)
+
+### Ci
+
+- Format check should not fail ci [fa14c74](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/fa14c74101c6ed3b1cc047b9b57de87eb3268d47)
+
+### Crates
+
+- Get libroast dep from crates.io [043c050](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/043c05053c5db9e5cb697c4aabd80d0f319ec7a7)
+
 ## [2.0.0] - 2024-10-12
+
+### Miscellaneous Tasks
+
+- V2.0.0 [d775b7c](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/d775b7c006f537f704187928d7a53d8418f11e7f)
 
 ### Refactor
 
