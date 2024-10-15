@@ -40,7 +40,7 @@ pub struct Opts {
         long,
         value_enum,
         default_value_t,
-        help = "What compression algorithm to use."
+        help = "What compression algorithm to use. Set to `not` if you just want a normal tarball with no compression."
     )]
     pub compression: Compression,
     #[arg(
