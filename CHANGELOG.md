@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.3] - 2024-10-18
+
+### Bug Fixes
+
+- Properly set which version to set in the manifest [f0051fe](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f0051feb263276815845a35089f7fdb390fd44d0)
+
 ## [3.3.2] - 2024-10-18
 
 ### Miscellaneous Tasks
