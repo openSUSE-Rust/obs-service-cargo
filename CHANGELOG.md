@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.1] - 2024-10-18
+
+### Cargo
+
+- Update lockfile and bump crate versions [0dbb45d](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/0dbb45d0e9b9a4d9b2d4131bec10bdb8a45936d7)
+
+### Cli
+
+- Improve description [e736094](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/e736094899058fb6f04576411713039d35f91578)
+
 ## [3.0.0] - 2024-10-15
 
 ### Features
 
-- Support uncompressed tarballs or with `.tar` extension [f41ad85](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/f41ad859816da723ef909cb9d6276104129b0c62)
+- Support uncompressed tarballs or with `.tar` extension [5733edc](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/5733edcf50b494441d8d854a490e0f154934b4f5)
 
 ### Ci
 
