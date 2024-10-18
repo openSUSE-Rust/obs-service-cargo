@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [3.3.1] - 2024-10-18
 
+### Miscellaneous Tasks
+
+- Release v3.3.1 [c9a7d47](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/c9a7d4757f1ff14feecca2a478bf555461150480)
+
 ### Cargo
 
 - Update lockfile and bump crate versions [0dbb45d](https://github.com/openSUSE-Rust/obs-service-cargo_vendor/commit/0dbb45d0e9b9a4d9b2d4131bec10bdb8a45936d7)
