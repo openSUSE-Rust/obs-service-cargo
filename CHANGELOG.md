@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.5.0] - 2024-11-01
+
+### Refactor
+
+- Migrate some ideas and move the compression logic to roast internally [901e2f7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/901e2f78280ab2c0bb2651a494f5db92485438f2)
+
 ## [3.3.3] - 2024-10-18
 
 ### Bug Fixes
 
 - Properly set which version to set in the manifest [f0051fe](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f0051feb263276815845a35089f7fdb390fd44d0)
+
+### Miscellaneous Tasks
+
+- Release v3.3.3 [a1669f3](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a1669f3593b05e222fea54e23793a6ac22dca555)
 
 ## [3.3.2] - 2024-10-18
 
