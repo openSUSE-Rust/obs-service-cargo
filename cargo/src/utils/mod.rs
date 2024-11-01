@@ -9,7 +9,6 @@
 
 use std::ffi::OsStr;
 use std::fmt::{self, Debug, Display};
-use std::fs;
 use std::io;
 use std::path::Path;
 use std::path::PathBuf;
@@ -23,44 +22,23 @@ use crate::audit::{perform_cargo_audit, process_reports};
 
 use glob::glob;
 use libroast::common::Compression;
+use libroast::operations::cli::RoastArgs;
+use libroast::operations::roast::roast_opts;
+use libroast::utils::copy_dir_all;
+
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 
-pub fn copy_dir_all(src: impl AsRef<Path>, dst: &Path) -> Result<(), io::Error> {
-    debug!("Copying sources");
-    debug!(?dst);
-    fs::create_dir_all(dst)?;
-    Ok(for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let ty = entry.file_type()?;
-        trace!(?entry);
-        trace!(?ty);
-        if ty.is_dir() {
-            trace!(?ty, "Is directory?");
-            copy_dir_all(entry.path(), &dst.join(entry.file_name()))?;
-
-        // Should we respect symlinks?
-        // } else if ty.is_symlink() {
-        //     debug!("Is symlink");
-        //     let path = fs::read_link(&entry.path())?;
-        //     let path = fs::canonicalize(&path).unwrap();
-        //     debug!(?path);
-        //     let pathfilename = path.file_name().unwrap_or(OsStr::new("."));
-        //     if path.is_dir() {
-        //         copy_dir_all(&path, &dst.join(pathfilename))?;
-        //     } else {
-        //         fs::copy(&path, &mut dst.join(pathfilename))?;
-        //     }
-
-        // Be pedantic or you get symlink error
-        } else if ty.is_file() {
-            trace!(?ty, "Is file?");
-            fs::copy(entry.path(), dst.join(entry.file_name()))?;
-        };
-    })
-}
-
 pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
+    let v_workdir = tempfile::Builder::new()
+        .prefix(".vendor")
+        .rand_bytes(12)
+        .tempdir()
+        .map_err(|err| {
+            error!(?err);
+            OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+        })?;
+    let vendor_workdir = v_workdir.path();
     let mut manifest_files: Vec<PathBuf> = if !args.cargotoml.is_empty() {
         debug!("Using manually specified Cargo.toml files.");
         debug!(?args.cargotoml);
@@ -274,13 +252,67 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         debug!("All paths to archive {:#?}", paths_to_archive);
 
         if vendor_dir.exists() {
-            vendor::compress(
-                outdir,
-                prjdir,
-                &paths_to_archive,
-                compression,
-                args.tag.as_deref(),
-            )?;
+            let vendor_filename = match &args.tag {
+                Some(suffix) => format!("vendor-{}", suffix),
+                None => "vendor".to_string(),
+            };
+            let vendor_filename_with_extension = match &args.compression {
+                Compression::Gz => format!("{}{}", &vendor_filename, ".tar.gz"),
+                Compression::Xz => format!("{}{}", &vendor_filename, ".tar.xz"),
+                Compression::Zst => format!("{}{}", &vendor_filename, ".tar.zst"),
+                Compression::Bz2 => format!("{}{}", &vendor_filename, ".tar.bz"),
+                Compression::Not => format!("{}{}", &vendor_filename, ".tar"),
+            };
+            let vendor_doppel = vendor_workdir.join(&vendor_filename);
+            copy_dir_all(vendor_dir, &vendor_doppel).map_err(|err| {
+                error!(?err);
+                OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+            })?;
+
+            for p in paths_to_archive {
+                let canon_p = p.canonicalize().unwrap_or(p.to_path_buf());
+                let stripped_canon_p = canon_p
+                    .strip_prefix(prjdir)
+                    .unwrap_or(Path::new(canon_p.file_stem().unwrap_or_default()));
+                let p_to_vendor_workdir = vendor_workdir.join(stripped_canon_p);
+                let p_to_vendor_workdir_parent =
+                    p_to_vendor_workdir.parent().unwrap_or(Path::new(""));
+                std::fs::create_dir_all(p_to_vendor_workdir_parent).map_err(|err| {
+                    error!(?err);
+                    OBSCargoError::new(
+                        OBSCargoErrorKind::VendorError,
+                        "Failed to create a directory".to_string(),
+                    )
+                })?;
+                if canon_p.is_file() {
+                    std::fs::copy(canon_p, p_to_vendor_workdir).map_err(|err| {
+                        error!(?err);
+                        OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+                    })?;
+                } else if canon_p.is_dir() {
+                    copy_dir_all(canon_p, &p_to_vendor_workdir).map_err(|err| {
+                        error!(?err);
+                        OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+                    })?;
+                };
+            }
+
+            let roast_args = RoastArgs {
+                target: vendor_workdir.to_path_buf(),
+                include: None,
+                exclude: None,
+                additional_paths: None,
+                outfile: PathBuf::from(vendor_filename_with_extension),
+                outdir: Some(outdir),
+                preserve_root: false,
+                reproducible: true,
+                ignore_git: true,
+                ignore_hidden: false,
+            };
+            roast_opts(roast_args, false).map_err(|err| {
+                error!(?err);
+                OBSCargoError::new(OBSCargoErrorKind::VendorCompressionFailed, err.to_string())
+            })?;
         } else {
             error!("Vendor dir does not exist! This is a bug!");
             return Err(OBSCargoError::new(

@@ -117,7 +117,7 @@ impl Vendor for Src {
         if let Ok(actual_src) = utils::process_globs(&self.src) {
             debug!(?actual_src, "Source got from glob pattern");
             if actual_src.is_file() {
-                libroast::is_supported_format(&actual_src)
+                libroast::utils::is_supported_format(&actual_src)
             } else {
                 Ok(SupportedFormat::Dir(actual_src))
             }
@@ -206,7 +206,7 @@ impl Vendor for Src {
                             }
                         }
                     }
-                    SupportedFormat::Dir(srcpath) => match utils::copy_dir_all(
+                    SupportedFormat::Dir(srcpath) => match libroast::utils::copy_dir_all(
                         &srcpath,
                         &workdir.join(srcpath.file_name().unwrap_or(srcpath.as_os_str())),
                     ) {
