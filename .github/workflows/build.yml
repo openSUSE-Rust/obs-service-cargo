@@ -27,6 +27,7 @@ jobs:
     - name: Check clippy
       run: |
         cargo clippy --release
+        cargo clippy --tests ---release
     - name: Install cargo-vendor-filterer
       run: |
         cargo install cargo-vendor-filterer
