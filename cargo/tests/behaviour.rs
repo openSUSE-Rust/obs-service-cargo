@@ -74,7 +74,7 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
 #[traced_test]
 async fn filter_vendor_sources() -> io::Result<()> {
     let sources: &[&str] = &[
-        "https://github.com/wez/wezterm/archive/refs/tags/20240203-110809-5046fc22.tar.gz",
+        "https://github.com/zellij-org/zellij/archive/refs/tags/v0.40.1.tar.gz",
         "https://github.com/alacritty/alacritty/archive/refs/tags/v0.14.0.tar.gz",
     ];
     for src in sources {
