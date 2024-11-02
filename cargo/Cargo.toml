@@ -22,3 +22,10 @@ libroast.workspace = true
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+rand = "0.8.5"
+reqwest = "0.12.9"
+tokio = { version = "1.41.0", features = ["full"] }
+tokio-test = "0.4.4"
+tracing-test = "0.2.5"
