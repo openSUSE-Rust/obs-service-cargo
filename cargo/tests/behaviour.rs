@@ -2,12 +2,12 @@
 
 use libroast::common::Compression;
 use obs_service_cargo::cli;
+use rand::prelude::*;
 use std::{io, path::PathBuf};
 use tokio::fs;
 use tokio_test::task::spawn;
 use tracing::{error, info};
 use tracing_test::traced_test;
-use rand::prelude::*;
 
 async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     let mut rng = rand::thread_rng();
@@ -74,15 +74,14 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
 async fn filter_vendor_sources() -> io::Result<()> {
     let sources: &[&str] = &[
         "https://github.com/wez/wezterm/archive/refs/tags/20240203-110809-5046fc22.tar.gz",
-        "https://github.com/alacritty/alacritty/archive/refs/tags/v0.14.0.tar.gz"
+        "https://github.com/alacritty/alacritty/archive/refs/tags/v0.14.0.tar.gz",
     ];
     for src in sources {
         let _ = spawn(async move {
-            filter_vendor_source(src, true).await.unwrap();
+            vendor_source(src, true).await.unwrap();
             src
         })
         .await;
     }
     Ok(())
 }
-
