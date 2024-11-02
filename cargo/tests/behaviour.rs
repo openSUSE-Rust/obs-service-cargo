@@ -163,7 +163,7 @@ async fn cargotoml_test_2() -> io::Result<()> {
         },
         compression: Compression::default(),
         tag: Some(random_tag),
-        cargotoml: [PathBuf::from("settings/rust/Cargo.toml")].to_vec(),
+        cargotoml: [PathBuf::from("libflux/Cargo.toml")].to_vec(),
         update: true,
         filter: true,
         outdir,
