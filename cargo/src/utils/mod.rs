@@ -70,6 +70,75 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
     // Assume we have deps
     let mut hasdeps = true;
 
+    // NOTE Generate the lockfile first
+    // NOTE Two things to know:
+    // 1. If a manifest is not a workspace manifest, it's likely the lockfile
+    // is in the directory of where the manifest is
+    // 2. If a manifest is part or a member of a workspace manifest, then it's
+    // likely that the lockfile is on the path of where the workspace manifest
+    // is.
+    //
+    // So we just eagerly take all manifest paths from the parameters, and
+    // just check if there are any lockfiles there.
+    //
+    // We canonicalize the path first so we won't get any gotchas if we are
+    // looking for the parent path.
+    //
+    // And then we only accept if there is `Some` kind of value there and ignore
+    // if there is `None`.
+    let mut cargo_locks: Vec<PathBuf> = Vec::new();
+
+    // Let's ensure the lockfiles are generated even if they don't exist
+    // This guarantees that the dependencies used are properly recorded. We do this twice!
+    for manifest_file in manifest_files.iter() {
+        let manifest_f = manifest_file.canonicalize().map_err(|err| {
+            error!("Failed to canonicalize path: {}", err);
+            OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+        })?;
+
+        let lockfile_path = manifest_f.parent().map(|path_f| path_f.join("Cargo.lock"));
+        if let Some(lockfile_p) = lockfile_path {
+            if lockfile_p.exists() {
+                debug!("Path to extra lockfile: {}", lockfile_p.display());
+                cargo_locks.push(lockfile_p)
+            } else {
+                info!("Path to extra lockfile not found: {}", lockfile_p.display());
+                if generate_lockfile(manifest_file).is_ok() {
+                    info!(
+                        "🔒 Cargo lockfile created for extra lockfile at path: {}",
+                        lockfile_p.display()
+                    );
+                    cargo_locks.push(lockfile_p)
+                } else {
+                    debug!("Path didn't generate manifest: {}", lockfile_p.display());
+                }
+            };
+        };
+    }
+
+    // NOTE: We check if the first manifest also has a lockfile.
+    if let Some(custom_path) = first_manifest.parent() {
+        let lockfilepath = custom_path.join("Cargo.lock");
+        if lockfilepath.exists() {
+            debug!("Path to first cargo lock: {}", lockfilepath.display());
+            cargo_locks.push(lockfilepath);
+        } else {
+            debug!(
+                "Path to first cargo lock not found: {}",
+                lockfilepath.display()
+            );
+            if generate_lockfile(&first_manifest).is_ok() {
+                info!(
+                    "🔒 Cargo lockfile created for first lockfile at path: {}",
+                    lockfilepath.display()
+                );
+                cargo_locks.push(lockfilepath);
+            } else {
+                debug!("Path didn't generate manifest: {}", lockfilepath.display());
+            };
+        };
+    };
+
     // Now switch on the multi vs single case.
     if manifest_files.is_empty() {
         // Single file
@@ -143,26 +212,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         };
     };
 
-    // NOTE
-    // Two things to know:
-    // 1. If a manifest is not a workspace manifest, it's likely the lockfile
-    // is in the directory of where the manifest is
-    // 2. If a manifest is part or a member of a workspace manifest, then it's
-    // likely that the lockfile is on the path of where the workspace manifest
-    // is.
-    //
-    // So we just eagerly take all manifest paths from the parameters, and
-    // just check if there are any lockfiles there.
-    //
-    // We canonicalize the path first so we won't get any gotchas if we are
-    // looking for the parent path.
-    //
-    // And then we only accept if there is `Some` kind of value there and ignore
-    // if there is `None`.
-    let mut cargo_locks: Vec<PathBuf> = Vec::new();
-
-    // Let's ensure the lockfiles are generated even if they don't exist
-    // This guarantees that the dependencies used are properly recorded
+    info!("🔓 Rechecking lockfiles!");
     for manifest_file in manifest_files.iter() {
         let manifest_f = manifest_file.canonicalize().map_err(|err| {
             error!("Failed to canonicalize path: {}", err);
@@ -175,7 +225,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
                 debug!("Path to extra lockfile: {}", lockfile_p.display());
                 cargo_locks.push(lockfile_p)
             } else {
-                debug!("Path to extra lockfile not found: {}", lockfile_p.display());
+                info!("Path to extra lockfile not found: {}", lockfile_p.display());
                 if generate_lockfile(manifest_file).is_ok() {
                     info!(
                         "🔒 Cargo lockfile created for extra lockfile at path: {}",
@@ -189,8 +239,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
         };
     }
 
-    // NOTE
-    // And then we check if the first manifest also has a lockfile.
+    // NOTE: We check if the first manifest also has a lockfile.
     if let Some(custom_path) = first_manifest.parent() {
         let lockfilepath = custom_path.join("Cargo.lock");
         if lockfilepath.exists() {
