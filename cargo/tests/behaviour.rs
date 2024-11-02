@@ -53,8 +53,8 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     Ok(outfile)
 }
 
-#[traced_test]
 #[tokio::test]
+#[traced_test]
 async fn no_filter_vendor_sources() -> io::Result<()> {
     let sources = [
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
@@ -71,6 +71,7 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
 }
 
 #[tokio::test]
+#[traced_test]
 async fn filter_vendor_sources() -> io::Result<()> {
     let sources: &[&str] = &[
         "https://github.com/wez/wezterm/archive/refs/tags/20240203-110809-5046fc22.tar.gz",
@@ -87,6 +88,7 @@ async fn filter_vendor_sources() -> io::Result<()> {
 }
 
 #[tokio::test]
+#[traced_test]
 async fn cargotoml_test_1() -> io::Result<()> {
     let source = "https://github.com/ibm-s390-linux/s390-tools/archive/refs/tags/v2.29.0.tar.gz";
     let mut rng = rand::thread_rng();
@@ -133,6 +135,7 @@ async fn cargotoml_test_1() -> io::Result<()> {
 }
 
 #[tokio::test]
+#[traced_test]
 async fn cargotoml_test_2() -> io::Result<()> {
     let source = "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz";
     let mut rng = rand::thread_rng();
