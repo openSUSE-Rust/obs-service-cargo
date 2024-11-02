@@ -65,16 +65,15 @@ pub fn generate_lockfile(manifest_path: impl AsRef<Path>) -> Result<(), OBSCargo
         guess_path.to_path_buf()
     };
 
-    Ok({
-        cargo_command("generate-lockfile", &lockfile_options, parent_path).map_err(|e| {
-            error!(err = %e);
-            OBSCargoError::new(
-                OBSCargoErrorKind::LockFileError,
-                "Unable to generate a lockfile".into(),
-            )
-        })?;
-        info!("🔒 Successfully generated lockfile")
-    })
+    cargo_command("generate-lockfile", &lockfile_options, parent_path).map_err(|e| {
+        error!(err = %e);
+        OBSCargoError::new(
+            OBSCargoErrorKind::LockFileError,
+            "Unable to generate a lockfile".into(),
+        )
+    })?;
+    info!("🔒 Successfully generated lockfile");
+    Ok(())
 }
 
 pub fn vendor(
@@ -86,6 +85,7 @@ pub fn vendor(
     respect_lockfile: bool,
     versioned_dirs: bool,
 ) -> Result<(), OBSCargoError> {
+
     let mut vendor_options: Vec<OsString> =
         vec!["--manifest-path".into(), manifest_path.as_ref().into()];
 
@@ -93,7 +93,7 @@ pub fn vendor(
         vendor_options.push("--sync".into());
         vendor_options.push(ex_path.as_ref().into());
     }
-    // TODO: Should this be an option?
+
     if versioned_dirs {
         vendor_options.push("--versioned-dirs".into());
     }
@@ -121,7 +121,6 @@ pub fn vendor(
     } else {
         // cargo-vendor-filterer doesn't support `-vv`
         vendor_options.push("-vv".into());
-        // Enforce lock is up-to-date despite the fact we are regenerating the locks
         if respect_lockfile {
             // NOTE: Only vendor has the --locked option
             vendor_options.push("--locked".into());
