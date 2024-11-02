@@ -31,6 +31,13 @@ A good example would be the [zellij](https://zellij.dev) project. Users will jus
   <service name="cargo_audit" mode="manual" />
 </services>
 ```
+## Versioned Dirs
+
+The `--versioned-dirs` flag is used when you
+- want to know the version quickly
+- prefer this configuration
+
+By default, it is set to true. So far, it has no impact on how we vendor.
 
 ## Accepting risks of RUSTSEC advisories
 
@@ -143,11 +150,20 @@ paths to be part of the vendored tarball. So a path that looks like
 if extracted, it will go to the desired path `rust/pv/Cargo.lock` from
 the root folder of the project.
 
+> [!IMPORTANT]
+> If a source does not ship a lockfile, we attempt to regenerate it by
+> running the command
+> ```bash
+> cargo generate-lockfile
+> ```
+> This ensures that there will be no errors during a `cargo update` or
+> a build when update is set to false but there was no lockfile originally.
+> Therefore, we check if there is a lockfile **twice**.
+
 ## Respecting lockfiles
 
 A new option is added to respect lockfiles. This means that vendored tarballs
 are expected to have the same metadata inside the `Cargo.lock`.
-
 
 > [!WARNING]
 > `cargo-vendor-filterer` is not supported for lockfile validation/verification
@@ -210,16 +226,32 @@ OBS Source Service to vendor all crates.io and dependencies for Rust project loc
 Usage: cargo_vendor [OPTIONS] --src <SRC> --outdir <OUTDIR>
 
 Options:
-      --src <SRC>                  Where to find sources. Source is either a directory or a source tarball AND cannot be both. [aliases: srctar, srcdir]
-      --compression <COMPRESSION>  What compression algorithm to use. [default: zst] [possible values: gz, xz, zst]
-      --tag <TAG>                  Tag some files for multi-vendor and multi-cargo_config projects.
-      --cargotoml <CARGOTOML>      Other cargo manifest files to sync with during vendor
-      --update <UPDATE>            Update dependencies or not [default: true] [possible values: true, false]
-      --outdir <OUTDIR>            Where to output vendor.tar* and cargo_config
-      --color <WHEN>               Whether WHEN to color output or not [default: auto] [possible values: auto, always, never]
-  -h, --help                       Print help (see more with '--help')
-  -V, --version                    Print version
-
+      --src <SRC>
+          Where to find sources. Source is either a directory or a source tarball AND cannot be both. [aliases: srctar, srcdir]
+      --compression <COMPRESSION>
+          What compression algorithm to use. Set to `not` if you just want a normal tarball with no compression. [default: zst] [possible values: gz, xz, zst, bz2, not]
+      --tag <TAG>
+          Tag some files for multi-vendor and multi-cargo_config projects
+      --cargotoml <CARGOTOML>
+          Other cargo manifest files to sync with during vendor
+      --update <UPDATE>
+          Update dependencies or not [default: true] [possible values: true, false]
+      --filter <FILTER>
+          EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies. [default: false] [possible values: true, false]
+      --outdir <OUTDIR>
+          Where to output vendor.tar* and cargo_config
+      --color <WHEN>
+          Whether WHEN to color output or not [default: auto] [possible values: auto, always, never]
+      --i-accept-the-risk <I_ACCEPT_THE_RISK>
+          A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it.
+      --respect-lockfile <RESPECT_LOCKFILE>
+          Respect lockfile or not if it exists. Otherwise, regenerate the lockfile and try to respect the lockfile. [default: true] [possible values: true, false]
+      --versioned-dirs <VERSIONED_DIRS>
+          Whether to use the `--versioned-dirs` flag of cargo-vendor. [default: true] [possible values: true, false]
+  -h, --help
+          Print help (see more with '--help')
+  -V, --version
+          Print version
 ```
 
 # List of possible scenarios when vendoring fails
