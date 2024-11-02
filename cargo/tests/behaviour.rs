@@ -4,10 +4,10 @@ use libroast::common::Compression;
 use obs_service_cargo::cli;
 use rand::prelude::*;
 use std::{io, path::PathBuf};
+use test_log::test;
 use tokio::fs;
 use tokio_test::task::spawn;
 use tracing::{error, info};
-use tracing_test::traced_test;
 
 async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     let mut rng = rand::thread_rng();
@@ -53,8 +53,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     Ok(outfile)
 }
 
-#[tokio::test]
-#[traced_test]
+#[test(tokio::test)]
 async fn no_filter_vendor_sources() -> io::Result<()> {
     let sources = [
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
@@ -70,8 +69,7 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
     Ok(())
 }
 
-#[tokio::test]
-#[traced_test]
+#[test(tokio::test)]
 async fn filter_vendor_sources() -> io::Result<()> {
     let sources: &[&str] = &[
         "https://github.com/zellij-org/zellij/archive/refs/tags/v0.40.1.tar.gz",
@@ -87,8 +85,7 @@ async fn filter_vendor_sources() -> io::Result<()> {
     Ok(())
 }
 
-#[tokio::test]
-#[traced_test]
+#[test(tokio::test)]
 async fn cargotoml_test_1() -> io::Result<()> {
     let source = "https://github.com/ibm-s390-linux/s390-tools/archive/refs/tags/v2.29.0.tar.gz";
     let mut rng = rand::thread_rng();
@@ -134,8 +131,7 @@ async fn cargotoml_test_1() -> io::Result<()> {
     Ok(())
 }
 
-#[tokio::test]
-#[traced_test]
+#[test(tokio::test)]
 async fn cargotoml_test_2() -> io::Result<()> {
     let source = "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz";
     let mut rng = rand::thread_rng();
