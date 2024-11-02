@@ -6,7 +6,7 @@ default-members = ["cargo", "bulk-updater"]
 resolver = "2"
 
 [workspace.package]
-version = "3.5.2"
+version = "3.5.4"
 description = "OBS Source Service and utilities for Rust software packaging."
 authors = [
         "Soc Virnyl Estela <socvirnyl.estela@uncomfyhalomacro.pl>",

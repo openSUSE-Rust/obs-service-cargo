@@ -179,7 +179,7 @@ dependencies = [
 
 [[package]]
 name = "bulk-updater"
-version = "3.5.2"
+version = "3.5.4"
 dependencies = [
  "clap",
  "libroast",
@@ -1532,6 +1532,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "infer"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc150e5ce2330295b8616ce0e3f53250e53af31759a9dbedad1621ba29151847"
+dependencies = [
+ "cfb",
+]
+
+[[package]]
 name = "io-close"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1636,15 +1645,15 @@ dependencies = [
 
 [[package]]
 name = "libroast"
-version = "5.1.2"
+version = "5.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75dca9c916f68c0c9afe8d229e9acd3cba7b4f307ad3a54752d1529866ddba45"
+checksum = "fbe3d56d8b70c84a6c269479bffb7e9e9ce4bec5fcac0444a09bf18ca1f22bbb"
 dependencies = [
  "bzip2",
  "clap",
  "flate2",
  "glob",
- "infer",
+ "infer 0.16.0",
  "rayon",
  "tar",
  "tempfile",
@@ -1653,7 +1662,7 @@ dependencies = [
  "tracing-subscriber",
  "walkdir",
  "xz2",
- "zstd",
+ "zstd 0.13.2",
 ]
 
 [[package]]
@@ -1794,13 +1803,13 @@ dependencies = [
 
 [[package]]
 name = "obs-service-cargo"
-version = "3.5.2"
+version = "3.5.4"
 dependencies = [
  "bzip2",
  "clap",
  "flate2",
  "glob",
- "infer",
+ "infer 0.15.0",
  "libroast",
  "quick-xml",
  "rustsec",
@@ -1813,7 +1822,7 @@ dependencies = [
  "tracing-subscriber",
  "walkdir",
  "xz2",
- "zstd",
+ "zstd 0.12.4",
 ]
 
 [[package]]
@@ -3284,7 +3293,16 @@ version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a27595e173641171fc74a1232b7b1c7a7cb6e18222c11e9dfb9888fa424c53c"
 dependencies = [
- "zstd-safe",
+ "zstd-safe 6.0.6",
+]
+
+[[package]]
+name = "zstd"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcf2b778a664581e31e389454a7072dab1647606d44f7feea22cd5abb9c9f3f9"
+dependencies = [
+ "zstd-safe 7.2.1",
 ]
 
 [[package]]
@@ -3294,6 +3312,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee98ffd0b48ee95e6c5168188e44a54550b1564d9d530ee21d5f0eaed1069581"
 dependencies = [
  "libc",
+ "zstd-sys",
+]
+
+[[package]]
+name = "zstd-safe"
+version = "7.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54a3ab4db68cea366acc5c897c7b4d4d1b8994a9cd6e6f841f8964566a419059"
+dependencies = [
  "zstd-sys",
 ]
 
