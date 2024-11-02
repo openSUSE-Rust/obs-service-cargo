@@ -1524,15 +1524,6 @@ dependencies = [
 
 [[package]]
 name = "infer"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb33622da908807a06f9513c19b3c1ad50fab3e4137d82a78107d502075aa199"
-dependencies = [
- "cfb",
-]
-
-[[package]]
-name = "infer"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc150e5ce2330295b8616ce0e3f53250e53af31759a9dbedad1621ba29151847"
@@ -1653,7 +1644,7 @@ dependencies = [
  "clap",
  "flate2",
  "glob",
- "infer 0.16.0",
+ "infer",
  "rayon",
  "tar",
  "tempfile",
@@ -1662,7 +1653,7 @@ dependencies = [
  "tracing-subscriber",
  "walkdir",
  "xz2",
- "zstd 0.13.2",
+ "zstd",
 ]
 
 [[package]]
@@ -1805,11 +1796,8 @@ dependencies = [
 name = "obs-service-cargo"
 version = "3.5.4"
 dependencies = [
- "bzip2",
  "clap",
- "flate2",
  "glob",
- "infer 0.15.0",
  "libroast",
  "quick-xml",
  "rustsec",
@@ -1820,9 +1808,6 @@ dependencies = [
  "toml 0.7.8",
  "tracing",
  "tracing-subscriber",
- "walkdir",
- "xz2",
- "zstd 0.12.4",
 ]
 
 [[package]]
@@ -3289,30 +3274,11 @@ checksum = "ced3678a2879b30306d323f4542626697a464a97c0a07c9aebf7ebca65cd4dde"
 
 [[package]]
 name = "zstd"
-version = "0.12.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a27595e173641171fc74a1232b7b1c7a7cb6e18222c11e9dfb9888fa424c53c"
-dependencies = [
- "zstd-safe 6.0.6",
-]
-
-[[package]]
-name = "zstd"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fcf2b778a664581e31e389454a7072dab1647606d44f7feea22cd5abb9c9f3f9"
 dependencies = [
- "zstd-safe 7.2.1",
-]
-
-[[package]]
-name = "zstd-safe"
-version = "6.0.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee98ffd0b48ee95e6c5168188e44a54550b1564d9d530ee21d5f0eaed1069581"
-dependencies = [
- "libc",
- "zstd-sys",
+ "zstd-safe",
 ]
 
 [[package]]

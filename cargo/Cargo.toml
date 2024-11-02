@@ -14,16 +14,10 @@ serde = { workspace = true, features = ["derive"] }
 glob.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
-flate2 = { version = "1.0" }
-infer = "0.15"
 tar = "0.4"
 tempfile = "3.8"
 terminfo = "0.8"
 toml = "0.7"
-xz2 = "0.1"
-zstd = { version = "0.12", features = ["pkg-config", "zstdmt"] }
-bzip2 = { version = "0.4" }
-walkdir = "2.4"
 libroast.workspace = true
 
 [lints]
