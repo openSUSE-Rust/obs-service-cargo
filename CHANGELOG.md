@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.5.2] - 2024-11-02
+
+### Features
+
+- Add versioned-dirs flag [e81774e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e81774e00b8cfce79ed45d61abb0e1c0233a9832)
+
 ## [3.5.0] - 2024-11-01
+
+### Miscellaneous Tasks
+
+- Release v3.5.0 [ff7d646](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ff7d646f6f800979d28b8e1b4b7c193eddd3c40c)
 
 ### Refactor
 
