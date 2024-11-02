@@ -28,6 +28,7 @@ jobs:
       run: |
         cargo clippy --release
     - name: Install cargo-vendor-filterer
+      run: |
         cargo install cargo-vendor-filterer
     - name: Run sample projects to test
       run: |
