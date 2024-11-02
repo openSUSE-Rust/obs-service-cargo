@@ -7,14 +7,28 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - Rectify mismatched types [cde5b62](https://github.com/openSUSE-Rust/obs-service-cargo/commit/cde5b620dc2881a3f49aaf0ae4583332e8be1742)
+- Used a different cargotoml. now using the correct one for flux [eca8c76](https://github.com/openSUSE-Rust/obs-service-cargo/commit/eca8c768930a842884ac6f613c21c3bfcb9d18d3)
 
 ### Miscellaneous Tasks
 
 - Remove dependencies since libroast is used internally [3ebf4e1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3ebf4e12cc9e7f37a0bb77544e4dbf2797fa71e6)
+- Update manifest and dependencies [63ce332](https://github.com/openSUSE-Rust/obs-service-cargo/commit/63ce33287fa379461513bbc973c825f4006d8f96)
 
 ### Refactor
 
 - Migrates almost all logic to libroast. 🎉 [ce0d23c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ce0d23c2c4080b61ec968b632a50df0823100ec2)
+
+### Testing
+
+- Add tests for unfiltered and filtered option [4594a44](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4594a44ff5335b261522139a0f667d502138762b)
+- Lessen verbosity and rename nonexistent function to existing one [2404269](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2404269fb0ed437431cf1b87849473aee822f1ac)
+- Add tests for cargotoml flag [646fcf6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/646fcf6d98bccf406345bd15c8621c9b875b7ccc)
+
+### Ci
+
+- Migrate tests from shell script to cargo [488dec4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/488dec4f9624fb33cbe4f2f3f0f48ba11fc2c4b9)
+- Add dependencies for cargo test [3e6b40d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3e6b40d61ee0d4b2dbd458801fec07aabbdc0801)
+- Install cargo-vendor-filterer from crates.io instead [a34cc71](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a34cc713f58863c7ebe33e0b24025db3130765e0)
 
 ## [3.5.4] - 2024-11-02
 
