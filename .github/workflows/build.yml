@@ -29,5 +29,4 @@ jobs:
         cargo clippy
     - name: Run sample projects to test
       run: |
-        chmod +x runtests.sh
-        ./runtests.sh
+        cargo -vvv test
