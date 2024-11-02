@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.6.1] - 2024-11-02
+
+### Bug Fixes
+
+- Forgot to use clap::ArgAction::Set. now finally added [c2fcb05](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c2fcb0520dff165c26737e8bbba976ae92b89898)
+
+### Minor
+
+- Small refactor in generate_lockfile and vendor [be4e87b](https://github.com/openSUSE-Rust/obs-service-cargo/commit/be4e87bfc10c94b6453d42950cded9268b3e40d1)
+
 ## [3.6.0] - 2024-11-02
 
 ### Bug Fixes
@@ -13,6 +23,7 @@ All notable changes to this project will be documented in this file.
 
 - Remove dependencies since libroast is used internally [3ebf4e1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3ebf4e12cc9e7f37a0bb77544e4dbf2797fa71e6)
 - Update manifest and dependencies [63ce332](https://github.com/openSUSE-Rust/obs-service-cargo/commit/63ce33287fa379461513bbc973c825f4006d8f96)
+- Release v3.6.0 [9c1aa86](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9c1aa86ce5433c6d593ba0f3be1ad925c597aee3)
 
 ### Refactor
 
