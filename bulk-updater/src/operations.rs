@@ -8,7 +8,7 @@
 
 use crate::services::{Service, Services};
 use libroast::common::Compression;
-use obs_service_cargo::cli::{Opts, Src, Vendor};
+use obs_service_cargo::cli::{Opts, Src};
 use std::path::{Path, PathBuf};
 use std::process;
 use std::process::Output;

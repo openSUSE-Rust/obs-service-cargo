@@ -8,7 +8,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use clap::Parser;
-use obs_service_cargo::cli::{self, Vendor};
+use obs_service_cargo::cli;
 
 use std::io;
 use std::io::IsTerminal;

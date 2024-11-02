@@ -179,7 +179,7 @@ dependencies = [
 
 [[package]]
 name = "bulk-updater"
-version = "3.5.4"
+version = "3.6.0"
 dependencies = [
  "clap",
  "libroast",
@@ -251,9 +251,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.31"
+version = "1.1.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2e7962b54006dcfcc61cb72735f4d89bb97061dd6a7ed882ec6b8ee53714c6f"
+checksum = "538b056773ee67775e422d15c33169f5415706855814b96505c84ee942f2bae2"
 dependencies = [
  "jobserver",
  "libc",
@@ -1794,7 +1794,7 @@ dependencies = [
 
 [[package]]
 name = "obs-service-cargo"
-version = "3.5.4"
+version = "3.6.0"
 dependencies = [
  "clap",
  "glob",
@@ -2571,9 +2571,9 @@ dependencies = [
 
 [[package]]
 name = "tar"
-version = "0.4.42"
+version = "0.4.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ff6c40d3aedb5e06b57c6f669ad17ab063dd1e63d977c6a88e7f4dfa4f04020"
+checksum = "c65998313f8e17d0d553d28f91a0df93e4dbbbf770279c7bc21ca0f09ea1a1f6"
 dependencies = [
  "filetime",
  "libc",

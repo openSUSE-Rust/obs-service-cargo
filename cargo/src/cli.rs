@@ -12,13 +12,13 @@ use std::path::{Path, PathBuf};
 use crate::consts::VENDOR_PATH_PREFIX;
 use crate::errors::OBSCargoError;
 use crate::errors::OBSCargoErrorKind;
-use crate::utils;
 use libroast::common::Compression;
-use libroast::common::{SupportedFormat, UnsupportedFormat};
 
 use clap::Parser;
 use libroast::decompress;
 
+use libroast::operations::cli::RawArgs;
+use libroast::operations::raw::raw_opts;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 
@@ -99,11 +99,6 @@ impl Src {
     }
 }
 
-pub trait Vendor {
-    fn is_supported(&self) -> Result<SupportedFormat, UnsupportedFormat>;
-    fn run_vendor(&self, opts: &Opts) -> Result<(), OBSCargoError>;
-}
-
 pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Result<()> {
     match comp_type {
         Compression::Gz => decompress::targz(outdir, src),
@@ -114,24 +109,8 @@ pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Res
     }
 }
 
-impl Vendor for Src {
-    fn is_supported(&self) -> Result<SupportedFormat, UnsupportedFormat> {
-        if let Ok(actual_src) = utils::process_globs(&self.src) {
-            debug!(?actual_src, "Source got from glob pattern");
-            if actual_src.is_file() {
-                libroast::utils::is_supported_format(&actual_src)
-            } else {
-                Ok(SupportedFormat::Dir(actual_src))
-            }
-        } else {
-            error!("Sources cannot be determined!");
-            Err(UnsupportedFormat {
-                ext: format!("unsupported source {}", &self.src.display()),
-            })
-        }
-    }
-
-    fn run_vendor(&self, opts: &Opts) -> Result<(), OBSCargoError> {
+impl Src {
+    pub fn run_vendor(&self, opts: &Opts) -> Result<(), OBSCargoError> {
         let tmpdir = match tempfile::Builder::new()
             .prefix(VENDOR_PATH_PREFIX)
             .rand_bytes(8)
@@ -147,93 +126,76 @@ impl Vendor for Src {
             }
         };
 
-        let workdir: PathBuf = tmpdir.path().into();
+        let workdir = &tmpdir.path();
         debug!(?workdir, "Created working directory");
+        let src_path = libroast::utils::process_globs(&self.src).map_err(|err| {
+            error!(?err);
+            OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+        })?;
 
-        // Return workdir here?
-        let newworkdir: PathBuf = match self.is_supported() {
-            Ok(format) => {
-                match format {
-                    SupportedFormat::Compressed(compression_type, srcpath) => {
-                        match decompress(&compression_type, &workdir, &srcpath) {
-                            Ok(_) => {
-                                let dirs: Vec<Result<std::fs::DirEntry, std::io::Error>> =
-                                    std::fs::read_dir(&workdir)
-                                        .map_err(|err| {
-                                            error!(?err, "Failed to read directory");
-                                            OBSCargoError::new(
-                                                OBSCargoErrorKind::VendorError,
-                                                "failed to read directory".to_string(),
-                                            )
-                                        })?
-                                        .collect();
-                                trace!(?dirs, "List of files and directories of the workdir");
-                                // If length is one, this means that the project has
-                                // a top-level folder
-                                if dirs.len() != 1 {
-                                    debug!(?workdir);
-                                    workdir
-                                } else {
-                                    match dirs.into_iter().last() {
-                                        Some(p) => match p {
-                                            Ok(dir) => {
-                                                if dir.path().is_dir() {
-                                                    debug!("{}", dir.path().display());
-                                                    dir.path()
-                                                } else {
-                                                    error!(?dir, "Tarball was extracted but got a file and not a possible top-level directory.");
-                                                    return Err(OBSCargoError::new(OBSCargoErrorKind::VendorError, "No top-level directory found after tarball was extracted".to_string()));
-                                                }
-                                            }
-                                            Err(err) => {
-                                                error!(?err, "Failed to read directory entry");
-                                                return Err(OBSCargoError::new(
-                                                    OBSCargoErrorKind::VendorError,
-                                                    err.to_string(),
-                                                ));
-                                            }
-                                        },
-                                        None => {
-                                            error!("This should be unreachable here");
-                                            unreachable!();
-                                        }
-                                    }
-                                }
-                            }
-                            Err(err) => {
+        if src_path.is_dir() {
+            libroast::utils::copy_dir_all(&src_path, workdir).map_err(|err| {
+                error!(?err);
+                OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+            })?;
+        } else if src_path.is_file() {
+            let raw_args = RawArgs {
+                target: src_path,
+                outdir: Some(workdir.to_path_buf()),
+            };
+            raw_opts(raw_args, false).map_err(|err| {
+                error!(?err);
+                OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+            })?;
+        }
+
+        let setup_workdir = {
+            let dirs: Vec<Result<std::fs::DirEntry, std::io::Error>> = std::fs::read_dir(workdir)
+                .map_err(|err| {
+                    error!(?err);
+                    OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
+                })?
+                .collect();
+            debug!(?dirs, "List of files and directories of the workdir");
+            if dirs.len() > 1 {
+                debug!(?workdir);
+                workdir.to_path_buf()
+            } else {
+                match dirs.into_iter().last() {
+                    Some(p) => match p {
+                        Ok(dir) => {
+                            if dir.path().is_dir() {
+                                debug!("{}", dir.path().display());
+                                // NOTE: return new workdir
+                                dir.path()
+                            } else {
+                                error!(?dir, "Tarball was extracted but got a file and not a possible top-level directory.");
                                 return Err(OBSCargoError::new(
                                     OBSCargoErrorKind::VendorError,
-                                    err.to_string(),
+                                    "No top-level directory found after tarball was extracted"
+                                        .to_string(),
                                 ));
                             }
                         }
-                    }
-                    SupportedFormat::Dir(srcpath) => match libroast::utils::copy_dir_all(
-                        &srcpath,
-                        &workdir.join(srcpath.file_name().unwrap_or(srcpath.as_os_str())),
-                    ) {
-                        Ok(_) => workdir.join(srcpath.file_name().unwrap_or(srcpath.as_os_str())),
                         Err(err) => {
+                            error!(?err, "Failed to read directory entry");
                             return Err(OBSCargoError::new(
                                 OBSCargoErrorKind::VendorError,
                                 err.to_string(),
-                            ))
+                            ));
                         }
                     },
+                    None => {
+                        error!("This should be unreachable here");
+                        unreachable!();
+                    }
                 }
-            }
-            Err(err) => {
-                error!(?err);
-                return Err(OBSCargoError::new(
-                    OBSCargoErrorKind::VendorError,
-                    err.to_string(),
-                ));
             }
         };
 
-        debug!(?newworkdir, "Workdir updated!");
+        debug!(?setup_workdir, "Workdir updated!");
 
-        match utils::process_src(opts, &newworkdir) {
+        match crate::utils::process_src(opts, &setup_workdir) {
             Ok(_) => {
                 info!("🥳 ✨ Successfull ran OBS Service Cargo Vendor ✨");
             }
@@ -245,7 +207,6 @@ impl Vendor for Src {
                 ));
             }
         };
-        drop(newworkdir);
         tmpdir
             .close()
             .map_err(|err| OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string()))
