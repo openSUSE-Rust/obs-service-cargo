@@ -84,6 +84,7 @@ pub fn vendor(
     extra_manifest_paths: &[impl AsRef<Path>],
     filter: bool,
     respect_lockfile: bool,
+    versioned_dirs: bool,
 ) -> Result<(), OBSCargoError> {
     let mut vendor_options: Vec<OsString> =
         vec!["--manifest-path".into(), manifest_path.as_ref().into()];
@@ -91,6 +92,10 @@ pub fn vendor(
     for ex_path in extra_manifest_paths {
         vendor_options.push("--sync".into());
         vendor_options.push(ex_path.as_ref().into());
+    }
+    // TODO: Should this be an option?
+    if versioned_dirs {
+        vendor_options.push("--versioned-dirs".into());
     }
 
     let cargo_subcommand = if filter {
@@ -116,8 +121,6 @@ pub fn vendor(
     } else {
         // cargo-vendor-filterer doesn't support `-vv`
         vendor_options.push("-vv".into());
-        // cargo-vendor-filterer doesn't support `--versioned-dirs` either
-        vendor_options.push("--versioned-dirs".into());
         // Enforce lock is up-to-date despite the fact we are regenerating the locks
         if respect_lockfile {
             // NOTE: Only vendor has the --locked option

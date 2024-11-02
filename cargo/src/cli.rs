@@ -72,6 +72,8 @@ pub struct Opts {
     pub i_accept_the_risk: Vec<String>,
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Respect lockfile or not if it exists. Otherwise, regenerate the lockfile and try to respect the lockfile.")]
     pub respect_lockfile: bool,
+    #[arg(long, default_value_t = true)]
+    pub versioned_dirs: bool,
 }
 
 impl AsRef<Opts> for Opts {

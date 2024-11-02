@@ -355,11 +355,12 @@ pub fn attempt_cargo_update_before_revendor(
             tag,
             cargotoml: cargotomls,
             update,
+            filter,
             outdir,
             color: colorize,
             i_accept_the_risk: accept_risks,
-            filter,
             respect_lockfile,
+            versioned_dirs: true,
         };
         srcpath
             .run_vendor(&new_opts)
