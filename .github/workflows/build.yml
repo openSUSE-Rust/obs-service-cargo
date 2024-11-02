@@ -32,4 +32,6 @@ jobs:
         cargo install cargo-vendor-filterer
     - name: Run sample projects to test
       run: |
+        export PATH="${PATH}:${HOME}/.cargo/bin"
+        echo "${PATH}"
         cargo -v test
