@@ -310,7 +310,7 @@ pub fn process_src(args: &Opts, prjdir: &Path) -> Result<(), OBSCargoError> {
                 ignore_git: true,
                 ignore_hidden: false,
             };
-            roast_opts(roast_args, false).map_err(|err| {
+            roast_opts(&roast_args, false).map_err(|err| {
                 error!(?err);
                 OBSCargoError::new(OBSCargoErrorKind::VendorCompressionFailed, err.to_string())
             })?;
