@@ -11,7 +11,10 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Remove dependencies since libroast is used internally [3ebf4e1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3ebf4e12cc9e7f37a0bb77544e4dbf2797fa71e6)
-- Release v3.6.0 [45d40af](https://github.com/openSUSE-Rust/obs-service-cargo/commit/45d40aff88fc338d99379fa0c0313f7870e27840)
+
+### Refactor
+
+- Migrates almost all logic to libroast. 🎉 [ce0d23c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ce0d23c2c4080b61ec968b632a50df0823100ec2)
 
 ## [3.5.4] - 2024-11-02
 
