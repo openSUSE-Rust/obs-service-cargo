@@ -85,7 +85,6 @@ pub fn vendor(
     respect_lockfile: bool,
     versioned_dirs: bool,
 ) -> Result<(), OBSCargoError> {
-
     let mut vendor_options: Vec<OsString> =
         vec!["--manifest-path".into(), manifest_path.as_ref().into()];
 
