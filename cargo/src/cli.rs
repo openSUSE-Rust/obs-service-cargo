@@ -147,6 +147,8 @@ impl Src {
                 error!(?err);
                 OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
             })?;
+        } else {
+            return Err(OBSCargoError::new(OBSCargoErrorKind::VendorError, "🛑 Something went wrong here. Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.".to_string()));
         }
 
         let setup_workdir = {
