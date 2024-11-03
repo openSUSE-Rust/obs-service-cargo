@@ -26,8 +26,8 @@ jobs:
         cargo fmt -- --check || true
     - name: Check clippy
       run: |
-        cargo clippy --release
-        cargo clippy --tests ---release
+        cargo clippy
+        cargo clippy --tests
     - name: Install cargo-vendor-filterer
       run: |
         cargo install cargo-vendor-filterer
