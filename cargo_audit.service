@@ -1,5 +1,0 @@
-<service name="cargo_audit">
-  <summary> OBS Source Service to audit all crates.io and dependencies in a Rust project for security issues</summary>
-  <description>This service audits a Rust application containing a Cargo.lock
-  for security issues that are known upstream by the Rust Security project.</description>
-</service>
