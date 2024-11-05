@@ -37,14 +37,8 @@ fn cargo_command(
     Ok(stdoutput.to_string())
 }
 
-pub fn cargo_fetch(
-    curdir: &Path,
-    cargo_home: &Path,
-    manifest: &str,
-    mut update: bool,
-) -> io::Result<String> {
+pub fn cargo_fetch(curdir: &Path, manifest: &str, mut update: bool) -> io::Result<String> {
     info!("⤵️ Running `cargo fetch`...");
-    std::env::set_var("CARGO_HOME", cargo_home);
     let mut default_options: Vec<String> = vec![];
     let manifest_path = PathBuf::from(&manifest);
     let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
@@ -92,12 +86,6 @@ pub fn cargo_vendor(
     mut update: bool,
     i_accept_the_risk: &[String],
 ) -> io::Result<String> {
-    let tempdir_for_home_registry_binding = tempfile::Builder::new()
-        .prefix(".cargo")
-        .rand_bytes(12)
-        .tempdir()?;
-    let home_registry = &tempdir_for_home_registry_binding.path();
-    let home_registry_dot_cargo = &home_registry.join(".cargo");
     let which_subcommand = if filter { "vendor-filterer" } else { "vendor" };
     info!("🏪 Running `cargo {}`...", &which_subcommand);
     let mut has_update_value_changed = false;
@@ -192,19 +180,10 @@ pub fn cargo_vendor(
     if !update {
         warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
     } else {
-        cargo_fetch(
-            curdir,
-            home_registry_dot_cargo,
-            &first_manifest.to_string_lossy(),
-            update,
-        )?;
-        cargo_generate_lockfile(
-            curdir,
-            home_registry_dot_cargo,
-            &first_manifest.to_string_lossy(),
-            update,
-        )?;
+        cargo_update(curdir, &first_manifest.to_string_lossy())?;
     }
+    cargo_fetch(curdir, &first_manifest.to_string_lossy(), update)?;
+    cargo_generate_lockfile(curdir, &first_manifest.to_string_lossy(), update)?;
 
     // NOTE: Vendor filterer's default output format is directory so we
     // don't need to set that ourselves.
@@ -263,12 +242,10 @@ pub fn cargo_vendor(
 
 pub fn cargo_generate_lockfile(
     curdir: &Path,
-    cargo_home: &Path,
     manifest: &str,
     mut update: bool,
 ) -> io::Result<String> {
     info!("🔓 💂 Running `cargo generate-lockfile`...");
-    std::env::set_var("CARGO_HOME", cargo_home);
     let mut has_update_value_changed = false;
     let mut hasher1 = Keccak256::default();
     let mut hasher2 = Keccak256::default();
@@ -334,8 +311,7 @@ pub fn cargo_generate_lockfile(
 }
 
 // Do not set `--locked` here. As explained in <https://doc.rust-lang.org/cargo/commands/cargo-update.html#manifest-options>
-pub fn cargo_update(curdir: &Path, cargo_home: &Path, manifest: &str) -> io::Result<String> {
-    std::env::set_var("CARGO_HOME", cargo_home);
+pub fn cargo_update(curdir: &Path, manifest: &str) -> io::Result<String> {
     let mut default_options = vec![];
     if !manifest.is_empty() {
         default_options.push("--manifest-path".to_string());

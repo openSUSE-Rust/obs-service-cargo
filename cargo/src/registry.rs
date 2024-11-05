@@ -22,19 +22,20 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
         .tempdir()?;
     let home_registry = &tempdir_for_home_registry_binding.path();
     let home_registry_dot_cargo = &home_registry.join(".cargo");
+    std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
     debug!(?home_registry_dot_cargo);
     if !registry.no_root_manifest {
         if registry.update {
             info!("⏫ Updating dependencies...");
-            cargo_update(setup_workdir, home_registry_dot_cargo, "")?;
+            cargo_update(setup_workdir, "")?;
             info!("✅ Updated dependencies.");
         }
         info!(?setup_workdir, "🌳 Finished setting up workdir.");
         info!("🔓Attempting to regenerate lockfile...");
-        cargo_generate_lockfile(setup_workdir, home_registry_dot_cargo, "", registry.update)?;
+        cargo_generate_lockfile(setup_workdir, "", registry.update)?;
         info!("🔒Regenerated lockfile.");
         info!("🚝 Attempting to fetch dependencies.");
-        cargo_fetch(setup_workdir, home_registry_dot_cargo, "", registry.update)?;
+        cargo_fetch(setup_workdir, "", registry.update)?;
         info!("💼 Fetched dependencies.");
     }
     let mut lockfiles: Vec<PathBuf> = Vec::new();
@@ -49,7 +50,6 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
                 );
                 cargo_update(
                     full_manifest_path_parent,
-                    home_registry_dot_cargo,
                     &full_manifest_path.to_string_lossy(),
                 )?;
                 info!(
@@ -63,7 +63,6 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
             );
             cargo_generate_lockfile(
                 full_manifest_path_parent,
-                home_registry_dot_cargo,
                 &full_manifest_path.to_string_lossy(),
                 registry.update,
             )?;
@@ -77,7 +76,6 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
             );
             cargo_fetch(
                 setup_workdir,
-                home_registry_dot_cargo,
                 &full_manifest_path.to_string_lossy(),
                 registry.update,
             )?;
