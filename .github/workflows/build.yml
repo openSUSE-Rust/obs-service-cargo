@@ -35,5 +35,4 @@ jobs:
       run: |
         export PATH="${PATH}:${HOME}/.cargo/bin"
         echo "${PATH}"
-        export RUST_LOG=trace
-        cargo test -- --nocapture
+        cargo t

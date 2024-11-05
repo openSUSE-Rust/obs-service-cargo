@@ -1,0 +1,5 @@
+[alias]
+t = "test -- --test-threads=1 --nocapture"
+
+[env]
+RUST_LOG = "debug"
