@@ -30,6 +30,7 @@ A good example would be the [zellij](https://zellij.dev) project. Users will jus
   </service>
 </services>
 ```
+
 ## Versioned Dirs
 
 The `--versioned-dirs` flag is used when you
@@ -486,6 +487,38 @@ The following are the parameters you can use with this utility:
    </parameter>
 </service>
 ```
+
+# `cargotoml` behaviours
+
+`cargotoml` is a flag/parameter that needs to be discussed as well. `cargotoml`
+behaviour between **vendor** and **registry** methods differ.
+
+## Vendor Method
+
+For this method, `cargotoml` is used to pass over the `--sync` flag. If there are
+no root manifest found but there is `cargotoml`, the first `cargotoml` is assumed
+to be the "root manifest".
+
+## Registry Method
+
+For this method, `cargotoml` acts like an extra set of "root" manifests. It's
+not passed over to `--sync` since under the hood, the registry method uses
+`cargo-fetch`. This design decision is intentional for monorepo scenarios
+where you have many crates that are standalone, regardless if they are a
+dependency from each other or not, like the s390-tools or python-tokenizers.
+
+If there is a case that you will do that, do experiment with the setting of
+the `no-root-manifest` flag. A tip would be setting `no-root-manifest` to true
+while having a lot of `cargotoml` declared.
+
+# Can we mix registry and vendor?
+
+Yes! You can. There might be a case where you need to use the regular vendor sources
+over registry i.e. respecting a working old lockfile by not setting update.
+
+In the future, it would be nice to set each `cargotoml` to have a separate
+`update` flag. For now, I see no benefit because, usually, projects that have
+multiple crates always catch up with their dependencies of other member crates.
 
 # List of possible scenarios when vendoring fails
 
