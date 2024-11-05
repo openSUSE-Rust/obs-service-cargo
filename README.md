@@ -233,6 +233,11 @@ Thus, this allows you to have many vendored tarballs by using the `--tag` parame
 
 # Cargo Vendor Home Registry
 
+> [!NOTE]
+> This attempt started in this repository <https://github.com/openSUSE-Rust/obs-service-cargo-vendor-home-registry> but now,
+> it's been merged here to avoid maintenance burden. As the old repository will retire, it still remains there for those that
+> are curious about how we go from there to here.
+
 As previously mentioned, we talked about the usage of tags for multi vendor scenarios. However, to avoid this issue of having
 to write a long service file while also managing multiple vendors, we introduced the vendoring of `$CARGO_HOME`,
 specifically, `$CARGO_HOME/registry`. The service file will look like this
@@ -403,10 +408,6 @@ popd
 
 
 ```
-
-This attempt started in this repository <https://github.com/openSUSE-Rust/obs-service-cargo-vendor-home-registry> but now,
-it's been merged here to avoid maintenance burden. As the old repository will retire, it still remains there for those that
-are curious about how we go from there to here.
 
 > [!IMPORTANT]
 > Overall, both methods are not perfect. But with the right combination of `--custom-root` and `--no-root-manifest`,
