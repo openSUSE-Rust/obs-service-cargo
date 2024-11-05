@@ -60,6 +60,7 @@ commit_parsers = [
   { message = "^cliff", group = "Cliff Config", skip = true },
   { message = "^lib", group = "Library Updates" },
   { message = "^security", group = "Security" },
+  { message = ".*", group = "Other", default_scope = "other"},
 ]
 # protect breaking changes from being skipped due to matching a skipping commit_parser
 protect_breaking_commits = false
@@ -72,9 +73,9 @@ skip_tags = "v0.1.0-beta.1"
 # regex for ignoring tags
 ignore_tags = ""
 # sort the tags topologically
-topo_order = true
+topo_order = false
 # sort the commits inside sections by oldest/newest order
-sort_commits = "oldest"
+sort_commits = "newest"
 # limit the number of commits included in the changelog.
 # limit_commits = 42
 
