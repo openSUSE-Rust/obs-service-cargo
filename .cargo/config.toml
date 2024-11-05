@@ -1,5 +1,0 @@
-[alias]
-t = "test --release --all-features -- --test-threads=1 --nocapture"
-
-[env]
-RUST_LOG = "debug"
