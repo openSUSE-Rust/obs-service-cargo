@@ -119,12 +119,7 @@ pub fn cargo_vendor(
                 "Failed to vendor as their are no manifest files to use.",
             ));
         };
-    } else {
-        return Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            "Failed to vendor as their are no manifest files to use.",
-        ));
-    };
+    }
     let first_manifest_parent = first_manifest.parent().unwrap_or(curdir);
     let possible_lockfile = first_manifest_parent.join("Cargo.lock");
     let is_workspace = is_workspace(&first_manifest)?;
