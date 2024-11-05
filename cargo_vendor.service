@@ -7,16 +7,36 @@
   and creates a vendor.tar[.<tar compression>] to be committed allowing fully offline
   builds of Rust applications.]]></description>
    <parameter name="strategy">
-      <description>Legacy argument, no longer used. Values: vendor. Default: vendor</description>
+      <description>Legacy argument, no longer used. Values: cargo_vendor. Default: cargo_vendor</description>
+   </parameter>
+   <parameter name="method">
+      <description>Whether to use vendor or the registry. Default: vendor</description>
+      <allowedvalue>registry</allowedvalue>
+      <allowedvalue>vendor</allowedvalue>
    </parameter>
    <parameter name="src">
       <description>Where to find sources. Source is either a directory or a source tarball AND cannot be both. Aliases: srctar, srcdir</description>
    </parameter>
    <parameter name="outdir">
-      <description>Specify where to put the vendor tarball</description>
+      <description>Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry.</description>
+   </parameter>
+   <parameter name="custom-root>
+      <description>Whether you want to manually set the root of the
+      project. Useful with a combination with `--manifest-paths` or
+      `--no-root-manifest`.
+      </description>
    </parameter>
    <parameter name="update">
       <description>Update dependencies or not. Default: true</description>
+      <allowedvalue>false</allowedvalue>
+      <allowedvalue>true</allowedvalue>
+   </parameter>
+   <parameter name="no-root-manifest">
+      <description>Available only if `--method` is set to registry. If a
+      project has no root manifest, this flag is useful for those situations
+      to set the manifest path manually. Useful in combination with
+      `--manifest-paths` flag. Default: false
+      </description>
       <allowedvalue>false</allowedvalue>
       <allowedvalue>true</allowedvalue>
    </parameter>
@@ -34,18 +54,16 @@
    <parameter name="cargotoml">
       <description>Other cargo manifest files to sync with during vendor. Optional</description>
    </parameter>
-   <parameter name="filter">
-      <description>EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies. Default: False</description>
-      <allowedvalue>false</allowedvalue>
-      <allowedvalue>true</allowedvalue>
+   <parameter name="i-accept-the-risk">
+      <description>A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it.</description>
    </parameter>
-   <parameter name="respect-lockfile">
-      <description>Respect lockfile or not if it exists. Otherwise, regenerate the lockfile and try to respect the lockfile. Default: true</description>
+   <parameter name="filter">
+      <description>Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies. Default: false</description>
       <allowedvalue>false</allowedvalue>
       <allowedvalue>true</allowedvalue>
    </parameter>
    <parameter name="versioned-dirs">
-      <description>Whether to use the `--versioned-dirs` flag of cargo-vendor. Default: true</description>
+      <description>Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor. Default: true</description>
       <allowedvalue>false</allowedvalue>
       <allowedvalue>true</allowedvalue>
    </parameter>
