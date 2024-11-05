@@ -1,6 +1,14 @@
 name: Build OBS Service Cargo
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - '**.rs'
+      - '**/Cargo.toml'
+  pull_request:
+    paths:
+      - '**.rs'
+      - '**/Cargo.toml'
 
 env:
   CARGO_TERM_COLOR: always
