@@ -164,8 +164,8 @@ the root folder of the project.
 
 Respecting lockfiles is just a matter of setting `update` from `true` to `false`.
 
-> [!WARN]
-> Do note that if a lockfile do needs updating, you're ultimately stuck at
+> [!WARNING]
+> note that if a lockfile do needs updating, you're ultimately stuck at
 > setting the `update` to `true` unless upstream uploads an updated lockfile.
 
 # Filter
@@ -273,7 +273,7 @@ Another example would be libflux. It can have three different configurations and
 > You have to decide when to set `no-root-manifest` to true or false.
 > A big mistake here is you know that the project has a crate
 > with a clear "root" manifest but not in the top-most level
-> directory, so you accidentally set it to true. When we refer
+> directory, so you accidentally set it to false. When we refer
 > to `no-root-manifest`, we are actually referring to the fact
 > that the "root" manifest is not at the top-most level of the directory.
 
@@ -363,7 +363,7 @@ In conclusion, the logic is similar but the results of vendoring the home regist
 results to lessened mental strain when trying to simplify the
 build process in the specfile. Here is what it looks like.
 
-> [!WARN]
+> [!WARNING]
 > This is just a theoretical scenario with s390-tools. This
 > kind of specfile has not been tested whatsoever. It only
 > serves as demonstration.
