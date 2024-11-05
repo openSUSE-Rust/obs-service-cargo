@@ -19,27 +19,27 @@ use crate::cli::Opts;
 pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<()> {
     debug!(?vendor_opts);
     info!("🛖🏃📦 Starting Cargo Vendor");
-    let tempdir_for_vendor_binding = tempfile::Builder::new()
-        .prefix(".cargo")
+    let tmpdir_for_config = tempfile::Builder::new()
+        .prefix(".cargo_config")
         .rand_bytes(12)
         .tempdir()?;
-    let vendor_workdir_path = &tempdir_for_vendor_binding.path();
-    let vendor_path = vendor_workdir_path.join("vendor");
+    let cargo_config_workdir = tmpdir_for_config.path();
     // Cargo vendor stdouts the configuration for config.toml
     let cargo_config_output = cargo_vendor(
         setup_workdir,
         vendor_opts.vendor_specific_args.filter,
         &vendor_opts.manifest_paths,
         vendor_opts.update,
-        &vendor_path,
         &vendor_opts.i_accept_the_risk,
     )?;
     if cargo_config_output.is_empty() {
         info!("🎉 No cargo config.toml created. Seems project has no dependencies.");
         return Ok(());
     };
-    let path_to_dot_cargo = &vendor_workdir_path.join(".cargo");
+    let path_to_dot_cargo = &cargo_config_workdir.join(".cargo");
     fs::create_dir(path_to_dot_cargo)?;
+    // NOTE maybe in the future, we might need to respect import
+    // an existing `cargo.toml` but I doubt that's necessary?
     let path_to_dot_cargo_cargo_config = &path_to_dot_cargo.join("config.toml");
     let mut cargo_config_file = fs::File::create(path_to_dot_cargo_cargo_config)?;
     cargo_config_file.write_all(cargo_config_output.as_bytes())?;
@@ -63,11 +63,21 @@ pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<
             "Unable to set extension",
         ));
     }
+    let vendor_path = &setup_workdir.join("vendor");
+    if !vendor_path.is_dir() {
+        return Err(io::Error::new(io::ErrorKind::NotFound, "No vendor path found! Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."));
+    }
+    // Process them here
+    let additional_paths = vec![
+        vendor_path.to_string_lossy().to_string(),
+        path_to_dot_cargo.to_string_lossy().to_string(),
+    ];
     let roast_args = RoastArgs {
-        target: vendor_workdir_path.to_path_buf(),
+        target: PathBuf::from(&setup_workdir),
         include: None,
-        exclude: None,
-        additional_paths: None,
+        // Exclude everything but additional_paths
+        exclude: Some(vec![PathBuf::from(&setup_workdir)]),
+        additional_paths: Some(additional_paths),
         outfile,
         outdir: Some(vendor_opts.outdir.to_path_buf()),
         preserve_root: false,
@@ -78,7 +88,7 @@ pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<
     roast_opts(&roast_args, false)?;
     info!("📦 Cargo Vendor finished.");
     info!("🧹 Cleaning up temporary directory...");
-    tempdir_for_vendor_binding.close()?;
+    tmpdir_for_config.close()?;
     Ok(())
 }
 

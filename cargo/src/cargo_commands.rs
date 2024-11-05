@@ -90,7 +90,6 @@ pub fn cargo_vendor(
     filter: bool,
     manifest_paths: &[PathBuf],
     mut update: bool,
-    vendor_path: &Path,
     i_accept_the_risk: &[String],
 ) -> io::Result<String> {
     let tempdir_for_home_registry_binding = tempfile::Builder::new()
@@ -209,8 +208,6 @@ pub fn cargo_vendor(
 
     // NOTE: Vendor filterer's default output format is directory so we
     // don't need to set that ourselves.
-    info!(?vendor_path, "📦 Vendor path");
-    default_options.push(vendor_path.to_string_lossy().to_string());
     let res = cargo_command(which_subcommand, &default_options, curdir);
 
     if possible_lockfile.is_file() {
