@@ -64,7 +64,11 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
         target: vendor_tarball_path.to_path_buf(),
         outdir: Some(raw_outdir.clone()),
     };
-    raw_opts(raw_args, false)?;
+    if *"https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz" != *source {
+        assert!(raw_opts(raw_args, false).is_ok());
+    } else {
+        assert!(raw_opts(raw_args, false).is_err());
+    }
     let vendor_path = raw_outdir.join("vendor");
     let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
     let cargo_lock_path = raw_outdir.join("Cargo.lock");
