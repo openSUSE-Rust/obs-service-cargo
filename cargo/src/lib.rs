@@ -7,8 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 pub mod audit;
+pub mod cargo_commands;
 pub mod cli;
 pub mod consts;
-mod errors;
-pub mod utils;
+pub mod registry;
 pub mod vendor;

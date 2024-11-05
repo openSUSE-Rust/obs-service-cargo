@@ -1,7 +1,7 @@
 [workspace]
-members = ["cargo", "bulk-updater"]
+members = ["cargo"]
 
-default-members = ["cargo", "bulk-updater"]
+default-members = ["cargo"]
 
 resolver = "2"
 

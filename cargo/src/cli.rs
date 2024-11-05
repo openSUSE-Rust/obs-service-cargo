@@ -10,17 +10,25 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::consts::VENDOR_PATH_PREFIX;
-use crate::errors::OBSCargoError;
-use crate::errors::OBSCargoErrorKind;
+use crate::registry::run_cargo_vendor_home_registry;
+use crate::vendor::run_cargo_vendor;
 use libroast::common::Compression;
 
-use clap::Parser;
-use libroast::decompress;
-
+use clap::{Args, Parser, ValueEnum};
 use libroast::operations::cli::RawArgs;
 use libroast::operations::raw::raw_opts;
+use libroast::utils::copy_dir_all;
+use libroast::{decompress, utils};
+
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
+
+#[derive(Debug, Clone, ValueEnum, Default)]
+pub enum Method {
+    Registry,
+    #[default]
+    Vendor,
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -34,8 +42,35 @@ Bugs can be reported on GitHub: https://github.com/openSUSE/obs-service-cargo_ve
     max_term_width = 120
 )]
 pub struct Opts {
-    #[clap(flatten)]
-    pub src: Src,
+    #[arg(
+        long,
+        value_enum,
+        default_value_t,
+        help = "Whether to use vendor or the registry."
+    )]
+    pub method: Method,
+    #[arg(
+        long,
+        visible_aliases = ["srctar", "srcdir", "target"],
+        help = "Where to find sources. Source is either a directory or a source tarball AND cannot be both."
+    )]
+    pub src: PathBuf,
+    #[arg(
+        long,
+        short = 'C',
+        help = "Whether you want to manually set the root of the project. Useful with a combination \
+		        with `--manifest-paths` or `--no-root-manifest`."
+    )]
+    pub custom_root: Option<String>,
+    #[arg(
+		long,
+		short = 'N',
+		requires_if("registry", "method"),
+		default_value_t = false,
+		action = clap::ArgAction::Set,
+		help = "Available only if `--method` is set to registry. If a project has no root manifest, this flag is useful for those situations to set \
+    			the manifest path manually. Useful in combination with `--manifest-paths` flag.")]
+    pub no_root_manifest: bool,
     #[arg(
         long,
         value_enum,
@@ -48,12 +83,10 @@ pub struct Opts {
         help = "Tag some files for multi-vendor and multi-cargo_config projects"
     )]
     pub tag: Option<String>,
-    #[arg(long, help = "Other cargo manifest files to sync with during vendor")]
-    pub cargotoml: Vec<PathBuf>,
+    #[arg(long, help = "Other cargo manifest files to sync with vendor", visible_aliases = ["cargotoml"])]
+    pub manifest_paths: Vec<PathBuf>,
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Update dependencies or not")]
     pub update: bool,
-    #[arg(long, default_value_t = false, action = clap::ArgAction::Set, help = "EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies.")]
-    pub filter: bool,
     #[arg(long, help = "Where to output vendor.tar* and cargo_config")]
     pub outdir: PathBuf,
     #[arg(
@@ -70,33 +103,16 @@ pub struct Opts {
         help = "A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it."
     )]
     pub i_accept_the_risk: Vec<String>,
-    #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Respect lockfile or not if it exists. Otherwise, regenerate the lockfile and try to respect the lockfile.")]
-    pub respect_lockfile: bool,
-    #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Whether to use the `--versioned-dirs` flag of cargo-vendor.")]
+    #[clap(flatten)]
+    pub vendor_specific_args: VendorArgs,
+}
+
+#[derive(Debug, Args)]
+pub struct VendorArgs {
+    #[arg(long,requires_if("vendor", "method"), default_value_t = false, action = clap::ArgAction::Set, help = "Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies.")]
+    pub filter: bool,
+    #[arg(long, requires_if("vendor", "method"), default_value_t = true, action = clap::ArgAction::Set, help = "Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor.")]
     pub versioned_dirs: bool,
-}
-
-impl AsRef<Opts> for Opts {
-    #[inline]
-    fn as_ref(&self) -> &Opts {
-        self
-    }
-}
-
-#[derive(clap::Args, Debug, Clone)]
-pub struct Src {
-    #[arg(
-        long,
-        visible_aliases = ["srctar", "srcdir"],
-        help = "Where to find sources. Source is either a directory or a source tarball AND cannot be both."
-    )]
-    pub src: PathBuf,
-}
-
-impl Src {
-    pub fn new(p: &Path) -> Self {
-        Self { src: p.into() }
-    }
 }
 
 pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Result<()> {
@@ -109,55 +125,34 @@ pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Res
     }
 }
 
-impl Src {
-    pub fn run_vendor(&self, opts: &Opts) -> Result<(), OBSCargoError> {
-        let tmpdir = match tempfile::Builder::new()
+impl Opts {
+    pub fn run_vendor(&self) -> io::Result<()> {
+        debug!(?self);
+        let tempdir_for_workdir = tempfile::Builder::new()
             .prefix(VENDOR_PATH_PREFIX)
-            .rand_bytes(8)
-            .tempdir()
-        {
-            Ok(t) => t,
-            Err(err) => {
-                error!("{}", err);
-                return Err(OBSCargoError::new(
-                    OBSCargoErrorKind::VendorError,
-                    "failed to create temporary directory for vendor process".to_string(),
-                ));
-            }
-        };
-
-        let workdir = &tmpdir.path();
-        debug!(?workdir, "Created working directory");
-        let src_path = libroast::utils::process_globs(&self.src).map_err(|err| {
-            error!(?err);
-            OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
-        })?;
-
-        if src_path.is_dir() {
-            libroast::utils::copy_dir_all(&src_path, workdir).map_err(|err| {
-                error!(?err);
-                OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
-            })?;
-        } else if src_path.is_file() {
+            .rand_bytes(12)
+            .tempdir()?;
+        let workdir = &tempdir_for_workdir.path();
+        debug!(?workdir);
+        let target = utils::process_globs(&self.src)?;
+        if target.is_dir() {
+            copy_dir_all(&target, workdir)?;
+        } else if target.is_file() && utils::is_supported_format(&target).is_ok() {
             let raw_args = RawArgs {
-                target: src_path,
+                target: target.to_path_buf(),
                 outdir: Some(workdir.to_path_buf()),
             };
-            raw_opts(raw_args, false).map_err(|err| {
-                error!(?err);
-                OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
-            })?;
+            raw_opts(raw_args, false)?;
         } else {
-            return Err(OBSCargoError::new(OBSCargoErrorKind::VendorError, "🛑 Something went wrong here. Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.".to_string()));
+            return Err(io::Error::new(
+                io::ErrorKind::Unsupported,
+                "Unsupported format found",
+            ));
         }
 
-        let setup_workdir = {
-            let dirs: Vec<Result<std::fs::DirEntry, std::io::Error>> = std::fs::read_dir(workdir)
-                .map_err(|err| {
-                    error!(?err);
-                    OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string())
-                })?
-                .collect();
+        let mut setup_workdir = {
+            let dirs: Vec<Result<std::fs::DirEntry, std::io::Error>> =
+                std::fs::read_dir(workdir)?.collect();
             debug!(?dirs, "List of files and directories of the workdir");
             if dirs.len() > 1 {
                 debug!(?workdir);
@@ -171,9 +166,12 @@ impl Src {
                                 // NOTE: return new workdir
                                 dir.path()
                             } else {
-                                error!(?dir, "Tarball was extracted but got a file and not a possible top-level directory.");
-                                return Err(OBSCargoError::new(
-                                    OBSCargoErrorKind::VendorError,
+                                error!(
+                                                                ?dir,
+                                                                "Tarball was extracted but got a file and not a possible top-level directory."
+                                                        );
+                                return Err(io::Error::new(
+                                    io::ErrorKind::Interrupted,
                                     "No top-level directory found after tarball was extracted"
                                         .to_string(),
                                 ));
@@ -181,10 +179,7 @@ impl Src {
                         }
                         Err(err) => {
                             error!(?err, "Failed to read directory entry");
-                            return Err(OBSCargoError::new(
-                                OBSCargoErrorKind::VendorError,
-                                err.to_string(),
-                            ));
+                            return Err(err);
                         }
                     },
                     None => {
@@ -195,22 +190,28 @@ impl Src {
             }
         };
 
-        debug!(?setup_workdir, "Workdir updated!");
-
-        match crate::utils::process_src(opts, &setup_workdir) {
-            Ok(_) => {
-                info!("🥳 ✨ Successfull ran OBS Service Cargo Vendor ✨");
+        if let Some(custom_root) = &self.custom_root {
+            info!(?custom_root, "ℹ️ Custom root is set.");
+            setup_workdir.push(custom_root);
+        }
+        if setup_workdir.exists() && setup_workdir.is_dir() {
+            match &self.method {
+                Method::Registry => run_cargo_vendor_home_registry(&setup_workdir, self),
+                Method::Vendor => run_cargo_vendor(&setup_workdir, self),
+            }?;
+        } else {
+            let mut msg: String =
+                "It seems that the setup workdir is not a directory or does not exist.".to_string();
+            if self.custom_root.is_some() {
+                msg.push_str(" Please check if your custom root has been setup properly!");
+            } else {
+                msg.push_str(" This seems to be a bug. Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
             }
-            Err(err) => {
-                error!(?err);
-                return Err(OBSCargoError::new(
-                    OBSCargoErrorKind::VendorError,
-                    err.to_string(),
-                ));
-            }
-        };
-        tmpdir
-            .close()
-            .map_err(|err| OBSCargoError::new(OBSCargoErrorKind::VendorError, err.to_string()))
+            return Err(io::Error::new(io::ErrorKind::Other, msg));
+        }
+        info!("🌟 OBS Service Cargo finished.");
+        info!("🧹 Cleaning up temporary directories...");
+        tempdir_for_workdir.close()?;
+        Ok(())
     }
 }

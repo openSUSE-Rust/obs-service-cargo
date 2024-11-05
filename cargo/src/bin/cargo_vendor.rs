@@ -77,7 +77,7 @@ This rewrite introduces some small changes to how vendoring functions for your p
 "#
     );
 
-    Ok(args.src.run_vendor(&args).map_err(|err| {
+    Ok(args.run_vendor().map_err(|err| {
         error!("{}", err);
         err
     })?)

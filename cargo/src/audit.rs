@@ -1,27 +1,38 @@
 // SPDX-License-Identifier: MPL-2.0
 
-// Copyright (C) 2024 To all Contributors of this project listed in CONTRIBUTORS.md
+// Copyright (C) 2024 To all Contributors of this project listed in
+// CONTRIBUTORS.md
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::path::{Path, PathBuf};
-use std::str::FromStr;
-
-use crate::consts::{EXCLUDED_RUSTSECS, OPENSUSE_CARGO_AUDIT_DB};
-use crate::errors::OBSCargoError;
-use crate::errors::OBSCargoErrorKind;
-
-use rustsec::{
-    advisory::Id, report::Report, report::Settings as ReportSettings, Database,
-    Error as RustsecError, ErrorKind as RustsecErrorKind, Lockfile,
+use std::{
+    io,
+    path::{Path, PathBuf},
+    str::FromStr,
 };
 
+pub const EXCLUDED_RUSTSECS: &[&str] = &[
+    // NOTE: These two are excluded because they are fundamentally
+    // silly and can never be fixed.
+    // https://rustsec.org/advisories/RUSTSEC-2020-0071.html
+    // https://rustsec.org/advisories/RUSTSEC-2020-0159.html
+    "RUSTSEC-2020-0071",
+    "RUSTSEC-2020-0159",
+];
+
+pub const OPENSUSE_CARGO_AUDIT_DB: &str = "/usr/share/cargo-audit-advisory-db";
+
+use rustsec::{
+    advisory::Id,
+    report::{Report, Settings as ReportSettings},
+    Database, Error as RustsecError, ErrorKind as RustsecErrorKind, Lockfile,
+};
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 
-pub fn process_reports(reports: Vec<Report>) -> Result<(), OBSCargoError> {
+pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
     let mut passed = true;
 
     // Now actually analyse the report.
@@ -65,10 +76,16 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), OBSCargoError> {
         info!("🎉 Cargo audit passed!");
         Ok(())
     } else {
-        error!("🛑 Vulnerabilities found in application dependencies. These must be actioned to proceed with vendoring.");
-        Err(OBSCargoError::new(OBSCargoErrorKind::AuditNeedsAction,
-            "Vulnerabilities found in application dependencies. These must be actioned to proceed with vendoring.".to_string(),
-        ))
+        error!(
+			"🛑 Vulnerabilities found in application dependencies. These must be actioned to proceed \
+			 with vendoring."
+		);
+        Err(io::Error::new(
+			io::ErrorKind::Interrupted,
+			"Vulnerabilities found in application dependencies. These must be actioned to proceed with \
+			 vendoring."
+				.to_string(),
+		))
     }
 }
 
