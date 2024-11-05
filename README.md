@@ -171,6 +171,12 @@ are expected to have the same metadata inside the `Cargo.lock`.
 
 # How to do multiple vendors
 
+> [!NOTE]
+> This is an old documentation but still applies for those
+> that still use the regular cargo vendor, aka, the **vendor method**.
+> A section using `cargo-fetch` and `$CARGO_HOME` is discussed further
+> down below, aka, the **registry method**.
+
 It is possible to do multiple vendored tarballs by using the `--tag` parameter. This allows you to rename your vendored
 in various contexts e.g. projects that are not part of one whole workspace. Example:
 
@@ -217,61 +223,152 @@ Thus, this allows you to have many vendored tarballs by using the `--tag` parame
 > it will produce a vendored tarball. Otherwise, although it is *somewhat* correct to
 > say `vendor-utils.tar.zst` should be the produced tarball, in reality, it won't exist
 > because it has [NO dependencies](https://github.com/ibm-s390-linux/s390-tools/blob/master/rust/utils/Cargo.toml) after all.
- 
-# Parameters
+
+## Cargo Vendor Home Registry
+
+As previously mentioned, we talked about the usage of tags for multi vendor scenarios. However, to avoid this issue of having
+to write a long service file while also managing multiple vendors, we introduced the vendoring of `$CARGO_HOME`,
+specifically, `$CARGO_HOME/registry`. The service file will look like this
+
+```xml
+<services>
+  <service name="download_files" mode="manual" />
+  <service name="cargo_vendor" mode="manual">
+     <param name="src">s390-tools*.tar.gz</param>
+	 <param name="update">true</param>
+	 <param name="method">registry</param>
+	 <param name="no_root_manifest">true</param>
+	 <param name="cargotoml">rust/pvsecret</param>
+  </service>
+  <service name="cargo_audit" mode="manual" />
+</services>
+```
+
+The logic is similar but the results of vendoring the home registry results to lessened mental strain when trying
+to simplify the build process in the specfile. Here is what it looks like
 
 ```
-OBS Source Service to vendor all crates.io and dependencies for Rust project locally
 
-Usage: cargo_vendor [OPTIONS] --src <SRC> --outdir <OUTDIR>
+%prep
+%autosetup -a1
 
-Options:
-      --src <SRC>
-          Where to find sources. Source is either a directory or a source tarball AND cannot be both. [aliases: srctar, srcdir]
-      --compression <COMPRESSION>
-          What compression algorithm to use. Set to `not` if you just want a normal tarball with no compression. [default: zst] [possible values: gz, xz, zst, bz2, not]
-      --tag <TAG>
-          Tag some files for multi-vendor and multi-cargo_config projects
-      --cargotoml <CARGOTOML>
-          Other cargo manifest files to sync with during vendor
-      --update <UPDATE>
-          Update dependencies or not [default: true] [possible values: true, false]
-      --filter <FILTER>
-          EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies. [default: false] [possible values: true, false]
-      --outdir <OUTDIR>
-          Where to output vendor.tar* and cargo_config
-      --color <WHEN>
-          Whether WHEN to color output or not [default: auto] [possible values: auto, always, never]
-      --i-accept-the-risk <I_ACCEPT_THE_RISK>
-          A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it.
-      --respect-lockfile <RESPECT_LOCKFILE>
-          Respect lockfile or not if it exists. Otherwise, regenerate the lockfile and try to respect the lockfile. [default: true] [possible values: true, false]
-      --versioned-dirs <VERSIONED_DIRS>
-          Whether to use the `--versioned-dirs` flag of cargo-vendor. [default: true] [possible values: true, false]
-  -h, --help
-          Print help (see more with '--help')
-  -V, --version
-          Print version
+%build
+export CARGO_HOME=$PWD/.cargo
+%{cargo_build}
+
+%install
+export CARGO_HOME=$PWD/.cargo
+%{cargo_install}
+
+%check
+export CARGO_HOME=$PWD/.cargo
+%{cargo_test}
+
+```
+
+This attempt started in this repository <https://github.com/openSUSE-Rust/obs-service-cargo-vendor-home-registry> but now,
+it's been merged to avoid maintenance burden. As the old repository will retire, it still remains there for those that
+are curious about how we go from there to here.
+
+
+# Parameters
+
+The following are the parameters you can use with this utility:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<service name="cargo_vendor">
+   <summary>OBS Source Service to vendor all crates.io and dependencies for a Rust project</summary>
+   <description><![CDATA[This service extracts a Rust application source,
+  searches for a Rust application containing a Cargo.toml file,
+  download all crates.io and dependecies,
+  and creates a vendor.tar[.<tar compression>] to be committed allowing fully offline
+  builds of Rust applications.]]></description>
+   <parameter name="strategy">
+      <description>Legacy argument, no longer used. Values: cargo_vendor. Default: cargo_vendor</description>
+   </parameter>
+   <parameter name="method">
+      <description>Whether to use vendor or the registry. Default: vendor</description>
+      <allowedvalue>registry</allowedvalue>
+      <allowedvalue>vendor</allowedvalue>
+   </parameter>
+   <parameter name="src">
+      <description>Where to find sources. Source is either a directory or a source tarball AND cannot be both. Aliases: srctar, srcdir</description>
+   </parameter>
+   <parameter name="outdir">
+      <description>Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry.</description>
+   </parameter>
+   <parameter name="custom-root>
+      <description>Whether you want to manually set the root of the
+      project. Useful with a combination with `--manifest-paths` or
+      `--no-root-manifest`.
+      </description>
+   </parameter>
+   <parameter name="update">
+      <description>Update dependencies or not. Default: true</description>
+      <allowedvalue>false</allowedvalue>
+      <allowedvalue>true</allowedvalue>
+   </parameter>
+   <parameter name="no-root-manifest">
+      <description>Available only if `--method` is set to registry. If a
+      project has no root manifest, this flag is useful for those situations
+      to set the manifest path manually. Useful in combination with
+      `--manifest-paths` flag. Default: false
+      </description>
+      <allowedvalue>false</allowedvalue>
+      <allowedvalue>true</allowedvalue>
+   </parameter>
+   <parameter name="tag">
+      <description>Tag some files for multi-vendor and multi-cargo_config projects</description>
+   </parameter>
+   <parameter name="compression">
+      <description>What compression algorithm to use. Set to `not` if you just want a normal tarball with no compression. Default: zst</description>
+      <allowedvalues>zst</allowedvalues>
+      <allowedvalues>gz</allowedvalues>
+      <allowedvalues>xz</allowedvalues>
+      <allowedvalues>bz2</allowedvalues>
+      <allowedvalues>not</allowedvalues>
+   </parameter>
+   <parameter name="cargotoml">
+      <description>Other cargo manifest files to sync with vendor or registry. Behaviour between methods changes. Consult the documentation.</description>
+   </parameter>
+   <parameter name="i-accept-the-risk">
+      <description>A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it.</description>
+   </parameter>
+   <parameter name="filter">
+      <description>Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies. Default: false</description>
+      <allowedvalue>false</allowedvalue>
+      <allowedvalue>true</allowedvalue>
+   </parameter>
+   <parameter name="versioned-dirs">
+      <description>Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor. Default: true</description>
+      <allowedvalue>false</allowedvalue>
+      <allowedvalue>true</allowedvalue>
+   </parameter>
+</service>
 ```
 
 # List of possible scenarios when vendoring fails
 
 - `cargo` issues. Sometimes deleting `~/.cargo` will solve your issues.
 - Wrong permissions. You may not have a permission to access a file or folder.
+- Incorrect usage of vendoring methods.
 - There are updates of this project. Please call us out on that 🤣
-
-# Other utilities
-
-- Bulk Updater (WIP). Allows you to update Rust software packages locally.
 
 # Limitations
 
-There may be some corner/edge (whatever-you-call-it) cases that will not work with **OBS Service Cargo**. Please open a bug 
-report at https://github.com/openSUSE/obs-service-cargo_vendor/issues. We will try to investigate those in the best of our abilities. The goal of this
-project is to help automate some tasks when packaging Rust software. We won't assume we can automate where we can a locate a project's root manifest file `Cargo.toml`.
-Thus, at best, please indicate it with `cargotoml` parameter. In the mean time, this will work, *hopefully*, in most projects since most projects have
-a root manifest file.
+There may be some corner/edge (whatever-you-call-it) cases that
+will not work with **OBS Service Cargo**. Please open a bug report at
+https://github.com/openSUSE-Rust/obs-service-cargo_vendor/issues. We will
+try to investigate those in the best of our abilities. The goal of this
+project is to help automate some tasks when packaging Rust software. We
+won't assume we can automate where we can a locate a project's root manifest
+file `Cargo.toml`.  Thus, at best, please indicate it with `cargotoml`
+parameter. In the mean time, this will work, *hopefully*, in most projects
+since most projects have a root manifest file.
 
 ## Reproducibility
 
-This project does not and will not support reproducible builds as a feature. If you submit a PR to enable those features, we may accept it but we will not maintain or guarantee that it will continue to work in the future. 
+This project does not and will not support reproducible builds as a feature. If
+you submit a PR to enable those features, we may accept it but we will not
+maintain or guarantee that it will continue to work in the future.
