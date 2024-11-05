@@ -112,7 +112,7 @@ pub fn cargo_vendor(
         if let Some(first) = &manifest_paths.first() {
             let _first_manifest = &curdir.join(first);
             if _first_manifest.exists() {
-                default_options.push("--manifest_path".to_string());
+                default_options.push("--manifest-path".to_string());
                 let string_lossy = &_first_manifest.to_string_lossy();
                 default_options.push(string_lossy.to_string());
                 first_manifest = _first_manifest.to_path_buf();
