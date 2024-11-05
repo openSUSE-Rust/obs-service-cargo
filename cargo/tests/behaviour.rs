@@ -69,15 +69,19 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     raw_opts(raw_args, false)?;
     let vendor_path = raw_outdir.join("vendor");
     let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
+    let cargo_lock_path = raw_outdir.join("Cargo.lock");
     assert!(vendor_path.is_dir());
     assert!(cargo_config_path.is_file());
+    assert!(cargo_lock_path.is_file());
     Ok(outfile)
 }
 
 #[test(tokio::test)]
 async fn no_filter_vendor_sources() -> io::Result<()> {
     let sources = [
+        // NOTE: This should not vendor anything as it does not contain any dependencies
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
+        // NOTE: This should vendor
         "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.2.tar.gz",
     ];
     for src in sources {
@@ -93,7 +97,9 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
 #[test(tokio::test)]
 async fn filter_vendor_sources() -> io::Result<()> {
     let sources = [
+        // NOTE: This should not vendor anything as it does not contain any dependencies
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
+        // NOTE: This should vendor
         "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.2.tar.gz",
     ];
     for src in sources {
@@ -163,10 +169,22 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
         outdir: Some(raw_outdir.clone()),
     };
     raw_opts(raw_args, false)?;
-    let vendor_path = raw_outdir.join("vendor");
-    let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
-    assert!(vendor_path.is_dir());
-    assert!(cargo_config_path.is_file());
+    let vendor_path = raw_outdir.join("rust").join("pvsecret").join("vendor");
+    let cargo_config_path = raw_outdir
+        .join("rust")
+        .join("pvsecret")
+        .join(".cargo")
+        .join("config.toml");
+    // NOTE: This should always stay at the top-most level
+    // Since
+    // 1. It's not affected by where the custom root is
+    // 2. It does not make sense to put it anywhere but top-most level directory
+    let cargo_registry_path = raw_outdir.join(".cargo").join("registry");
+    let cargo_possible_lockfile_path = raw_outdir.join("rust").join("pvsecret").join("Cargo.lock");
+    assert!(!vendor_path.is_dir());
+    assert!(!cargo_config_path.is_file());
+    assert!(cargo_registry_path.is_dir());
+    assert!(cargo_possible_lockfile_path.is_file());
     Ok(())
 }
 
@@ -227,10 +245,15 @@ async fn manifest_paths_test_2() -> io::Result<()> {
         outdir: Some(raw_outdir.clone()),
     };
     raw_opts(raw_args, false)?;
-    let vendor_path = raw_outdir.join("vendor");
-    let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
+    let vendor_path = raw_outdir.join("libflux").join("vendor");
+    let cargo_config_path = raw_outdir
+        .join("libflux")
+        .join(".cargo")
+        .join("config.toml");
+    let cargo_lock_path = raw_outdir.join("libflux").join("Cargo.lock");
     assert!(vendor_path.is_dir());
     assert!(cargo_config_path.is_file());
+    assert!(cargo_lock_path.is_file());
     Ok(())
 }
 
@@ -291,9 +314,14 @@ async fn custom_root_test() -> io::Result<()> {
         outdir: Some(raw_outdir.clone()),
     };
     raw_opts(raw_args, false)?;
-    let vendor_path = raw_outdir.join("vendor");
-    let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
+    let vendor_path = raw_outdir.join("libflux").join("vendor");
+    let cargo_config_path = raw_outdir
+        .join("libflux")
+        .join(".cargo")
+        .join("config.toml");
+    let cargo_lock_path = raw_outdir.join("libflux").join("Cargo.lock");
     assert!(vendor_path.is_dir());
     assert!(cargo_config_path.is_file());
+    assert!(cargo_lock_path.is_file());
     Ok(())
 }

@@ -85,7 +85,7 @@ pub fn cargo_vendor(
     manifest_paths: &[PathBuf],
     mut update: bool,
     i_accept_the_risk: &[String],
-) -> io::Result<String> {
+) -> io::Result<Option<(PathBuf, String)>> {
     let which_subcommand = if filter { "vendor-filterer" } else { "vendor" };
     info!("🏪 Running `cargo {}`...", &which_subcommand);
     let mut has_update_value_changed = false;
@@ -128,7 +128,7 @@ pub fn cargo_vendor(
     } else if !has_deps {
         info!("😄 This project does not seem to have any dependencies. Check manifest if we have no need to vendor.");
         info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
-        return Ok("".to_string());
+        return Ok(None);
     }
 
     manifest_paths.iter().try_for_each(|manifest| {
@@ -232,12 +232,21 @@ pub fn cargo_vendor(
         })?;
     }
     info!("🛡️🙂 All lockfiles are audited");
-    res.inspect(|_| {
-        info!("🏪 `cargo {}` finished.", &which_subcommand);
-    })
-    .inspect_err(|err| {
-        error!(?err);
-    })
+    match res {
+        Ok(output_cargo_configuration) => {
+            info!("🏪 `cargo {}` finished.", &which_subcommand);
+            Ok(Some((
+                possible_lockfile
+                    .canonicalize()
+                    .unwrap_or(possible_lockfile),
+                output_cargo_configuration,
+            )))
+        }
+        Err(err) => {
+            error!(?err);
+            Err(err)
+        }
+    }
 }
 
 pub fn cargo_generate_lockfile(

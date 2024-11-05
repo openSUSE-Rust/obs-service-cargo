@@ -150,7 +150,7 @@ impl Opts {
             ));
         }
 
-        let mut setup_workdir = {
+        let setup_workdir = {
             let dirs: Vec<Result<std::fs::DirEntry, std::io::Error>> =
                 std::fs::read_dir(workdir)?.collect();
             debug!(?dirs, "List of files and directories of the workdir");
@@ -190,14 +190,17 @@ impl Opts {
             }
         };
 
-        if let Some(custom_root) = &self.custom_root {
+        let custom_root = if let Some(custom_root) = &self.custom_root {
             info!(?custom_root, "ℹ️ Custom root is set.");
-            setup_workdir.push(custom_root);
-        }
+            setup_workdir.join(custom_root)
+        } else {
+            setup_workdir.to_path_buf()
+        };
+
         if setup_workdir.exists() && setup_workdir.is_dir() {
             match &self.method {
-                Method::Registry => run_cargo_vendor_home_registry(&setup_workdir, self),
-                Method::Vendor => run_cargo_vendor(&setup_workdir, self),
+                Method::Registry => run_cargo_vendor_home_registry(&custom_root, self),
+                Method::Vendor => run_cargo_vendor(&setup_workdir, &custom_root, self),
             }?;
         } else {
             let mut msg: String =

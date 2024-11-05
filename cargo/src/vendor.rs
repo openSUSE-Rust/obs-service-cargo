@@ -16,7 +16,11 @@ use tracing::{debug, error, info, trace, warn, Level};
 use crate::cargo_commands::cargo_vendor;
 use crate::cli::Opts;
 
-pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<()> {
+pub fn run_cargo_vendor(
+    setup_workdir: &Path,
+    custom_root: &Path,
+    vendor_opts: &Opts,
+) -> io::Result<()> {
     debug!(?vendor_opts);
     info!("📦 Starting Cargo Vendor");
     let tmpdir_for_config = tempfile::Builder::new()
@@ -25,25 +29,33 @@ pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<
         .tempdir()?;
     let cargo_config_workdir = tmpdir_for_config.path();
     // Cargo vendor stdouts the configuration for config.toml
-    let cargo_config_output = cargo_vendor(
-        setup_workdir,
+    if let Some((lockfile, cargo_config_output)) = cargo_vendor(
+        custom_root,
         vendor_opts.vendor_specific_args.filter,
         &vendor_opts.manifest_paths,
         vendor_opts.update,
         &vendor_opts.i_accept_the_risk,
-    )?;
-    if cargo_config_output.is_empty() {
-        info!("🎉 No cargo config.toml created. Seems project has no dependencies.");
-        return Ok(());
-    };
-    let path_to_dot_cargo = &cargo_config_workdir.join(".cargo");
-    fs::create_dir(path_to_dot_cargo)?;
-    // NOTE maybe in the future, we might need to respect import
-    // an existing `cargo.toml` but I doubt that's necessary?
-    let path_to_dot_cargo_cargo_config = &path_to_dot_cargo.join("config.toml");
-    let mut cargo_config_file = fs::File::create(path_to_dot_cargo_cargo_config)?;
-    cargo_config_file.write_all(cargo_config_output.as_bytes())?;
-    debug!(?cargo_config_file);
+    )? {
+        if cargo_config_output.is_empty() {
+            info!("🎉 No cargo config.toml created. Seems project has no dependencies.");
+            return Ok(());
+        };
+        let lockfile_parent = lockfile.parent().unwrap_or(setup_workdir);
+        let lockfile_path_stripped = lockfile
+            .strip_prefix(setup_workdir)
+            .unwrap_or(setup_workdir);
+        // NOTE: Both lockfile and dot cargo should have the same parent path.
+        let path_to_lockfile = &cargo_config_workdir.join(lockfile_path_stripped);
+        let path_to_dot_cargo = &cargo_config_workdir.join(lockfile_parent).join(".cargo");
+        fs::create_dir(path_to_dot_cargo)?;
+        fs::copy(lockfile, path_to_lockfile)?;
+        // NOTE maybe in the future, we might need to respect import
+        // an existing `cargo.toml` but I doubt that's necessary?
+        let path_to_dot_cargo_cargo_config = &path_to_dot_cargo.join("config.toml");
+        let mut cargo_config_file = fs::File::create(path_to_dot_cargo_cargo_config)?;
+        cargo_config_file.write_all(cargo_config_output.as_bytes())?;
+        debug!(?cargo_config_file);
+    }
     let outfile = match &vendor_opts.tag {
         Some(v) => format!("vendor-{}", v),
         None => "vendor".to_string(),
@@ -63,7 +75,7 @@ pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<
             "Unable to set extension",
         ));
     }
-    let vendor_path = &setup_workdir.join("vendor");
+    let vendor_path = &custom_root.join("vendor");
     if !vendor_path.is_dir() {
         return Err(io::Error::new(io::ErrorKind::NotFound, "No vendor path found! Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."));
     }
