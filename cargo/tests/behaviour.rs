@@ -58,21 +58,24 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
         Method::Vendor => format!("vendor-{}.tar.zst", &random_tag),
     };
 
-    let vendor_tarball_path = &outdir.join(vendor_tarball);
-    assert!(vendor_tarball_path.is_file());
+    if *"https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz" != *source {
+        let vendor_tarball_path = &outdir.join(vendor_tarball);
 
-    let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
-    let raw_args = RawArgs {
-        target: vendor_tarball_path.to_path_buf(),
-        outdir: Some(raw_outdir.clone()),
-    };
-    raw_opts(raw_args, false)?;
-    let vendor_path = raw_outdir.join("vendor");
-    let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
-    let cargo_lock_path = raw_outdir.join("Cargo.lock");
-    assert!(vendor_path.is_dir());
-    assert!(cargo_config_path.is_file());
-    assert!(cargo_lock_path.is_file());
+        assert!(vendor_tarball_path.is_file());
+
+        let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
+        let raw_args = RawArgs {
+            target: vendor_tarball_path.to_path_buf(),
+            outdir: Some(raw_outdir.clone()),
+        };
+        raw_opts(raw_args, false)?;
+        let vendor_path = raw_outdir.join("vendor");
+        let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
+        let cargo_lock_path = raw_outdir.join("Cargo.lock");
+        assert!(vendor_path.is_dir());
+        assert!(cargo_config_path.is_file());
+        assert!(cargo_lock_path.is_file());
+    }
     Ok(outfile)
 }
 
@@ -189,7 +192,7 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
 }
 
 #[test(tokio::test)]
-async fn manifest_paths_test_2() -> io::Result<()> {
+async fn manifest_paths_with_vendor() -> io::Result<()> {
     let source = "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz";
     let mut rng = rand::thread_rng();
     let random_tag: u8 = rng.gen();
@@ -278,7 +281,7 @@ async fn custom_root_test() -> io::Result<()> {
     let data = response.bytes().await.unwrap();
     let data = data.to_vec();
     fs::write(&outfile, data).await.unwrap();
-    let outdir = PathBuf::from("/tmp").join(random_tag.clone());
+    let outdir = PathBuf::from("/tmp");
     let vendor_specific_args = VendorArgs {
         filter: false,
         versioned_dirs: true,

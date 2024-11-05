@@ -81,6 +81,7 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, mut update: bool) -> io::Resul
 
 pub fn cargo_vendor(
     curdir: &Path,
+    versioned_dirs: bool,
     filter: bool,
     manifest_paths: &[PathBuf],
     mut update: bool,
@@ -90,6 +91,9 @@ pub fn cargo_vendor(
     info!("🏪 Running `cargo {}`...", &which_subcommand);
     let mut has_update_value_changed = false;
     let mut default_options: Vec<String> = vec![];
+    if versioned_dirs {
+        default_options.push("--versioned-dirs".to_string());
+    }
     let mut first_manifest = curdir.join("Cargo.toml");
     let mut lockfiles: Vec<PathBuf> = Vec::new();
     let mut hasher1 = Keccak256::default();

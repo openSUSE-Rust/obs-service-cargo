@@ -28,23 +28,21 @@ pub fn run_cargo_vendor(
         .rand_bytes(12)
         .tempdir()?;
     let cargo_config_workdir = tmpdir_for_config.path();
+    let mut custom_path_for_vendor_dir: String = String::new();
     // Cargo vendor stdouts the configuration for config.toml
     if let Some((lockfile, cargo_config_output)) = cargo_vendor(
         custom_root,
+        vendor_opts.vendor_specific_args.versioned_dirs,
         vendor_opts.vendor_specific_args.filter,
         &vendor_opts.manifest_paths,
         vendor_opts.update,
         &vendor_opts.i_accept_the_risk,
     )? {
-        if cargo_config_output.is_empty() {
-            info!("🎉 No cargo config.toml created. Seems project has no dependencies.");
-            return Ok(());
-        };
         let lockfile_parent = lockfile.parent().unwrap_or(setup_workdir);
         let lockfile_parent_stripped = lockfile_parent
             .strip_prefix(setup_workdir)
             .unwrap_or(setup_workdir);
-        fs::create_dir_all(lockfile_parent_stripped)?;
+        custom_path_for_vendor_dir.push_str(&lockfile_parent_stripped.to_string_lossy());
         // NOTE: Both lockfile and dot cargo should have the same parent path.
         let path_to_lockfile = &cargo_config_workdir
             .join(lockfile_parent_stripped)
@@ -60,6 +58,9 @@ pub fn run_cargo_vendor(
         let mut cargo_config_file = fs::File::create(path_to_dot_cargo_cargo_config)?;
         cargo_config_file.write_all(cargo_config_output.as_bytes())?;
         debug!(?cargo_config_file);
+    } else {
+        info!("🎉 Project has no dependencies.");
+        return Ok(());
     }
     let outfile = match &vendor_opts.tag {
         Some(v) => format!("vendor-{}", v),
@@ -85,7 +86,11 @@ pub fn run_cargo_vendor(
         return Err(io::Error::new(io::ErrorKind::NotFound, "No vendor path found! Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."));
     }
     // Process them here
-    let additional_paths = vec![vendor_path.to_string_lossy().to_string()];
+    let additional_paths = vec![format!(
+        "{},{}",
+        vendor_path.to_string_lossy(),
+        custom_path_for_vendor_dir
+    )];
     let roast_args = RoastArgs {
         target: PathBuf::from(&cargo_config_workdir),
         include: None,

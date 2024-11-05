@@ -210,6 +210,7 @@ impl Opts {
             } else {
                 msg.push_str(" This seems to be a bug. Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
             }
+            error!(msg);
             return Err(io::Error::new(io::ErrorKind::Other, msg));
         }
         info!("🌟 OBS Service Cargo finished.");
