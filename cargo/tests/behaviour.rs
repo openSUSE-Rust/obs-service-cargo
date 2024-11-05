@@ -57,24 +57,27 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
         Method::Registry => format!("registry-{}.tar.zst", &random_tag),
         Method::Vendor => format!("vendor-{}.tar.zst", &random_tag),
     };
+    let vendor_tarball_path = &outdir.join(vendor_tarball);
 
+    let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
+    let raw_args = RawArgs {
+        target: vendor_tarball_path.to_path_buf(),
+        outdir: Some(raw_outdir.clone()),
+    };
+    raw_opts(raw_args, false)?;
+    let vendor_path = raw_outdir.join("vendor");
+    let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
+    let cargo_lock_path = raw_outdir.join("Cargo.lock");
     if *"https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz" != *source {
-        let vendor_tarball_path = &outdir.join(vendor_tarball);
-
         assert!(vendor_tarball_path.is_file());
-
-        let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
-        let raw_args = RawArgs {
-            target: vendor_tarball_path.to_path_buf(),
-            outdir: Some(raw_outdir.clone()),
-        };
-        raw_opts(raw_args, false)?;
-        let vendor_path = raw_outdir.join("vendor");
-        let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
-        let cargo_lock_path = raw_outdir.join("Cargo.lock");
         assert!(vendor_path.is_dir());
         assert!(cargo_config_path.is_file());
         assert!(cargo_lock_path.is_file());
+    } else {
+        assert!(!vendor_tarball_path.is_file());
+        assert!(!vendor_path.is_dir());
+        assert!(!cargo_config_path.is_file());
+        assert!(!cargo_lock_path.is_file());
     }
     Ok(outfile)
 }
