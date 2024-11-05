@@ -37,7 +37,7 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
         info!("💼 Fetched dependencies.");
     }
     let mut lockfiles: Vec<PathBuf> = Vec::new();
-    for manifest in &registry.manifest_paths {
+    for manifest in &registry.manifest_path {
         let full_manifest_path = &setup_workdir.join(manifest);
         let full_manifest_path_parent = full_manifest_path.parent().unwrap_or(setup_workdir);
         if full_manifest_path.is_file() {

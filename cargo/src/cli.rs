@@ -58,8 +58,7 @@ pub struct Opts {
     #[arg(
         long,
         short = 'C',
-        help = "Whether you want to manually set the root of the project. Useful with a combination \
-		        with `--manifest-paths` or `--no-root-manifest`."
+        help = "Whether you want to manually set the root of the project. Useful with a combination with `--manifest-paths` or `--no-root-manifest`."
     )]
     pub custom_root: Option<String>,
     #[arg(
@@ -68,8 +67,7 @@ pub struct Opts {
 		requires_if("registry", "method"),
 		default_value_t = false,
 		action = clap::ArgAction::Set,
-		help = "Available only if `--method` is set to registry. If a project has no root manifest, this flag is useful for those situations to set \
-    			the manifest path manually. Useful in combination with `--manifest-paths` flag.")]
+		help = "Available only if `--method` is set to registry. If a project has no root manifest, this flag is useful for those situations to set the manifest path manually. Useful in combination with `--manifest-paths` flag.")]
     pub no_root_manifest: bool,
     #[arg(
         long,
@@ -83,11 +81,14 @@ pub struct Opts {
         help = "Tag some files for multi-vendor and multi-cargo_config projects"
     )]
     pub tag: Option<String>,
-    #[arg(long, help = "Other cargo manifest files to sync with vendor", visible_aliases = ["cargotoml"])]
-    pub manifest_paths: Vec<PathBuf>,
-    #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Update dependencies or not")]
+    #[arg(long, help = "Other cargo manifest files to sync with vendor or registry. Behaviour between methods changes. Consult the documentation.", visible_aliases = ["cargotoml"])]
+    pub manifest_path: Vec<PathBuf>,
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set, help = "Update dependencies or not.")]
     pub update: bool,
-    #[arg(long, help = "Where to output vendor.tar* and cargo_config")]
+    #[arg(
+        long,
+        help = "Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry."
+    )]
     pub outdir: PathBuf,
     #[arg(
         long,
