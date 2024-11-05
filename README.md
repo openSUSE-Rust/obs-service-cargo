@@ -28,7 +28,6 @@ A good example would be the [zellij](https://zellij.dev) project. Users will jus
      <param name="compression">zst</param>
      <param name="update">true</param>
   </service>
-  <service name="cargo_audit" mode="manual" />
 </services>
 ```
 ## Versioned Dirs
@@ -52,7 +51,6 @@ should now be in openSUSE, you can "accept a risk" of a RUSTSEC ID by adding a n
 	 <param name="i-accept-the-risk">RUSTSEC-2022-0093</param>
 	 <param name="i-accept-the-risk">RUSTSEC-2021-0041</param>
   </service>
-  <service name="cargo_audit" mode="manual" />
 </services>
 ```
 
@@ -79,7 +77,6 @@ the following `cargotoml` parameter value of `rust/utils/Cargo.toml`.
 >      <param name="cargotoml">rust/utils/Cargo.toml</param>
 >      <param name="update">true</param>
 >   </service>
->   <service name="cargo_audit" mode="manual" />
 > </services>
 > ```
 
@@ -213,7 +210,6 @@ in various contexts e.g. projects that are not part of one whole workspace. Exam
         <param name="tag">utils</param>
         <param name="update">true</param>
   </service>
-  <service name="cargo_audit" mode="manual" />
 </services>
 ```
 
@@ -254,7 +250,6 @@ specifically, `$CARGO_HOME/registry`. The service file will look like this
 	 <param name="cargotoml">rust/pv/Cargo.toml</param>
 	 <param name="cargotoml">rust/utils/Cargo.toml</param>
   </service>
-  <service name="cargo_audit" mode="manual" />
 </services>
 ```
 
@@ -271,7 +266,6 @@ Another example would be libflux. It can have three different configurations and
 	 <param name="no-root-manifest">true</param>
 	 <param name="cargotoml">libflux/Cargo.toml</param>
   </service>
-  <service name="cargo_audit" mode="manual" />
 </services>
 ```
 
@@ -293,7 +287,6 @@ Another example would be libflux. It can have three different configurations and
 	 <param name="method">registry</param>
 	 <param name="custom-root">libflux</param>
   </service>
-  <service name="cargo_audit" mode="manual" />
 </services>
 ```
 
@@ -311,7 +304,6 @@ Another example would be libflux. It can have three different configurations and
 	 <param name="update">true</param>
 	 <param name="custom-root">libflux</param>
   </service>
-  <service name="cargo_audit" mode="manual" />
 </services>
 ```
 > [!NOTE]
