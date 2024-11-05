@@ -13,7 +13,11 @@ use crate::audit;
 use crate::cargo_commands::*;
 use crate::cli::Opts;
 
-pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> io::Result<()> {
+pub fn run_cargo_vendor_home_registry(
+    setup_workdir: &Path,
+    custom_root: &Path,
+    registry: &Opts,
+) -> io::Result<()> {
     debug!(?registry);
     info!("🛖🏃📦 Starting Cargo Vendor Home Registry");
     let tempdir_for_home_registry_binding = tempfile::Builder::new()
@@ -26,19 +30,19 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
     debug!(?home_registry_dot_cargo);
     if !registry.no_root_manifest {
         if registry.update {
-            cargo_update(setup_workdir, "")?;
+            cargo_update(custom_root, "")?;
         }
         info!(?setup_workdir, "🌳 Finished setting up workdir.");
         info!("🔓Attempting to regenerate lockfile...");
-        cargo_generate_lockfile(setup_workdir, "", registry.update)?;
+        cargo_generate_lockfile(custom_root, "", registry.update)?;
         info!("🔒Regenerated lockfile.");
         info!("🚝 Attempting to fetch dependencies.");
-        cargo_fetch(setup_workdir, "", registry.update)?;
+        cargo_fetch(custom_root, "", registry.update)?;
         info!("💼 Fetched dependencies.");
     }
     let mut lockfiles: Vec<PathBuf> = Vec::new();
     for manifest in &registry.manifest_path {
-        let full_manifest_path = &setup_workdir.join(manifest);
+        let full_manifest_path = &custom_root.join(manifest);
         let full_manifest_path_parent = full_manifest_path.parent().unwrap_or(setup_workdir);
         if full_manifest_path.is_file() {
             if registry.update {
@@ -73,7 +77,7 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
                 "🚝 Attempting to fetch dependencies at extra manifest path..."
             );
             cargo_fetch(
-                setup_workdir,
+                custom_root,
                 &full_manifest_path.to_string_lossy(),
                 registry.update,
             )?;
@@ -87,6 +91,9 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
             return Err(err);
         }
         let possible_lockfile = full_manifest_path_parent.join("Cargo.lock");
+        let possible_lockfile = &possible_lockfile
+            .canonicalize()
+            .unwrap_or(possible_lockfile.to_path_buf());
         if possible_lockfile.exists() {
             info!(
                 ?possible_lockfile,
@@ -94,11 +101,11 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
             );
             let stripped_lockfile_path = possible_lockfile
                 .strip_prefix(setup_workdir)
-                .unwrap_or(&possible_lockfile);
+                .unwrap_or(possible_lockfile);
             let new_lockfile_path = &home_registry.join(stripped_lockfile_path);
             let new_lockfile_parent = new_lockfile_path.parent().unwrap_or(home_registry);
             fs::create_dir_all(new_lockfile_parent)?;
-            fs::copy(&possible_lockfile, new_lockfile_path)?;
+            fs::copy(possible_lockfile, new_lockfile_path)?;
             info!(
                 ?possible_lockfile,
                 "🔒 🌟 Successfully added extra lockfile."
@@ -107,7 +114,10 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
         }
     }
     if !registry.no_root_manifest {
-        let possible_root_lockfile = &setup_workdir.join("Cargo.lock");
+        let possible_root_lockfile = &custom_root.join("Cargo.lock");
+        let possible_root_lockfile = &possible_root_lockfile
+            .canonicalize()
+            .unwrap_or(possible_root_lockfile.to_path_buf());
         if possible_root_lockfile.exists() {
             info!(
                 ?possible_root_lockfile,

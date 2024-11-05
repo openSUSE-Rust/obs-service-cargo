@@ -200,7 +200,9 @@ impl Opts {
 
         if setup_workdir.exists() && setup_workdir.is_dir() {
             match &self.method {
-                Method::Registry => run_cargo_vendor_home_registry(&custom_root, self),
+                Method::Registry => {
+                    run_cargo_vendor_home_registry(&setup_workdir, &custom_root, self)
+                }
                 Method::Vendor => run_cargo_vendor(&setup_workdir, &custom_root, self),
             }?;
         } else {

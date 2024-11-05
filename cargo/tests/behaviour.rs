@@ -261,7 +261,7 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
 }
 
 #[test(tokio::test)]
-async fn custom_root_test() -> io::Result<()> {
+async fn custom_root_test_1() -> io::Result<()> {
     let source = "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz";
     let mut rng = rand::thread_rng();
     let random_tag: u8 = rng.gen();
@@ -326,5 +326,76 @@ async fn custom_root_test() -> io::Result<()> {
     assert!(vendor_path.is_dir());
     assert!(cargo_config_path.is_file());
     assert!(cargo_lock_path.is_file());
+    Ok(())
+}
+
+#[test(tokio::test)]
+async fn custom_root_test_2() -> io::Result<()> {
+    let source = "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz";
+    let mut rng = rand::thread_rng();
+    let random_tag: u8 = rng.gen();
+    let random_tag = random_tag.to_string();
+    let response = reqwest::get(source).await.unwrap();
+    let fname = response
+        .url()
+        .path_segments()
+        .and_then(|segments| segments.last())
+        .and_then(|name| if name.is_empty() { None } else { Some(name) })
+        .unwrap_or("balls");
+    info!("Source file: {}", &fname);
+    let outfile = format!("/{}/{}", "tmp", &fname);
+    info!("Downloaded to: '{:?}'", &outfile);
+    fs::File::create(&outfile).await.unwrap();
+    let outfile = PathBuf::from(&outfile);
+    let data = response.bytes().await.unwrap();
+    let data = data.to_vec();
+    fs::write(&outfile, data).await.unwrap();
+    let outdir = PathBuf::from("/tmp");
+    let vendor_specific_args = VendorArgs {
+        filter: false,
+        versioned_dirs: true,
+    };
+    let opt = cli::Opts {
+        no_root_manifest: false,
+        custom_root: Some("libflux".to_string()),
+        method: Method::Registry,
+        src: outfile.to_path_buf(),
+        compression: Compression::default(),
+        tag: Some(random_tag.clone()),
+        manifest_path: vec![],
+        update: true,
+        outdir: outdir.to_path_buf(),
+        color: clap::ColorChoice::Auto,
+        i_accept_the_risk: vec![],
+        vendor_specific_args,
+    };
+
+    let res = opt.run_vendor();
+    assert!(res.is_ok());
+    let vendor_tarball = match opt.method {
+        Method::Registry => format!("registry-{}.tar.zst", &random_tag),
+        Method::Vendor => format!("vendor-{}.tar.zst", &random_tag),
+    };
+
+    let vendor_tarball_path = &outdir.join(vendor_tarball);
+    assert!(vendor_tarball_path.is_file());
+
+    let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
+    let raw_args = RawArgs {
+        target: vendor_tarball_path.to_path_buf(),
+        outdir: Some(raw_outdir.clone()),
+    };
+    raw_opts(raw_args, false)?;
+    let vendor_path = raw_outdir.join("libflux").join("vendor");
+    let cargo_config_path = raw_outdir
+        .join("libflux")
+        .join(".cargo")
+        .join("config.toml");
+    let cargo_lock_path = raw_outdir.join("libflux").join("Cargo.lock");
+    let cargo_registry_path = raw_outdir.join(".cargo").join("registry");
+    assert!(!vendor_path.is_dir());
+    assert!(!cargo_config_path.is_file());
+    assert!(cargo_lock_path.is_file());
+    assert!(cargo_registry_path.is_dir());
     Ok(())
 }
