@@ -99,7 +99,7 @@ pub fn cargo_vendor(
     let mut hasher1 = Keccak256::default();
     let mut hasher2 = Keccak256::default();
     if !first_manifest.is_file() {
-        warn!("⚠️ First manifest seems to not exist. Will attempt to fallback to manifest paths.");
+        warn!("⚠️ Root manifest seems to not exist. Will attempt to fallback to manifest paths.");
         if let Some(first) = &manifest_paths.first() {
             let _first_manifest = &curdir.join(first);
             if _first_manifest.exists() {
@@ -126,7 +126,7 @@ pub fn cargo_vendor(
     let has_deps = has_dependencies(&first_manifest)?;
 
     if is_workspace {
-        info!("ℹ️ This project is a workspace configuration.");
+        info!("ℹ️ This project is a WORKSPACE configuration.");
     } else if is_workspace && !has_deps {
         warn!("⚠️ This workspace does not seem to have dependencies. Please check member dependencies.");
     }
@@ -148,7 +148,14 @@ pub fn cargo_vendor(
     }
 
     if possible_lockfile.is_file() {
-        default_options.push("--locked".to_string());
+        if !filter {
+            default_options.push("--locked".to_string());
+        } else {
+            warn!("⚠️ Vendor filterer does not support lockfile verification. Your dependencies MIGHT get updated.");
+            update = true;
+            has_update_value_changed = update;
+        }
+
         info!(?possible_lockfile, "🔓 Adding lockfile.");
         lockfiles.push(possible_lockfile.as_path().to_path_buf());
         let bytes = fs::read(&possible_lockfile)?;
@@ -159,16 +166,10 @@ pub fn cargo_vendor(
 				 false to true."
         );
         update = true;
-        has_update_value_changed = true;
+        has_update_value_changed = update;
     }
     if !update {
         warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
-        if filter {
-            warn!("⚠️ Vendor filterer does not support lockfile verification. `--locked` flag not added.");
-            warn!("⚠️ This might UPDATE your dependencies.");
-            update = true;
-            has_update_value_changed = true;
-        }
     }
     info!(?vendor_path, "📦 Vendor path");
     default_options.push(vendor_path.to_string_lossy().to_string());
