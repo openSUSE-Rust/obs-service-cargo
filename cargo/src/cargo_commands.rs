@@ -127,8 +127,9 @@ pub fn cargo_vendor(
 
     if is_workspace {
         info!("ℹ️ This project is a WORKSPACE configuration.");
-    } else if is_workspace && !has_deps {
-        warn!("⚠️ This workspace does not seem to have dependencies. Please check member dependencies.");
+        if !has_deps {
+            warn!("⚠️ The WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
+        }
     } else if !has_deps {
         info!("😄 This project does not seem to have any dependencies. Check manifest if we have no need to vendor.");
         info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
