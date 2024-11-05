@@ -5,10 +5,12 @@ on:
     paths:
       - '**.rs'
       - '**/Cargo.toml'
+      - '!**.md'
   pull_request:
     paths:
       - '**.rs'
       - '**/Cargo.toml'
+      - '!**.md'
 
 env:
   CARGO_TERM_COLOR: always
