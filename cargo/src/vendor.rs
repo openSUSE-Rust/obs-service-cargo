@@ -18,7 +18,7 @@ use crate::cli::Opts;
 
 pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<()> {
     debug!(?vendor_opts);
-    info!("🛖🏃📦 Starting Cargo Vendor Home Registry");
+    info!("🛖🏃📦 Starting Cargo Vendor");
     let tempdir_for_vendor_binding = tempfile::Builder::new()
         .prefix(".cargo")
         .rand_bytes(12)
@@ -34,6 +34,10 @@ pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<
         &vendor_path,
         &vendor_opts.i_accept_the_risk,
     )?;
+    if cargo_config_output.is_empty() {
+        info!("🎉 No cargo config.toml created. Seems project has no dependencies.");
+        return Ok(());
+    };
     let path_to_dot_cargo = &vendor_workdir_path.join(".cargo");
     fs::create_dir(path_to_dot_cargo)?;
     let path_to_dot_cargo_cargo_config = &path_to_dot_cargo.join("config.toml");

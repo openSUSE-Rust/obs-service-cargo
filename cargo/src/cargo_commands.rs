@@ -43,6 +43,7 @@ pub fn cargo_fetch(
     manifest: &str,
     mut update: bool,
 ) -> io::Result<String> {
+    info!("⤵️ Running `cargo fetch`...");
     std::env::set_var("CARGO_HOME", cargo_home);
     let mut default_options: Vec<String> = vec![];
     let manifest_path = PathBuf::from(&manifest);
@@ -64,9 +65,11 @@ pub fn cargo_fetch(
         default_options.push(manifest.to_string());
     }
     let res = cargo_command("fetch", &default_options, curdir);
-    match res {
-        Ok(ok) => Ok(ok),
-        Err(err) => {
+    res.inspect(|_| {
+            info!("✅ `cargo fetch` finished!");
+    }).inspect_err(
+        |err|
+        {
             if !update {
                 debug!(?err);
                 error!(
@@ -78,9 +81,8 @@ pub fn cargo_fetch(
                                         "❌ 🔒 Lockfile was not regenerated for and needs update. Aborting gracefully..."
                                 );
             }
-            Err(err)
         }
-    }
+    )
 }
 
 pub fn cargo_vendor(
@@ -91,7 +93,14 @@ pub fn cargo_vendor(
     vendor_path: &Path,
     i_accept_the_risk: &[String],
 ) -> io::Result<String> {
+    let tempdir_for_home_registry_binding = tempfile::Builder::new()
+        .prefix(".cargo")
+        .rand_bytes(12)
+        .tempdir()?;
+    let home_registry = &tempdir_for_home_registry_binding.path();
+    let home_registry_dot_cargo = &home_registry.join(".cargo");
     let which_subcommand = if filter { "vendor-filterer" } else { "vendor" };
+    info!("🏪 Running `cargo {}`...", &which_subcommand);
     let mut has_update_value_changed = false;
     let mut default_options: Vec<String> = vec![];
     let mut first_manifest = curdir.join("Cargo.toml");
@@ -129,23 +138,24 @@ pub fn cargo_vendor(
         info!("ℹ️ This project is a WORKSPACE configuration.");
     } else if is_workspace && !has_deps {
         warn!("⚠️ This workspace does not seem to have dependencies. Please check member dependencies.");
+    } else if !has_deps {
+        info!("😄 This project does not seem to have any dependencies. Check manifest if we have no need to vendor.");
+        info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
+        return Ok("".to_string());
     }
 
-    if filter {
-        warn!("⚠️ Vendor filterer does not support sync. Multiple manifest paths for `--sync` flag are ignored.");
-    } else {
-        for manifest in manifest_paths {
-            let extra_full_manifest_path = curdir.join(manifest);
-            if extra_full_manifest_path.exists() {
-                default_options.push("--sync".to_string());
-                default_options.push(manifest.to_string_lossy().to_string());
-            } else {
-                let msg = "Manifest path does not exist. Aborting operation.";
-                error!(?extra_full_manifest_path, msg);
-                return Err(io::Error::new(io::ErrorKind::NotFound, msg));
-            }
+    manifest_paths.iter().try_for_each(|manifest| {
+        let extra_full_manifest_path = curdir.join(manifest);
+        if extra_full_manifest_path.exists() {
+            default_options.push("--sync".to_string());
+            default_options.push(manifest.to_string_lossy().to_string());
+        } else {
+            let msg = "Manifest path does not exist. Aborting operation.";
+            error!(?extra_full_manifest_path, msg);
+            return Err(io::Error::new(io::ErrorKind::NotFound, msg));
         }
-    }
+        Ok(())
+    })?;
 
     if possible_lockfile.is_file() {
         if !filter {
@@ -168,12 +178,39 @@ pub fn cargo_vendor(
         update = true;
         has_update_value_changed = update;
     }
+    if filter {
+        default_options.push("--platform=*-unknown-linux-gnu".to_string());
+        default_options.push("--platform=wasm32-unknown-unknown".to_string());
+        // NOTE: by <https://github.com/msirringhaus>
+        // We are conservative here and vendor all possible features, even
+        // if they are not used in the spec. But we can't know.
+        // Maybe make this configurable?
+        // NOTE to that NOTE: by uncomfyhalomacro
+        // I think we won't because we can't guess every feature they have.
+        // It's usually enabled on `cargo build -F` tbh...
+        default_options.push("--all-features".to_string());
+    }
     if !update {
         warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
+    } else {
+        cargo_fetch(
+            curdir,
+            home_registry_dot_cargo,
+            &first_manifest.to_string_lossy(),
+            update,
+        )?;
+        cargo_generate_lockfile(
+            curdir,
+            home_registry_dot_cargo,
+            &first_manifest.to_string_lossy(),
+            update,
+        )?;
     }
+
+    // NOTE: Vendor filterer's default output format is directory so we
+    // don't need to set that ourselves.
     info!(?vendor_path, "📦 Vendor path");
     default_options.push(vendor_path.to_string_lossy().to_string());
-
     let res = cargo_command(which_subcommand, &default_options, curdir);
 
     if possible_lockfile.is_file() {
@@ -219,7 +256,10 @@ pub fn cargo_vendor(
         })?;
     }
     info!("🛡️🙂 All lockfiles are audited");
-    res.inspect_err(|err| {
+    res.inspect(|_| {
+        info!("🏪 `cargo {}` finished.", &which_subcommand);
+    })
+    .inspect_err(|err| {
         error!(?err);
     })
 }
@@ -230,6 +270,7 @@ pub fn cargo_generate_lockfile(
     manifest: &str,
     mut update: bool,
 ) -> io::Result<String> {
+    info!("🔓 💂 Running `cargo generate-lockfile`...");
     std::env::set_var("CARGO_HOME", cargo_home);
     let mut has_update_value_changed = false;
     let mut hasher1 = Keccak256::default();
@@ -287,7 +328,10 @@ pub fn cargo_generate_lockfile(
         info!("Previous hash: {}", hash1);
         info!("New hash: {}", hash2);
     }
-    res.inspect_err(|err| {
+    res.inspect(|_| {
+        info!("🔓 💂 `cargo generate-lockfile` finished.");
+    })
+    .inspect_err(|err| {
         error!(?err);
     })
 }
