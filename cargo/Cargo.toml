@@ -8,7 +8,7 @@ license.workspace = true
 
 [dependencies]
 rustsec = { workspace = true }
-clap = { workspace = true, features = ["derive", "unstable-doc", "wrap_help"] }
+clap = { workspace = true, features = ["derive", "wrap_help"] }
 quick-xml = { workspace = true, features = ["serialize"] }
 serde = { workspace = true, features = ["derive"] }
 glob.workspace = true
