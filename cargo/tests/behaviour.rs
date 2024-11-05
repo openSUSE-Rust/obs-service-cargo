@@ -1,13 +1,16 @@
 #![allow(clippy::unwrap_used)]
 
-use libroast::common::Compression;
+use libroast::{
+    common::Compression,
+    operations::{cli::RawArgs, raw::raw_opts},
+};
 use obs_service_cargo::cli::{self, Method, VendorArgs};
 use rand::prelude::*;
 use std::{io, path::PathBuf};
 use test_log::test;
 use tokio::fs;
 use tokio_test::task::spawn;
-use tracing::{error, info};
+use tracing::info;
 
 async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     let mut rng = rand::thread_rng();
@@ -39,20 +42,35 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
         no_root_manifest: false,
         src: outfile.to_path_buf(),
         compression: Compression::default(),
-        tag: Some(random_tag),
+        tag: Some(random_tag.clone()),
         manifest_paths: vec![],
         update: true,
         vendor_specific_args,
-        outdir,
+        outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
     };
 
-    let res = opt.run_vendor().map_err(|err| {
-        error!(?err);
-        io::Error::new(io::ErrorKind::Interrupted, err.to_string())
-    });
+    let res = opt.run_vendor();
     assert!(res.is_ok());
+    let vendor_tarball = match opt.method {
+        Method::Registry => format!("registry-{}.tar.zst", &random_tag),
+        Method::Vendor => format!("vendor-{}.tar.zst", &random_tag),
+    };
+
+    let vendor_tarball_path = &outdir.join(vendor_tarball);
+    assert!(vendor_tarball_path.is_file());
+
+    let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
+    let raw_args = RawArgs {
+        target: vendor_tarball_path.to_path_buf(),
+        outdir: Some(raw_outdir.clone()),
+    };
+    raw_opts(raw_args, false)?;
+    let vendor_path = raw_outdir.join("vendor");
+    let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
+    assert!(vendor_path.is_dir());
+    assert!(cargo_config_path.is_file());
     Ok(outfile)
 }
 
@@ -120,20 +138,35 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
         method: Method::Registry,
         src: outfile.to_path_buf(),
         compression: Compression::default(),
-        tag: Some(random_tag),
+        tag: Some(random_tag.clone()),
         manifest_paths: [PathBuf::from("rust/pvsecret/Cargo.toml")].to_vec(),
         update: true,
         vendor_specific_args,
-        outdir,
+        outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
     };
 
-    let res = opt.run_vendor().map_err(|err| {
-        error!(?err);
-        io::Error::new(io::ErrorKind::Interrupted, err.to_string())
-    });
+    let res = opt.run_vendor();
     assert!(res.is_ok());
+    let vendor_tarball = match opt.method {
+        Method::Registry => format!("registry-{}.tar.zst", &random_tag),
+        Method::Vendor => format!("vendor-{}.tar.zst", &random_tag),
+    };
+
+    let vendor_tarball_path = &outdir.join(vendor_tarball);
+    assert!(vendor_tarball_path.is_file());
+
+    let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
+    let raw_args = RawArgs {
+        target: vendor_tarball_path.to_path_buf(),
+        outdir: Some(raw_outdir.clone()),
+    };
+    raw_opts(raw_args, false)?;
+    let vendor_path = raw_outdir.join("vendor");
+    let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
+    assert!(vendor_path.is_dir());
+    assert!(cargo_config_path.is_file());
     Ok(())
 }
 
@@ -169,20 +202,35 @@ async fn manifest_paths_test_2() -> io::Result<()> {
         method: Method::Vendor,
         src: outfile.to_path_buf(),
         compression: Compression::default(),
-        tag: Some(random_tag),
+        tag: Some(random_tag.clone()),
         manifest_paths: [PathBuf::from("libflux/Cargo.toml")].to_vec(),
         update: true,
-        outdir,
+        outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
         vendor_specific_args,
     };
 
-    let res = opt.run_vendor().map_err(|err| {
-        error!(?err);
-        io::Error::new(io::ErrorKind::Interrupted, err.to_string())
-    });
+    let res = opt.run_vendor();
     assert!(res.is_ok());
+    let vendor_tarball = match opt.method {
+        Method::Registry => format!("registry-{}.tar.zst", &random_tag),
+        Method::Vendor => format!("vendor-{}.tar.zst", &random_tag),
+    };
+
+    let vendor_tarball_path = &outdir.join(vendor_tarball);
+    assert!(vendor_tarball_path.is_file());
+
+    let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
+    let raw_args = RawArgs {
+        target: vendor_tarball_path.to_path_buf(),
+        outdir: Some(raw_outdir.clone()),
+    };
+    raw_opts(raw_args, false)?;
+    let vendor_path = raw_outdir.join("vendor");
+    let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
+    assert!(vendor_path.is_dir());
+    assert!(cargo_config_path.is_file());
     Ok(())
 }
 
@@ -207,7 +255,7 @@ async fn custom_root_test() -> io::Result<()> {
     let data = response.bytes().await.unwrap();
     let data = data.to_vec();
     fs::write(&outfile, data).await.unwrap();
-    let outdir = PathBuf::from("/tmp");
+    let outdir = PathBuf::from("/tmp").join(random_tag.clone());
     let vendor_specific_args = VendorArgs {
         filter: false,
         versioned_dirs: true,
@@ -218,19 +266,34 @@ async fn custom_root_test() -> io::Result<()> {
         method: Method::Vendor,
         src: outfile.to_path_buf(),
         compression: Compression::default(),
-        tag: Some(random_tag),
+        tag: Some(random_tag.clone()),
         manifest_paths: vec![],
         update: true,
-        outdir,
+        outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
         vendor_specific_args,
     };
 
-    let res = opt.run_vendor().map_err(|err| {
-        error!(?err);
-        io::Error::new(io::ErrorKind::Interrupted, err.to_string())
-    });
+    let res = opt.run_vendor();
     assert!(res.is_ok());
+    let vendor_tarball = match opt.method {
+        Method::Registry => format!("registry-{}.tar.zst", &random_tag),
+        Method::Vendor => format!("vendor-{}.tar.zst", &random_tag),
+    };
+
+    let vendor_tarball_path = &outdir.join(vendor_tarball);
+    assert!(vendor_tarball_path.is_file());
+
+    let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
+    let raw_args = RawArgs {
+        target: vendor_tarball_path.to_path_buf(),
+        outdir: Some(raw_outdir.clone()),
+    };
+    raw_opts(raw_args, false)?;
+    let vendor_path = raw_outdir.join("vendor");
+    let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
+    assert!(vendor_path.is_dir());
+    assert!(cargo_config_path.is_file());
     Ok(())
 }
