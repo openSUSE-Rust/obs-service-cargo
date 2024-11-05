@@ -58,7 +58,7 @@ pub struct Opts {
     #[arg(
         long,
         short = 'C',
-        help = "Whether you want to manually set the root of the project. Useful with a combination with `--manifest-paths` or `--no-root-manifest`."
+        help = "Whether you want to manually set the root of the project. Useful with a combination with `--manifest-path` (aliased as `--cargotoml`) or `--no-root-manifest`."
     )]
     pub custom_root: Option<String>,
     #[arg(
@@ -67,7 +67,7 @@ pub struct Opts {
 		requires_if("registry", "method"),
 		default_value_t = false,
 		action = clap::ArgAction::Set,
-		help = "Available only if `--method` is set to registry. If a project has no root manifest, this flag is useful for those situations to set the manifest path manually. Useful in combination with `--manifest-paths` flag.")]
+		help = "Available only if `--method` is set to registry. If a project has no root manifest, this flag is useful for those situations to set the manifest path manually. Useful in combination with `--manifest-path` (aliased as `--cargotoml`) flag.")]
     pub no_root_manifest: bool,
     #[arg(
         long,

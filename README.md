@@ -439,7 +439,7 @@ The following are the parameters you can use with this utility:
    </parameter>
    <parameter name="custom-root>
       <description>Whether you want to manually set the root of the
-      project. Useful with a combination with `--manifest-paths` or
+      project. Useful with a combination with `--manifest-path` (aliased as `--cargotoml`) or
       `--no-root-manifest`.
       </description>
    </parameter>
@@ -452,7 +452,7 @@ The following are the parameters you can use with this utility:
       <description>Available only if `--method` is set to registry. If a
       project has no root manifest, this flag is useful for those situations
       to set the manifest path manually. Useful in combination with
-      `--manifest-paths` flag. Default: false
+      `--manifest-path` (aliased as `--cargotoml`) flag. Default: false
       </description>
       <allowedvalue>false</allowedvalue>
       <allowedvalue>true</allowedvalue>
