@@ -223,7 +223,9 @@ Thus, this allows you to have many vendored tarballs by using the `--tag` parame
 
 > [!WARNING]
 > As long as the manifest file contains dependencies or the manifest file is a workspace
-> it will produce a vendored tarball. Otherwise, it won't proceed to produce a tarball.
+> that either has workspace dependencies or member crates that have
+dependencies, it will produce a vendored tarball. Otherwise, it won't proceed
+to produce a tarball.
 
 # Cargo Vendor Home Registry
 
