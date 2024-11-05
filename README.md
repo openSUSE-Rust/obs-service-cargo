@@ -342,7 +342,7 @@ pushd libflux
 popd
 ```
 
-The register method looks like this.
+The registry method looks like this.
 
 ```
 %build
