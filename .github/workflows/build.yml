@@ -35,4 +35,4 @@ jobs:
       run: |
         export PATH="${PATH}:${HOME}/.cargo/bin"
         echo "${PATH}"
-        cargo test --release --all-features
+        cargo test --release --all-features -- --test-threads=1
