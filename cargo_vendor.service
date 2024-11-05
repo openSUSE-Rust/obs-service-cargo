@@ -52,7 +52,7 @@
       <allowedvalues>not</allowedvalues>
    </parameter>
    <parameter name="cargotoml">
-      <description>Other cargo manifest files to sync with during vendor. Optional</description>
+      <description>Other cargo manifest files to sync with vendor or registry. Behaviour between methods changes. Consult the documentation.</description>
    </parameter>
    <parameter name="i-accept-the-risk">
       <description>A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it.</description>
