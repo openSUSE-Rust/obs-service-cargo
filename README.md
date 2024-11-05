@@ -244,14 +244,129 @@ specifically, `$CARGO_HOME/registry`. The service file will look like this
 	 <param name="update">true</param>
 	 <param name="method">registry</param>
 	 <param name="no_root_manifest">true</param>
-	 <param name="cargotoml">rust/pvsecret</param>
+	 <param name="cargotoml">rust/pvsecret/Cargo.toml</param>
+	 <param name="cargotoml">rust/pv/Cargo.toml</param>
+	 <param name="cargotoml">rust/utils/Cargo.toml</param>
   </service>
   <service name="cargo_audit" mode="manual" />
 </services>
 ```
 
-The logic is similar but the results of vendoring the home registry results to lessened mental strain when trying
-to simplify the build process in the specfile. Here is what it looks like
+Another example would be libflux. It can have three different configurations and we include **vendor** method for comparisons.
+
+**Registry method variant 1**
+```xml
+<services>
+  <service name="download_files" mode="manual" />
+  <service name="cargo_vendor" mode="manual">
+     <param name="src">flux*.tar.gz</param>
+	 <param name="update">true</param>
+	 <param name="method">registry</param>
+	 <param name="no-root-manifest">true</param>
+	 <param name="cargotoml">libflux/Cargo.toml</param>
+  </service>
+  <service name="cargo_audit" mode="manual" />
+</services>
+```
+
+> [!NOTE]
+> You have to decide when to set `no-root-manifest` to true or false.
+> A big mistake here is you know that the project has a crate
+> with a clear "root" manifest but not in the top-most level
+> directory, so you accidentally set it to true. When we refer
+> to `no-root-manifest`, we are actually referring to the fact
+> that the "root" manifest is not at the top-most level of the directory.
+
+**Registry method variant 2**
+```xml
+<services>
+  <service name="download_files" mode="manual" />
+  <service name="cargo_vendor" mode="manual">
+     <param name="src">flux*.tar.gz</param>
+	 <param name="update">true</param>
+	 <param name="method">registry</param>
+	 <param name="custom-root">libflux</param>
+  </service>
+  <service name="cargo_audit" mode="manual" />
+</services>
+```
+
+> [!NOTE]
+> The second registry method variant is cleaner, as it avoids setting `no-root-manifest`
+> and it's pretty clear that we are actually defining a **custom**
+> **root** here.
+
+**Vendor method**
+```xml
+<services>
+  <service name="download_files" mode="manual" />
+  <service name="cargo_vendor" mode="manual">
+     <param name="src">flux*.tar.gz</param>
+	 <param name="update">true</param>
+	 <param name="custom-root">libflux</param>
+  </service>
+  <service name="cargo_audit" mode="manual" />
+</services>
+```
+> [!NOTE]
+> The **vendor method** is cleaner than the previous. As we said before, there is a clear
+> location of where our "root" manifest is.
+
+If we extract the contents of `registry.tar.zst` for both registry variants, you will get a tree like this
+
+```
+.
+├── .cargo
+│   └── registry
+│
+└── libflux
+    └── Cargo.lock
+```
+
+As for **vendor method**, we get this instead.
+
+```
+.
+└── libflux
+    ├── .cargo
+    ├── Cargo.lock
+    └── vendor
+
+```
+
+It's good to know why this happens and why it's decided to be like this. For example, if one decides to use the
+vendor method, they can just add this to their specfile on the build section.
+
+```
+%build
+pushd libflux
+%cargo_build
+popd
+```
+
+The register method looks like this.
+
+```
+%build
+export CARGO_HOME=$PWD/.cargo
+pushd libflux
+%cargo_build
+popd
+```
+
+One caveat with **vendor** method is it can only do *one* thing, so we ended up littered with many
+vendored tarballs. While for **registry**, we can have one registry tarball and that's it.
+You can see how advantageous it is when you look back at the s390-tools example at the
+[beginning](#cargo-vendor-home-registry) of this section.
+
+In conclusion, the logic is similar but the results of vendoring the home registry
+results to lessened mental strain when trying to simplify the
+build process in the specfile. Here is what it looks like.
+
+> [!WARN]
+> This is just a theoretical scenario with s390-tools. This
+> kind of specfile has not been tested whatsoever. It only
+> serves as demonstration.
 
 ```
 
@@ -260,21 +375,43 @@ to simplify the build process in the specfile. Here is what it looks like
 
 %build
 export CARGO_HOME=$PWD/.cargo
+pushd rust/pv
 %{cargo_build}
+popd
+pushd rust/pvsecret
+%{cargo_build}
+popd
 
 %install
 export CARGO_HOME=$PWD/.cargo
+pushd rust/pv
 %{cargo_install}
+popd
+pushd rust/pvsecret
+%{cargo_install}
+popd
 
 %check
 export CARGO_HOME=$PWD/.cargo
+pushd rust/pv
 %{cargo_test}
+popd
+pushd rust/pvsecret
+%{cargo_test}
+popd
+
 
 ```
 
 This attempt started in this repository <https://github.com/openSUSE-Rust/obs-service-cargo-vendor-home-registry> but now,
-it's been merged to avoid maintenance burden. As the old repository will retire, it still remains there for those that
+it's been merged here to avoid maintenance burden. As the old repository will retire, it still remains there for those that
 are curious about how we go from there to here.
+
+> [!IMPORTANT]
+> Overall, both methods are not perfect. But with the right combination of `--custom-root` and `--no-root-manifest`,
+> it gets easier if you're able to find that combination.
+> You can see more in the [./cargo/tests/behaviour.rs](./cargo/tests//behaviour.rs) for
+> such combinations.
 
 Filtering is not supported in this method. See more in the [./cargo_vendor.service](./cargo_vendor.service) file or the
 [Parameters](#parameters) section below.
