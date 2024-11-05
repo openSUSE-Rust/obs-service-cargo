@@ -18,7 +18,7 @@ use crate::cli::Opts;
 
 pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<()> {
     debug!(?vendor_opts);
-    info!("🛖🏃📦 Starting Cargo Vendor");
+    info!("📦 Starting Cargo Vendor");
     let tmpdir_for_config = tempfile::Builder::new()
         .prefix(".cargo_config")
         .rand_bytes(12)
@@ -68,15 +68,11 @@ pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<
         return Err(io::Error::new(io::ErrorKind::NotFound, "No vendor path found! Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."));
     }
     // Process them here
-    let additional_paths = vec![
-        vendor_path.to_string_lossy().to_string(),
-        path_to_dot_cargo.to_string_lossy().to_string(),
-    ];
+    let additional_paths = vec![vendor_path.to_string_lossy().to_string()];
     let roast_args = RoastArgs {
-        target: PathBuf::from(&setup_workdir),
+        target: PathBuf::from(&cargo_config_workdir),
         include: None,
-        // Exclude everything but additional_paths
-        exclude: Some(vec![PathBuf::from(&setup_workdir)]),
+        exclude: None,
         additional_paths: Some(additional_paths),
         outfile,
         outdir: Some(vendor_opts.outdir.to_path_buf()),

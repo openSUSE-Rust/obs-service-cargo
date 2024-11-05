@@ -26,9 +26,7 @@ pub fn run_cargo_vendor_home_registry(setup_workdir: &Path, registry: &Opts) -> 
     debug!(?home_registry_dot_cargo);
     if !registry.no_root_manifest {
         if registry.update {
-            info!("⏫ Updating dependencies...");
             cargo_update(setup_workdir, "")?;
-            info!("✅ Updated dependencies.");
         }
         info!(?setup_workdir, "🌳 Finished setting up workdir.");
         info!("🔓Attempting to regenerate lockfile...");

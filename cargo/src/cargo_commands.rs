@@ -312,12 +312,17 @@ pub fn cargo_generate_lockfile(
 
 // Do not set `--locked` here. As explained in <https://doc.rust-lang.org/cargo/commands/cargo-update.html#manifest-options>
 pub fn cargo_update(curdir: &Path, manifest: &str) -> io::Result<String> {
+    info!("⏫ Updating dependencies...");
     let mut default_options = vec![];
     if !manifest.is_empty() {
         default_options.push("--manifest-path".to_string());
         default_options.push(manifest.to_string());
     }
-    cargo_command("update", &default_options, curdir).inspect_err(|err| {
-        error!(?err);
-    })
+    cargo_command("update", &default_options, curdir)
+        .inspect(|_| {
+            info!("✅ Updated dependencies.");
+        })
+        .inspect_err(|err| {
+            error!(?err);
+        })
 }
