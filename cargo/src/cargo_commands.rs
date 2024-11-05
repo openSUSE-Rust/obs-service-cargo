@@ -9,6 +9,7 @@ use sha3::Keccak256;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 
+use crate::audit;
 use crate::vendor::has_dependencies;
 use crate::vendor::is_workspace;
 
@@ -88,13 +89,15 @@ pub fn cargo_vendor(
     manifest_paths: &[PathBuf],
     mut update: bool,
     vendor_path: &Path,
+    i_accept_the_risk: &[String],
 ) -> io::Result<String> {
     let which_subcommand = if filter { "vendor-filterer" } else { "vendor" };
-    let mut hasher1 = Keccak256::default();
-    let mut hasher2 = Keccak256::default();
     let mut has_update_value_changed = false;
     let mut default_options: Vec<String> = vec![];
     let mut first_manifest = curdir.join("Cargo.toml");
+    let mut lockfiles: Vec<PathBuf> = Vec::new();
+    let mut hasher1 = Keccak256::default();
+    let mut hasher2 = Keccak256::default();
     if !first_manifest.is_file() {
         warn!("⚠️ First manifest seems to not exist. Will attempt to fallback to manifest paths.");
         if let Some(first) = &manifest_paths.first() {
@@ -137,38 +140,52 @@ pub fn cargo_vendor(
         warn!("⚠️ Vendor filterer does not support sync. Multiple manifest paths for `--sync` flag are ignored.");
     } else {
         for manifest in manifest_paths {
-            default_options.push("--sync".to_string());
-            default_options.push(manifest.to_string_lossy().to_string());
+            let extra_full_manifest_path = curdir.join(manifest);
+            if extra_full_manifest_path.exists() {
+                default_options.push("--sync".to_string());
+                default_options.push(manifest.to_string_lossy().to_string());
+            } else {
+                let msg = "Manifest path does not exist. Aborting operation.";
+                error!(?extra_full_manifest_path, msg);
+                return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+            }
         }
+    }
+
+    if possible_lockfile.is_file() {
+        default_options.push("--locked".to_string());
+        info!(?possible_lockfile, "🔓 Adding lockfile.");
+        lockfiles.push(possible_lockfile.as_path().to_path_buf());
+        let bytes = fs::read(&possible_lockfile)?;
+        hasher1.update(&bytes);
+    } else {
+        warn!(
+            "⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from \
+				 false to true."
+        );
+        update = true;
+        has_update_value_changed = true;
     }
     if !update {
         warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
-        if possible_lockfile.is_file() {
-            if !filter {
-                default_options.push("--locked".to_string());
-                let lockfile_bytes = fs::read(&possible_lockfile)?;
-                hasher1.update(&lockfile_bytes);
-            } else {
-                warn!("⚠️ Vendor filterer does not support lockfile verification. `--locked` flag not added.");
-                warn!("⚠️ This might UPDATE your dependencies.");
-                update = true;
-                has_update_value_changed = true;
-            }
-        } else {
-            warn!(
-				"⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from \
-				 false to true."
-			);
+        if filter {
+            warn!("⚠️ Vendor filterer does not support lockfile verification. `--locked` flag not added.");
+            warn!("⚠️ This might UPDATE your dependencies.");
             update = true;
             has_update_value_changed = true;
         }
     }
     info!(?vendor_path, "📦 Vendor path");
     default_options.push(vendor_path.to_string_lossy().to_string());
+
     let res = cargo_command(which_subcommand, &default_options, curdir);
-    if possible_lockfile.exists() {
-        let lockfile_bytes = fs::read(&possible_lockfile)?;
-        hasher2.update(&lockfile_bytes);
+
+    if possible_lockfile.is_file() {
+        default_options.push("--locked".to_string());
+        info!(?possible_lockfile, "🔓 Adding lockfile.");
+        lockfiles.push(possible_lockfile.as_path().to_path_buf());
+        let bytes = fs::read(&possible_lockfile)?;
+        hasher2.update(&bytes);
     }
     let hash1 = hex::encode(hasher1.finalize());
     let hash2 = hex::encode(hasher2.finalize());
@@ -183,7 +200,7 @@ pub fn cargo_vendor(
 		);
         if has_update_value_changed && update {
             let mut msg: String = "⚠️ Update was SET from FALSE to TRUE , hence a NEW LOCKFILE was CREATED since there was \
-				 NO LOCKFILE prior. Your dependencies MIGHT have updated.".to_string();
+        NO LOCKFILE prior. Your dependencies MIGHT have updated.".to_string();
             if filter {
                 msg.push_str(" This is because `--filter` option is set to true 🧺.");
             }
@@ -197,6 +214,15 @@ pub fn cargo_vendor(
         info!("Previous hash: {}", hash1);
         info!("New hash: {}", hash2);
     }
+
+    info!("🛡️🫥 Auditing lockfiles...");
+    if let Ok(audit_result) = audit::perform_cargo_audit(&lockfiles, i_accept_the_risk) {
+        audit::process_reports(audit_result).map_err(|err| {
+            error!(?err);
+            io::Error::new(io::ErrorKind::Interrupted, err.to_string())
+        })?;
+    }
+    info!("🛡️🙂 All lockfiles are audited");
     res.inspect_err(|err| {
         error!(?err);
     })

@@ -32,6 +32,7 @@ pub fn run_cargo_vendor(setup_workdir: &Path, vendor_opts: &Opts) -> io::Result<
         &vendor_opts.manifest_paths,
         vendor_opts.update,
         &vendor_path,
+        &vendor_opts.i_accept_the_risk,
     )?;
     let path_to_dot_cargo = &vendor_workdir_path.join(".cargo");
     fs::create_dir(path_to_dot_cargo)?;
