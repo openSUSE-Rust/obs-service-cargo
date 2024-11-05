@@ -162,12 +162,18 @@ the root folder of the project.
 
 ## Respecting lockfiles
 
-A new option is added to respect lockfiles. This means that vendored tarballs
-are expected to have the same metadata inside the `Cargo.lock`.
+Respecting lockfiles is just a matter of setting `update` from `true` to `false`.
 
-> [!WARNING]
-> `cargo-vendor-filterer` is not supported for lockfile validation/verification
+> [!WARN]
+> Do note that if a lockfile do needs updating, you're ultimately stuck at
+> setting the `update` to `true` unless upstream uploads an updated lockfile.
 
+# Filter
+
+You can filter platform-specific crates and features
+using `filter` option.  It's still **experimental** and it uses
+[cargo-vendor-filterer](https://github.com/coreos/cargo-vendor-filterer)
+under the hood.
 
 # How to do multiple vendors
 
@@ -224,7 +230,7 @@ Thus, this allows you to have many vendored tarballs by using the `--tag` parame
 > say `vendor-utils.tar.zst` should be the produced tarball, in reality, it won't exist
 > because it has [NO dependencies](https://github.com/ibm-s390-linux/s390-tools/blob/master/rust/utils/Cargo.toml) after all.
 
-## Cargo Vendor Home Registry
+# Cargo Vendor Home Registry
 
 As previously mentioned, we talked about the usage of tags for multi vendor scenarios. However, to avoid this issue of having
 to write a long service file while also managing multiple vendors, we introduced the vendoring of `$CARGO_HOME`,
@@ -270,6 +276,8 @@ This attempt started in this repository <https://github.com/openSUSE-Rust/obs-se
 it's been merged to avoid maintenance burden. As the old repository will retire, it still remains there for those that
 are curious about how we go from there to here.
 
+Filtering is not supported in this method. See more in the [./cargo_vendor.service](./cargo_vendor.service) file or the
+[Parameters](#parameters) section below.
 
 # Parameters
 
