@@ -165,8 +165,9 @@ the root folder of the project.
 Respecting lockfiles is just a matter of setting `update` from `true` to `false`.
 
 > [!WARNING]
-> note that if a lockfile do needs updating, you're ultimately stuck at
+> If a lockfile do needs updating, you're ultimately stuck at
 > setting the `update` to `true` unless upstream uploads an updated lockfile.
+> The vendoring process will abort in case it happens.
 
 # Filter
 
