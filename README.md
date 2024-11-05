@@ -223,9 +223,7 @@ Thus, this allows you to have many vendored tarballs by using the `--tag` parame
 
 > [!WARNING]
 > As long as the manifest file contains dependencies or the manifest file is a workspace
-> it will produce a vendored tarball. Otherwise, although it is *somewhat* correct to
-> say `vendor-utils.tar.zst` should be the produced tarball, in reality, it won't exist
-> because it has [NO dependencies](https://github.com/ibm-s390-linux/s390-tools/blob/master/rust/utils/Cargo.toml) after all.
+> it will produce a vendored tarball. Otherwise, it won't proceed to produce a tarball.
 
 # Cargo Vendor Home Registry
 
