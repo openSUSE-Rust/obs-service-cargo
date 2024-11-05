@@ -41,13 +41,18 @@ pub fn run_cargo_vendor(
             return Ok(());
         };
         let lockfile_parent = lockfile.parent().unwrap_or(setup_workdir);
-        let lockfile_path_stripped = lockfile
+        let lockfile_parent_stripped = lockfile_parent
             .strip_prefix(setup_workdir)
             .unwrap_or(setup_workdir);
+        fs::create_dir_all(lockfile_parent_stripped)?;
         // NOTE: Both lockfile and dot cargo should have the same parent path.
-        let path_to_lockfile = &cargo_config_workdir.join(lockfile_path_stripped);
-        let path_to_dot_cargo = &cargo_config_workdir.join(lockfile_parent).join(".cargo");
-        fs::create_dir(path_to_dot_cargo)?;
+        let path_to_lockfile = &cargo_config_workdir
+            .join(lockfile_parent_stripped)
+            .join("Cargo.lock");
+        let path_to_dot_cargo = &cargo_config_workdir
+            .join(lockfile_parent_stripped)
+            .join(".cargo");
+        fs::create_dir_all(path_to_dot_cargo)?;
         fs::copy(lockfile, path_to_lockfile)?;
         // NOTE maybe in the future, we might need to respect import
         // an existing `cargo.toml` but I doubt that's necessary?
