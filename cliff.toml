@@ -59,6 +59,8 @@ commit_parsers = [
   { message = "^deps", group = "Dependencies" },
   { message = "^cliff", group = "Cliff Config", skip = true },
   { message = "^lib", group = "Library Updates" },
+  { message = "^CI", group = "Continuous Integrations" },
+  { message = "^ci", group = "Continuous Integrations" },
   { message = "^security", group = "Security" },
   { message = ".*", group = "Other", default_scope = "other"},
 ]

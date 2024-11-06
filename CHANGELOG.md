@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.1] - 2024-11-06
+
+### Continuous Integrations
+
+- Remove --release flag on clippy [10d414f](https://github.com/openSUSE-Rust/obs-service-cargo/commit/10d414fdace1de948b13dae525e2953cb6d188a6)
+
+### Dependencies
+
+- Replace sha3 with sha2 [9257586](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9257586eab4990bdda69c103e61242c8343d034f)
+
+### Documentation
+
+- Put the xml service to readme as well [8af1405](https://github.com/openSUSE-Rust/obs-service-cargo/commit/8af1405ed450c8b49e73278f10e49bbc121c88c2)
+
+### Miscellaneous Tasks
+
+- Improve descriptions of each flag [ff12110](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ff121107e24444aa7fa4c77dd2a0730323769241)
+
+### Other
+
+- Fix spaces and tabs and parentheses [2ef0c8b](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2ef0c8bf2581043e0627ca847ceefd85b776977e)
+
 ## [4.0.0] - 2024-11-05
 
 ### Bug Fixes
@@ -15,6 +37,14 @@ All notable changes to this project will be documented in this file.
 - Again, vendor filterer does not support --locked [72c1bd7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/72c1bd7be787149626bb230c108213ac6c872d0e)
 - Remove unnecessary if-else that broke the vendor logic [92210b1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/92210b131291a92408d7f4ccf50b7ff7386fb804)
 - Added trace feature [1f206d8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1f206d8303a525611284b9efd2934632778c3164)
+
+### Continuous Integrations
+
+- Improve filtering [d99a274](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d99a27472d2c36d53f41d0ab54baf2238ab23593)
+- Add paths filtering so that it will only run CI on new code [9ac53b4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9ac53b4f1158b3167bd75139e958c67acdace975)
+- Prepare CI test in release mode 🎉 [326397e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/326397e00f3859019250f1b68fffd7d6493d6bce)
+- Properly alias the tests instead to run tests in release mode [815d333](https://github.com/openSUSE-Rust/obs-service-cargo/commit/815d33386a106fc45de451c865c0b2e4610fb225)
+- Remove --release flag on clippy [6e6d8f2](https://github.com/openSUSE-Rust/obs-service-cargo/commit/6e6d8f2cd86a817c869177f43e393f6d060ed2ce)
 
 ### Documentation
 
@@ -34,16 +64,15 @@ All notable changes to this project will be documented in this file.
 - Update service file [96afe40](https://github.com/openSUSE-Rust/obs-service-cargo/commit/96afe40e5611bf309c721271855fa9c0a61a0a4d)
 - Improve explainer about lockfiles [f884fd8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f884fd8531de5ea6f3b82431a286c7803361014b)
 
+### Miscellaneous Tasks
+
+- V4.0.0 [ed3b800](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ed3b800179cdd259f6e5300970491010df6f4178)
+
 ### Other
 
-- Improve filtering [d99a274](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d99a27472d2c36d53f41d0ab54baf2238ab23593)
-- Add paths filtering so that it will only run CI on new code [9ac53b4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9ac53b4f1158b3167bd75139e958c67acdace975)
-- Prepare CI test in release mode 🎉 [326397e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/326397e00f3859019250f1b68fffd7d6493d6bce)
-- Properly alias the tests instead to run tests in release mode [815d333](https://github.com/openSUSE-Rust/obs-service-cargo/commit/815d33386a106fc45de451c865c0b2e4610fb225)
 - Improve messages [1c08baf](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1c08baf676163d8359e7f311af196a5825ae96b5)
 - Set env before everything for registry [3da6198](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3da619818576a3808de46fdfc5a407e0b6325187)
 - Check the else clause [784264a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/784264a643010042be70e33d8186a8a6db4180c4)
-- Remove --release flag on clippy [6e6d8f2](https://github.com/openSUSE-Rust/obs-service-cargo/commit/6e6d8f2cd86a817c869177f43e393f6d060ed2ce)
 
 ### Refactor
 
@@ -78,17 +107,17 @@ All notable changes to this project will be documented in this file.
 - Used a different cargotoml. now using the correct one for flux [eca8c76](https://github.com/openSUSE-Rust/obs-service-cargo/commit/eca8c768930a842884ac6f613c21c3bfcb9d18d3)
 - Rectify mismatched types [cde5b62](https://github.com/openSUSE-Rust/obs-service-cargo/commit/cde5b620dc2881a3f49aaf0ae4583332e8be1742)
 
+### Continuous Integrations
+
+- Install cargo-vendor-filterer from crates.io instead [a34cc71](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a34cc713f58863c7ebe33e0b24025db3130765e0)
+- Add dependencies for cargo test [3e6b40d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3e6b40d61ee0d4b2dbd458801fec07aabbdc0801)
+- Migrate tests from shell script to cargo [488dec4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/488dec4f9624fb33cbe4f2f3f0f48ba11fc2c4b9)
+
 ### Miscellaneous Tasks
 
 - Release v3.6.0 [9c1aa86](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9c1aa86ce5433c6d593ba0f3be1ad925c597aee3)
 - Update manifest and dependencies [63ce332](https://github.com/openSUSE-Rust/obs-service-cargo/commit/63ce33287fa379461513bbc973c825f4006d8f96)
 - Remove dependencies since libroast is used internally [3ebf4e1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3ebf4e12cc9e7f37a0bb77544e4dbf2797fa71e6)
-
-### Other
-
-- Install cargo-vendor-filterer from crates.io instead [a34cc71](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a34cc713f58863c7ebe33e0b24025db3130765e0)
-- Add dependencies for cargo test [3e6b40d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3e6b40d61ee0d4b2dbd458801fec07aabbdc0801)
-- Migrate tests from shell script to cargo [488dec4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/488dec4f9624fb33cbe4f2f3f0f48ba11fc2c4b9)
 
 ### Refactor
 
@@ -155,6 +184,10 @@ All notable changes to this project will be documented in this file.
 
 ## [3.0.0] - 2024-10-15
 
+### Continuous Integrations
+
+- Format check should not fail ci [fa14c74](https://github.com/openSUSE-Rust/obs-service-cargo/commit/fa14c74101c6ed3b1cc047b9b57de87eb3268d47)
+
 ### Features
 
 - Support uncompressed tarballs or with `.tar` extension [5733edc](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5733edcf50b494441d8d854a490e0f154934b4f5)
@@ -162,7 +195,6 @@ All notable changes to this project will be documented in this file.
 ### Other
 
 - Get libroast dep from crates.io [043c050](https://github.com/openSUSE-Rust/obs-service-cargo/commit/043c05053c5db9e5cb697c4aabd80d0f319ec7a7)
-- Format check should not fail ci [fa14c74](https://github.com/openSUSE-Rust/obs-service-cargo/commit/fa14c74101c6ed3b1cc047b9b57de87eb3268d47)
 
 ## [2.0.0] - 2024-10-12
 
@@ -344,6 +376,11 @@ All notable changes to this project will be documented in this file.
 
 - Check if dependencies section is empty or not [621dea1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/621dea1f84cd37f7a178bf5878c0e22354961c6b)
 
+### Continuous Integrations
+
+- Put the tests into a convenient script [84cca41](https://github.com/openSUSE-Rust/obs-service-cargo/commit/84cca411fbf4b632bbc6b6eb16b19876154882f2)
+- Install libzstd. it's needed [f7039e3](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f7039e3c078c5c88f843712e8f4b4292c12df360)
+
 ### Documentation
 
 - Update README [ci skip] [4c15d8e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4c15d8e6f7dac07267d558199e71bb6939aeb75b)
@@ -355,8 +392,6 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- Put the tests into a convenient script [84cca41](https://github.com/openSUSE-Rust/obs-service-cargo/commit/84cca411fbf4b632bbc6b6eb16b19876154882f2)
-- Install libzstd. it's needed [f7039e3](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f7039e3c078c5c88f843712e8f4b4292c12df360)
 - Better handling on when and when not to vendor [751775c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/751775c2c070481c9a755fa86faeb12c503d8729)
 
 ## [0.8.9] - 2023-11-17
