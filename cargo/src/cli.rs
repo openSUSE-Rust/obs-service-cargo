@@ -87,7 +87,7 @@ pub struct Opts {
     pub update: bool,
     #[arg(
         long,
-        help = "Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry."
+        help = "Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry. If using with `osc service`, this option is automatically appended."
     )]
     pub outdir: PathBuf,
     #[arg(
