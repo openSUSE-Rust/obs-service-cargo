@@ -66,14 +66,8 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, mut update: bool) -> io::Resul
         {
             if !update {
                 debug!(?err);
-                error!(
-                                        "🛑 The lockfile needs to be updated. This operation will fail. Please set the setting \
-                                         `--update` to true."
-                                );
-                error!(
-                                        ?possible_lockfile,
-                                        "❌ 🔒 Lockfile was not regenerated for and needs update. Aborting gracefully..."
-                                );
+                error!("🛑 The lockfile needs to be updated. This operation will fail. Please set the setting `--update` to true.");
+                error!(?possible_lockfile, "❌ 🔒 Lockfile was not regenerated for and needs update. Aborting gracefully...");
             }
         }
     )
@@ -208,13 +202,9 @@ pub fn cargo_vendor(
         warn!("⚠️ Lockfile has changed");
         warn!("Previous hash: {}", hash1);
         warn!("New hash: {}", hash2);
-        warn!(
-			"⚠️ If you wish to respect the lockfile, consider not setting `--update` to true. However, \
-			 this MIGHT FAIL in some cases."
-		);
+        warn!("⚠️ If you wish to respect the lockfile, consider not setting `--update` to true. However, this MIGHT FAIL in some cases.");
         if has_update_value_changed && update {
-            let mut msg: String = "⚠️ Update was SET from FALSE to TRUE , hence a NEW LOCKFILE was CREATED since there was \
-        NO LOCKFILE prior. Your dependencies MIGHT have updated.".to_string();
+            let mut msg: String = "⚠️ Update was SET from FALSE to TRUE , hence a NEW LOCKFILE was CREATED since there was NO LOCKFILE prior. Your dependencies MIGHT have updated.".to_string();
             if filter {
                 msg.push_str(" This is because `--filter` option is set to true 🧺.");
             }
@@ -274,10 +264,7 @@ pub fn cargo_generate_lockfile(
             let lockfile_bytes = fs::read(&possible_lockfile)?;
             hasher1.update(&lockfile_bytes);
         } else {
-            warn!(
-				"⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from \
-				 false to true."
-			);
+            warn!("⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from false to true.");
             update = true;
             has_update_value_changed = true;
         }
@@ -298,15 +285,9 @@ pub fn cargo_generate_lockfile(
         warn!("⚠️ Lockfile has changed");
         warn!("Previous hash: {}", hash1);
         warn!("New hash: {}", hash2);
-        warn!(
-			"⚠️ If you wish to respect the lockfile, consider not setting `--update` to true. However, \
-			 this MIGHT FAIL in some cases."
-		);
+        warn!("⚠️ If you wish to respect the lockfile, consider not setting `--update` to true. However, this MIGHT FAIL in some cases.");
         if has_update_value_changed && update {
-            warn!(
-				"⚠️ Update was SET from FALSE to TRUE , hence a NEW LOCKFILE was CREATED since there was \
-				 NO LOCKFILE prior. Your dependencies MIGHT have updated."
-			);
+            warn!("⚠️ Update was SET from FALSE to TRUE , hence a NEW LOCKFILE was CREATED since there was NO LOCKFILE prior. Your dependencies MIGHT have updated.");
         }
     } else {
         info!(
