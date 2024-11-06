@@ -18,9 +18,9 @@ tempfile = "3.8"
 terminfo = "0.8"
 toml = "0.7"
 libroast.workspace = true
-sha3 = { version = "0.11.0-pre.4" }
 hex-literal = "0.4.1"
 hex = "0.4.3"
+sha2 = "0.10"
 
 [lints]
 workspace = true
