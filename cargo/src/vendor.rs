@@ -30,83 +30,90 @@ pub fn run_cargo_vendor(
     let cargo_config_workdir = tmpdir_for_config.path();
     let mut custom_path_for_vendor_dir: String = String::new();
     // Cargo vendor stdouts the configuration for config.toml
-    if let Some((lockfile, cargo_config_output)) = cargo_vendor(
-        custom_root,
-        vendor_opts.vendor_specific_args.versioned_dirs,
-        vendor_opts.vendor_specific_args.filter,
-        &vendor_opts.manifest_path,
-        vendor_opts.update,
-        &vendor_opts.i_accept_the_risk,
-    )? {
-        let lockfile_parent = lockfile.parent().unwrap_or(setup_workdir);
-        let lockfile_parent_stripped = lockfile_parent
-            .strip_prefix(setup_workdir)
-            .unwrap_or(setup_workdir);
-        custom_path_for_vendor_dir.push_str(&lockfile_parent_stripped.to_string_lossy());
-        // NOTE: Both lockfile and dot cargo should have the same parent path.
-        let path_to_lockfile = &cargo_config_workdir
-            .join(lockfile_parent_stripped)
-            .join("Cargo.lock");
-        let path_to_dot_cargo = &cargo_config_workdir
-            .join(lockfile_parent_stripped)
-            .join(".cargo");
-        fs::create_dir_all(path_to_dot_cargo)?;
-        fs::copy(lockfile, path_to_lockfile)?;
-        // NOTE maybe in the future, we might need to respect import
-        // an existing `cargo.toml` but I doubt that's necessary?
-        let path_to_dot_cargo_cargo_config = &path_to_dot_cargo.join("config.toml");
-        let mut cargo_config_file = fs::File::create(path_to_dot_cargo_cargo_config)?;
-        cargo_config_file.write_all(cargo_config_output.as_bytes())?;
-        debug!(?cargo_config_file);
-    } else {
-        info!("🎉 Project has no dependencies.");
-        return Ok(());
-    }
-    let outfile = match &vendor_opts.tag {
-        Some(v) => format!("vendor-{}", v),
-        None => "vendor".to_string(),
-    };
-    let mut outfile = PathBuf::from(outfile);
-    let extension = match &vendor_opts.compression {
-        Compression::Gz => "tar.gz",
-        Compression::Xz => "tar.xz",
-        Compression::Zst => "tar.zst",
-        Compression::Bz2 => "tar.bz",
-        Compression::Not => "tar",
-    };
+    let res = {
+        if let Some((lockfile, cargo_config_output)) = cargo_vendor(
+            custom_root,
+            vendor_opts.vendor_specific_args.versioned_dirs,
+            vendor_opts.vendor_specific_args.filter,
+            &vendor_opts.manifest_path,
+            vendor_opts.update,
+            &vendor_opts.i_accept_the_risk,
+        )? {
+            let lockfile_parent = lockfile.parent().unwrap_or(setup_workdir);
+            let lockfile_parent_stripped = lockfile_parent
+                .strip_prefix(setup_workdir)
+                .unwrap_or(setup_workdir);
+            custom_path_for_vendor_dir.push_str(&lockfile_parent_stripped.to_string_lossy());
+            // NOTE: Both lockfile and dot cargo should have the same parent path.
+            let path_to_lockfile = &cargo_config_workdir
+                .join(lockfile_parent_stripped)
+                .join("Cargo.lock");
+            let path_to_dot_cargo = &cargo_config_workdir
+                .join(lockfile_parent_stripped)
+                .join(".cargo");
+            fs::create_dir_all(path_to_dot_cargo)?;
+            fs::copy(lockfile, path_to_lockfile)?;
+            // NOTE maybe in the future, we might need to respect import
+            // an existing `cargo.toml` but I doubt that's necessary?
+            let path_to_dot_cargo_cargo_config = &path_to_dot_cargo.join("config.toml");
+            let mut cargo_config_file = fs::File::create(path_to_dot_cargo_cargo_config)?;
+            cargo_config_file.write_all(cargo_config_output.as_bytes())?;
+            debug!(?cargo_config_file);
+        } else {
+            info!("🎉 Project has no dependencies.");
+            return Ok(());
+        }
+        let outfile = match &vendor_opts.tag {
+            Some(v) => format!("vendor-{}", v),
+            None => "vendor".to_string(),
+        };
+        let mut outfile = PathBuf::from(outfile);
+        let extension = match &vendor_opts.compression {
+            Compression::Gz => "tar.gz",
+            Compression::Xz => "tar.xz",
+            Compression::Zst => "tar.zst",
+            Compression::Bz2 => "tar.bz",
+            Compression::Not => "tar",
+        };
 
-    if !outfile.set_extension(extension) {
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Unable to set extension",
-        ));
-    }
-    let vendor_path = &custom_root.join("vendor");
-    if !vendor_path.is_dir() {
-        return Err(io::Error::new(io::ErrorKind::NotFound, "No vendor path found! Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."));
-    }
-    // Process them here
-    let additional_paths = vec![format!(
-        "{},{}",
-        vendor_path.to_string_lossy(),
-        custom_path_for_vendor_dir
-    )];
-    let roast_args = RoastArgs {
-        target: PathBuf::from(&cargo_config_workdir),
-        include: None,
-        exclude: None,
-        additional_paths: Some(additional_paths),
-        outfile,
-        outdir: Some(vendor_opts.outdir.to_path_buf()),
-        preserve_root: false,
-        reproducible: true,
-        ignore_git: false,
-        ignore_hidden: false,
+        if !outfile.set_extension(extension) {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Unable to set extension",
+            ));
+        }
+        let vendor_path = &custom_root.join("vendor");
+        if !vendor_path.is_dir() {
+            return Err(io::Error::new(io::ErrorKind::NotFound, "No vendor path found! Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."));
+        }
+        // Process them here
+        let additional_paths = vec![format!(
+            "{},{}",
+            vendor_path.to_string_lossy(),
+            custom_path_for_vendor_dir
+        )];
+        let roast_args = RoastArgs {
+            target: PathBuf::from(&cargo_config_workdir),
+            include: None,
+            exclude: None,
+            additional_paths: Some(additional_paths),
+            outfile,
+            outdir: Some(vendor_opts.outdir.to_path_buf()),
+            preserve_root: false,
+            reproducible: true,
+            ignore_git: false,
+            ignore_hidden: false,
+        };
+        roast_opts(&roast_args, false)?;
+        Ok(())
     };
-    roast_opts(&roast_args, false)?;
-    info!("📦 Cargo Vendor finished.");
-    info!("🧹 Cleaning up temporary directory...");
-    tmpdir_for_config.close()?;
+    if res.is_ok() {
+        info!("📦 Cargo Vendor finished.");
+        info!("🧹 Cleaning up temporary directory...");
+        tmpdir_for_config.close()?;
+    } else {
+        return res;
+    }
     Ok(())
 }
 
@@ -117,6 +124,12 @@ struct TomlManifest {
     dev_dependencies: Option<BTreeMap<String, toml::Value>>,
     build_dependencies: Option<BTreeMap<String, toml::Value>>,
     target: Option<BTreeMap<String, toml::Value>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct WorkspaceTomlManifest {
+    workspace: TomlManifest,
 }
 
 pub fn is_workspace(src: &Path) -> io::Result<bool> {
@@ -138,11 +151,43 @@ pub fn is_workspace(src: &Path) -> io::Result<bool> {
     ))
 }
 
+pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
+    if let Ok(manifest) = fs::read_to_string(src) {
+        match toml::from_str::<WorkspaceTomlManifest>(&manifest) {
+            Ok(manifest_data) => {
+                return Ok(match manifest_data.workspace.dependencies {
+                    Some(deps) => !deps.is_empty(),
+                    None => false,
+                } || match manifest_data.workspace.dev_dependencies {
+                    Some(deps) => !deps.is_empty(),
+                    None => false,
+                } || match manifest_data.workspace.build_dependencies {
+                    Some(deps) => !deps.is_empty(),
+                    None => false,
+                } || match manifest_data.workspace.target {
+                    Some(deps) => !deps.is_empty(),
+                    None => false,
+                });
+            }
+            Err(err) => {
+                error!(?err, "Failed to deserialize TOML manifest file.");
+                return Err(io::Error::new(io::ErrorKind::InvalidData, err.to_string()));
+            }
+        };
+    };
+    Err(io::Error::new(
+        io::ErrorKind::Other,
+        format!(
+            "Failed to check manifest file at path {}",
+            src.to_string_lossy()
+        ),
+    ))
+}
 pub fn has_dependencies(src: &Path) -> io::Result<bool> {
     if let Ok(manifest) = fs::read_to_string(src) {
         match toml::from_str::<TomlManifest>(&manifest) {
             Ok(manifest_data) => {
-                debug!("Manifest TOML data: {:?}", manifest_data);
+                debug!(?manifest_data, "Manifest TOML data");
                 return Ok(match manifest_data.dependencies {
                     Some(deps) => !deps.is_empty(),
                     None => false,
@@ -158,11 +203,10 @@ pub fn has_dependencies(src: &Path) -> io::Result<bool> {
                 });
             }
             Err(err) => {
-                error!("Failed to deserialize TOML manifest file: {}", err);
-                return Err(io::Error::new(io::ErrorKind::InvalidData, err.to_string()));
+                debug!(?err, "Failed to deserialize toml.");
             }
         };
-    }
+    };
     Err(io::Error::new(
         io::ErrorKind::Other,
         format!(

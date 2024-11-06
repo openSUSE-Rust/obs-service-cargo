@@ -12,6 +12,7 @@ use tracing::{debug, error, info, trace, warn, Level};
 use crate::audit;
 use crate::vendor::has_dependencies;
 use crate::vendor::is_workspace;
+use crate::vendor::workspace_has_dependencies;
 
 fn cargo_command(
     subcommand: &str,
@@ -47,10 +48,7 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, mut update: bool) -> io::Resul
         if possible_lockfile.is_file() {
             default_options.push("--locked".to_string());
         } else {
-            warn!(
-                                "⚠️ No lockfile present. This might UPDATE your dependencies. Overriding `update` from \
-                                 false to true."
-                        );
+            warn!("⚠️ No lockfile present. This might UPDATE your dependencies. Overriding `update` from false to true.");
             update = true;
         }
     }
@@ -121,7 +119,7 @@ pub fn cargo_vendor(
 
     if is_workspace {
         info!("ℹ️ This project is a WORKSPACE configuration.");
-        if !has_deps {
+        if !workspace_has_dependencies(&first_manifest)? {
             warn!("⚠️ The WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
         }
     } else if !has_deps {
