@@ -436,12 +436,12 @@ The following are the parameters you can use with this utility:
       <description>Where to find sources. Source is either a directory or a source tarball AND cannot be both. Aliases: srctar, srcdir</description>
    </parameter>
    <parameter name="outdir">
-      <description>Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry.</description>
+      <description>Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry. If using with `osc service`, this option is automatically appended.</description>
    </parameter>
-   <parameter name="custom-root>
+   <parameter name="custom root>
       <description>Whether you want to manually set the root of the
       project. Useful with a combination with `--manifest-path` (aliased as `--cargotoml`) or
-      `--no-root-manifest`.
+      `--no-root-manifest`. You have to replace the spaces with dashes (-) to make this work.
       </description>
    </parameter>
    <parameter name="update">
@@ -449,11 +449,11 @@ The following are the parameters you can use with this utility:
       <allowedvalue>false</allowedvalue>
       <allowedvalue>true</allowedvalue>
    </parameter>
-   <parameter name="no-root-manifest">
+   <parameter name="no root manifest">
       <description>Available only if `--method` is set to registry. If a
       project has no root manifest, this flag is useful for those situations
       to set the manifest path manually. Useful in combination with
-      `--manifest-path` (aliased as `--cargotoml`) flag. Default: false
+      `--manifest-path` (aliased as `--cargotoml`) flag. You have to replace the spaces with dashes (-) to make this work. Default: false
       </description>
       <allowedvalue>false</allowedvalue>
       <allowedvalue>true</allowedvalue>
@@ -472,16 +472,16 @@ The following are the parameters you can use with this utility:
    <parameter name="cargotoml">
       <description>Other cargo manifest files to sync with vendor or registry. Behaviour between methods changes. Consult the documentation.</description>
    </parameter>
-   <parameter name="i-accept-the-risk">
-      <description>A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it.</description>
+   <parameter name="i accept the risk">
+      <description>A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it. You have to replace the spaces with dashes (-) to make this work.</description>
    </parameter>
    <parameter name="filter">
       <description>Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies. Default: false</description>
       <allowedvalue>false</allowedvalue>
       <allowedvalue>true</allowedvalue>
    </parameter>
-   <parameter name="versioned-dirs">
-      <description>Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor. Default: true</description>
+   <parameter name="versioned dirs">
+      <description>Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor. You have to replace the spaces with dashes (-) to make this work. Default: true</description>
       <allowedvalue>false</allowedvalue>
       <allowedvalue>true</allowedvalue>
    </parameter>
