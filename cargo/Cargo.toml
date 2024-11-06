@@ -15,11 +15,9 @@ glob.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
 tempfile = "3.8"
-terminfo = "0.8"
-toml = "0.7"
+terminfo = "0.9"
+toml = "0.8"
 libroast.workspace = true
-hex-literal = "0.4.1"
-hex = "0.4.3"
 blake3 = "1"
 
 [lints]
