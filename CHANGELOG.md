@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.2] - 2024-11-06
+
+### Refactor
+
+- Check if all manifest needs to get vendored [7b90383](https://github.com/openSUSE-Rust/obs-service-cargo/commit/7b903839b16626af87a7627676a83bda74f54e39)
+- Properly cleanup directories and exit if there are actually no dependencies [5c5ff9f](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5c5ff9f89b2d3d2254ec7ef99febfa5dbad630a8)
+
 ## [4.0.1] - 2024-11-06
 
 ### Continuous Integrations
@@ -18,6 +25,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
+- V4.0.1 [aaa627d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/aaa627dd4dc76174c42aed7e8a831341277ad7e4)
 - Improve descriptions of each flag [ff12110](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ff121107e24444aa7fa4c77dd2a0730323769241)
 
 ### Other
