@@ -3,9 +3,6 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
-use sha2::Digest;
-use sha2::Sha256;
-
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn, Level};
 
@@ -88,8 +85,8 @@ pub fn cargo_vendor(
     }
     let mut first_manifest = curdir.join("Cargo.toml");
     let mut lockfiles: Vec<PathBuf> = Vec::new();
-    let mut hasher1 = Sha256::default();
-    let mut hasher2 = Sha256::default();
+    let mut hasher1 = blake3::Hasher::new();
+    let mut hasher2 = blake3::Hasher::new();
     if !first_manifest.is_file() {
         warn!("⚠️ Root manifest seems to not exist. Will attempt to fallback to manifest paths.");
         if let Some(first) = &manifest_paths.first() {
@@ -193,8 +190,8 @@ pub fn cargo_vendor(
         let bytes = fs::read(&possible_lockfile)?;
         hasher2.update(&bytes);
     }
-    let hash1 = hex::encode(hasher1.finalize());
-    let hash2 = hex::encode(hasher2.finalize());
+    let hash1 = hasher1.finalize();
+    let hash2 = hasher2.finalize();
     if hash1 != hash2 {
         debug!(?hash1, ?hash2);
         warn!("⚠️ Lockfile has changed");
@@ -249,8 +246,8 @@ pub fn cargo_generate_lockfile(
 ) -> io::Result<String> {
     info!("🔓 💂 Running `cargo generate-lockfile`...");
     let mut has_update_value_changed = false;
-    let mut hasher1 = Sha256::default();
-    let mut hasher2 = Sha256::default();
+    let mut hasher1 = blake3::Hasher::new();
+    let mut hasher2 = blake3::Hasher::new();
     let mut default_options: Vec<String> = vec![];
     let manifest_path = PathBuf::from(&manifest);
     let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
@@ -276,8 +273,8 @@ pub fn cargo_generate_lockfile(
         let lockfile_bytes = fs::read(&possible_lockfile)?;
         hasher2.update(&lockfile_bytes);
     }
-    let hash1 = hex::encode(hasher1.finalize());
-    let hash2 = hex::encode(hasher2.finalize());
+    let hash1 = hasher1.finalize();
+    let hash2 = hasher2.finalize();
     if hash1 != hash2 {
         debug!(?hash1, ?hash2);
         warn!("⚠️ Lockfile has changed");

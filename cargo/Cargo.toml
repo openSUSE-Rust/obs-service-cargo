@@ -20,7 +20,7 @@ toml = "0.7"
 libroast.workspace = true
 hex-literal = "0.4.1"
 hex = "0.4.3"
-sha2 = "0.10"
+blake3 = "1"
 
 [lints]
 workspace = true
