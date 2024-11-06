@@ -29,6 +29,7 @@ pub fn run_cargo_vendor_home_registry(
         .tempdir()?;
     let home_registry = &tempdir_for_home_registry_binding.path();
     let home_registry_dot_cargo = &home_registry.join(".cargo");
+    let mut global_has_deps = false;
     let res = {
         std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
         debug!(?home_registry_dot_cargo);
@@ -39,8 +40,11 @@ pub fn run_cargo_vendor_home_registry(
                 let has_deps = has_dependencies(&possible_root_manifest)?;
                 if is_workspace {
                     info!("ℹ️ This manifest is in WORKSPACE configuration.");
-                    if !workspace_has_dependencies(&possible_root_manifest)? {
+                    let workspace_has_deps = !workspace_has_dependencies(&possible_root_manifest)?;
+                    if !workspace_has_deps {
                         warn!("⚠️ This extra WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
+                    } else {
+                        global_has_deps = workspace_has_deps;
                     }
                 } else if !has_deps {
                     info!("😄 This extra manifest does not seem to have any dependencies.");
@@ -49,6 +53,8 @@ pub fn run_cargo_vendor_home_registry(
                         info!("🎉 No other manifests. No dependencies. Nothing to vendor.");
                         return Ok(());
                     }
+                } else {
+                    global_has_deps = has_deps;
                 }
                 if registry.update {
                     cargo_update(custom_root, "")?;
@@ -72,12 +78,17 @@ pub fn run_cargo_vendor_home_registry(
 
                 if is_workspace {
                     info!("ℹ️ This manifest is in WORKSPACE configuration.");
-                    if !workspace_has_dependencies(full_manifest_path)? {
+                    let workspace_has_deps = !workspace_has_dependencies(full_manifest_path)?;
+                    if !workspace_has_deps {
                         warn!("⚠️ This extra WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
+                    } else {
+                        global_has_deps = workspace_has_deps;
                     }
                 } else if !has_deps {
                     info!("😄 This extra manifest does not seem to have any dependencies.");
                     info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
+                } else {
+                    global_has_deps = has_deps;
                 }
                 if registry.update {
                     info!(
@@ -146,6 +157,11 @@ pub fn run_cargo_vendor_home_registry(
                 );
                 lockfiles.push(possible_lockfile.to_path_buf());
             }
+        }
+        if !global_has_deps {
+            info!("🎉 Project seems to have no dependencies!");
+            info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
+            return Ok(());
         }
         if !registry.no_root_manifest {
             let possible_root_lockfile = &custom_root.join("Cargo.lock");
