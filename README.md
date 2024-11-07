@@ -174,6 +174,14 @@ Respecting lockfiles is just a matter of setting `respect-lockfile` from `true` 
 > any updates of the dependencies**. If set to false, it will try
 > to respect the version of the dependencies in lockfile by passing the `--locked` flag BUT
 > will try to update to the next compatible semver. And if there is, it will abort the operation.
+>
+> If we want to respect a lockfile, we have to avoid
+> generating a new lockfile if it exists before we
+> pass `--locked` flag to other operations.
+>
+> If a lockfile does not exist, we call `generate-lockfile`.
+> Of course, it won't make sense to pass a `--locked` flag
+> since we don't have any lockfile to respect to begin with.
 
 # Filter
 
