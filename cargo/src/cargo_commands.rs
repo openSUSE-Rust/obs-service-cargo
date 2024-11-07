@@ -41,8 +41,10 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
     let manifest_path = PathBuf::from(&manifest);
     let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
     let possible_lockfile = manifest_path_parent.join("Cargo.lock");
-    if possible_lockfile.is_file() && respect_lockfile {
-        default_options.push("--locked".to_string());
+    if possible_lockfile.is_file() {
+        if respect_lockfile {
+            default_options.push("--locked".to_string());
+        }
     } else {
         info!("🔓Attempting to regenerate lockfile...");
         cargo_generate_lockfile(curdir, "", respect_lockfile)?;
