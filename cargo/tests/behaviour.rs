@@ -6,7 +6,7 @@ use libroast::{
 };
 use obs_service_cargo::cli::{self, Method, VendorArgs};
 use rand::prelude::*;
-use sha2::{digest::Digest, Sha256};
+use blake3::Hasher;
 use std::{io, path::PathBuf};
 use test_log::test;
 use tokio::fs;
@@ -188,16 +188,14 @@ async fn lockfile_does_not_change_if_update_is_false() -> io::Result<()> {
         "https://github.com/openSUSE-Rust/obs-service-cargo/archive/refs/tags/v4.0.2.tar.gz";
     let first = another_vendor_helper(source, false).await?;
     let second = another_vendor_helper(source, false).await?;
-    let mut hasher1 = Sha256::default();
-    let mut hasher2 = Sha256::default();
+    let mut hasher1 = Hasher::default();
+    let mut hasher2 = Hasher::default();
     let first_bytes = fs::read(&first).await?;
     let second_bytes = fs::read(&second).await?;
     hasher1.update(&first_bytes);
     hasher2.update(&second_bytes);
-    let hash1 = hex::encode(hasher1.finalize());
-    let hash2 = hex::encode(hasher2.finalize());
 
-    assert!(hash1 == hash2);
+    assert!(hasher1.finalize() == hasher2.finalize());
     Ok(())
 }
 
@@ -208,16 +206,14 @@ async fn lockfile_does_change_if_update_is_true() -> io::Result<()> {
         "https://github.com/openSUSE-Rust/obs-service-cargo/archive/refs/tags/v4.0.2.tar.gz";
     let first = another_vendor_helper(source, true).await?;
     let second = another_vendor_helper(source, true).await?;
-    let mut hasher1 = Sha256::default();
-    let mut hasher2 = Sha256::default();
+    let mut hasher1 = Hasher::default();
+    let mut hasher2 = Hasher::default();
     let first_bytes = fs::read(&first).await?;
     let second_bytes = fs::read(&second).await?;
     hasher1.update(&first_bytes);
     hasher2.update(&second_bytes);
-    let hash1 = hex::encode(hasher1.finalize());
-    let hash2 = hex::encode(hasher2.finalize());
 
-    assert!(hash1 == hash2);
+    assert!(hasher1.finalize() == hasher2.finalize());
     Ok(())
 }
 
