@@ -35,24 +35,14 @@ fn cargo_command(
     Ok(stdoutput.to_string())
 }
 
-pub fn cargo_fetch(
-    curdir: &Path,
-    manifest: &str,
-    mut update: bool,
-    respect_lockfile: bool,
-) -> io::Result<String> {
+pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io::Result<String> {
     info!("⤵️ Running `cargo fetch`...");
     let mut default_options: Vec<String> = vec![];
     let manifest_path = PathBuf::from(&manifest);
     let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
     let possible_lockfile = manifest_path_parent.join("Cargo.lock");
-    if !update {
-        if !possible_lockfile.exists() && !possible_lockfile.is_file() {
-            warn!("⚠️ No lockfile present. This might UPDATE your dependencies. Overriding `update` from false to true.");
-            update = true;
-        } else if respect_lockfile {
-            default_options.push("--locked".to_string());
-        }
+    if possible_lockfile.is_file() && respect_lockfile {
+        default_options.push("--locked".to_string());
     }
     if !manifest.is_empty() {
         default_options.push("--manifest-path".to_string());
@@ -64,7 +54,7 @@ pub fn cargo_fetch(
     }).inspect_err(
         |err|
         {
-            if !update {
+            if !respect_lockfile {
                 debug!(?err);
                 error!("🛑 The lockfile needs to be updated. This operation will fail. Please set the setting `--update` to true.");
                 error!(?possible_lockfile, "❌ 🔒 Lockfile was not regenerated for and needs update. Aborting gracefully...");
@@ -78,18 +68,16 @@ pub fn cargo_vendor(
     versioned_dirs: bool,
     filter: bool,
     manifest_paths: &[PathBuf],
-    mut update: bool,
     i_accept_the_risk: &[String],
+    update: bool,
     respect_lockfile: bool,
 ) -> io::Result<Option<(PathBuf, String)>> {
     let which_subcommand = if filter { "vendor-filterer" } else { "vendor" };
-    let mut has_update_value_changed = false;
     let mut default_options: Vec<String> = vec![];
     if versioned_dirs {
         default_options.push("--versioned-dirs".to_string());
     }
     let mut first_manifest = curdir.join("Cargo.toml");
-    let mut first_lockfile_exists = false;
     let mut lockfiles: Vec<PathBuf> = Vec::new();
     if !first_manifest.is_file() {
         warn!("⚠️ Root manifest seems to not exist. Will attempt to fallback to manifest paths.");
@@ -145,9 +133,7 @@ pub fn cargo_vendor(
     if possible_lockfile.is_file() {
         if filter {
             warn!("⚠️ Vendor filterer does not support lockfile verification. Your dependencies MIGHT get updated.");
-            update = true;
-            has_update_value_changed = update;
-        } else if respect_lockfile {
+        } else if !filter && respect_lockfile {
             default_options.push("--locked".to_string());
         }
 
@@ -158,9 +144,6 @@ pub fn cargo_vendor(
             "⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from \
 				 false to true."
         );
-        first_lockfile_exists = false;
-        update = true;
-        has_update_value_changed = update;
     }
 
     if filter {
@@ -176,38 +159,16 @@ pub fn cargo_vendor(
         default_options.push("--all-features".to_string());
     }
 
-    if has_update_value_changed && update {
-        warn!(
-            "⚠️ Reminder: Update was SET from FALSE to TRUE. Your dependencies MIGHT have updated."
-        );
-        if !first_lockfile_exists {
-            warn!("⚠️ This might be because the lockfile did not exist prior.");
-        }
-        if filter {
-            warn!("⚠️ This is because `--filter` option is set to true 🧺.");
-        }
-    }
-
     if !update {
         warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
     } else {
         cargo_update(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
     }
     info!("🔓Attempting to regenerate lockfile...");
-    cargo_generate_lockfile(
-        curdir,
-        &first_manifest.to_string_lossy(),
-        update,
-        respect_lockfile,
-    )?;
+    cargo_generate_lockfile(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
     info!("🔒Regenerated lockfile.");
     info!("🚝 Attempting to fetch dependencies.");
-    cargo_fetch(
-        curdir,
-        &first_manifest.to_string_lossy(),
-        update,
-        respect_lockfile,
-    )?;
+    cargo_fetch(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
     info!("💼 Fetched dependencies.");
 
     // NOTE: Vendor filterer's default output format is directory so we
@@ -249,30 +210,23 @@ pub fn cargo_vendor(
 pub fn cargo_generate_lockfile(
     curdir: &Path,
     manifest: &str,
-    mut update: bool,
     respect_lockfile: bool,
 ) -> io::Result<String> {
     info!("🔓 💂 Running `cargo generate-lockfile`...");
-    let mut has_update_value_changed = false;
     let mut hasher1 = blake3::Hasher::new();
     let mut hasher2 = blake3::Hasher::new();
     let mut default_options: Vec<String> = vec![];
     let manifest_path = PathBuf::from(&manifest);
     let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
     let possible_lockfile = manifest_path_parent.join("Cargo.lock");
-    if !update {
-        warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
-        if possible_lockfile.is_file() {
-            if respect_lockfile {
-                default_options.push("--locked".to_string());
-            }
-            let lockfile_bytes = fs::read(&possible_lockfile)?;
-            hasher1.update(&lockfile_bytes);
-        } else {
-            warn!("⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from false to true.");
-            update = true;
-            has_update_value_changed = true;
+    if possible_lockfile.is_file() {
+        if respect_lockfile {
+            default_options.push("--locked".to_string());
         }
+        let lockfile_bytes = fs::read(&possible_lockfile)?;
+        hasher1.update(&lockfile_bytes);
+    } else {
+        warn!("⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from false to true.");
     }
     if !manifest.is_empty() {
         default_options.push("--manifest-path".to_string());
@@ -291,9 +245,6 @@ pub fn cargo_generate_lockfile(
         warn!("Previous hash: {}", hash1);
         warn!("New hash: {}", hash2);
         warn!("⚠️ If you wish to respect the lockfile, consider setting `--locked` to true. However, this MIGHT FAIL in some cases.");
-        if has_update_value_changed && update {
-            warn!("⚠️ Update was SET from FALSE to TRUE , hence a NEW LOCKFILE was CREATED since there was NO LOCKFILE prior. Your dependencies MIGHT have updated.");
-        }
     } else {
         info!(
             "🔒 Lockfile was not regenerated for `{}`",

@@ -44,8 +44,8 @@ pub fn run_cargo_vendor(
             vendor_opts.vendor_specific_args.versioned_dirs,
             vendor_opts.vendor_specific_args.filter,
             &vendor_opts.manifest_path,
-            vendor_opts.update,
             &vendor_opts.i_accept_the_risk,
+            vendor_opts.update,
             vendor_opts.respect_lockfile,
         )? {
             let lockfile_parent = lockfile.parent().unwrap_or(setup_workdir);

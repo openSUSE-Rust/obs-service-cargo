@@ -61,15 +61,10 @@ pub fn run_cargo_vendor_home_registry(
                 }
                 info!(?setup_workdir, "🌳 Finished setting up workdir.");
                 info!("🔓Attempting to regenerate lockfile...");
-                cargo_generate_lockfile(
-                    custom_root,
-                    "",
-                    registry.update,
-                    registry.respect_lockfile,
-                )?;
+                cargo_generate_lockfile(custom_root, "", registry.respect_lockfile)?;
                 info!("🔒Regenerated lockfile.");
                 info!("🚝 Attempting to fetch dependencies.");
-                cargo_fetch(custom_root, "", registry.update, registry.respect_lockfile)?;
+                cargo_fetch(custom_root, "", registry.respect_lockfile)?;
                 info!("💼 Fetched dependencies.");
             }
         }
@@ -109,6 +104,8 @@ pub fn run_cargo_vendor_home_registry(
                         ?full_manifest_path,
                         "✅ Updated dependencies for extra manifest path."
                     );
+                } else {
+                    warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
                 }
                 info!(
                     ?full_manifest_path,
@@ -117,7 +114,6 @@ pub fn run_cargo_vendor_home_registry(
                 cargo_generate_lockfile(
                     full_manifest_path_parent,
                     &full_manifest_path.to_string_lossy(),
-                    registry.update,
                     registry.respect_lockfile,
                 )?;
                 info!(
@@ -131,7 +127,6 @@ pub fn run_cargo_vendor_home_registry(
                 cargo_fetch(
                     custom_root,
                     &full_manifest_path.to_string_lossy(),
-                    registry.update,
                     registry.respect_lockfile,
                 )?;
                 info!(
