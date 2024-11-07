@@ -193,10 +193,9 @@ pub fn is_workspace(src: &Path) -> io::Result<bool> {
     }
 }
 
-pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
+pub fn workspace_has_dependencies(workdir: &Path, src: &Path) -> io::Result<bool> {
     let mut global_has_deps = false;
-    let binding = PathBuf::new();
-    let src_parent = src.parent().unwrap_or(&binding);
+    let src_parent = src.parent().unwrap_or(workdir);
     if let Ok(manifest) = fs::read_to_string(src) {
         match toml::from_str::<WorkspaceTomlManifest>(&manifest) {
             Ok(manifest_data) => {
@@ -227,8 +226,8 @@ pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
                         info!(?member_path, "🐈 Found a membered path.");
                         let is_workspace = is_workspace(&member_path)?;
                         if is_workspace {
-                            global_has_deps =
-                                global_has_deps || workspace_has_dependencies(&member_path)?;
+                            global_has_deps = global_has_deps
+                                || workspace_has_dependencies(workdir, &member_path)?;
                         } else {
                             global_has_deps = global_has_deps || has_dependencies(&member_path)?;
                         }

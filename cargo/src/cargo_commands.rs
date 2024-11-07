@@ -85,6 +85,7 @@ pub fn cargo_vendor(
     }
     let mut first_manifest = curdir.join("Cargo.toml");
     let mut lockfiles: Vec<PathBuf> = Vec::new();
+    let mut global_has_deps = false;
     if !first_manifest.is_file() {
         warn!("⚠️ Root manifest seems to not exist. Will attempt to fallback to manifest paths.");
         if let Some(first) = &manifest_paths.first() {
@@ -109,23 +110,38 @@ pub fn cargo_vendor(
     }
     let first_manifest_parent = first_manifest.parent().unwrap_or(curdir);
     let possible_lockfile = first_manifest_parent.join("Cargo.lock");
-    let is_workspace = is_workspace(&first_manifest)?;
+    let is_manifest_workspace = is_workspace(&first_manifest)?;
     let has_deps = has_dependencies(&first_manifest)?;
 
-    if is_workspace {
+    if is_manifest_workspace {
         info!("ℹ️ This manifest is in WORKSPACE configuration.");
-        let workspace_has_deps = workspace_has_dependencies(&first_manifest)?;
+        let workspace_has_deps = workspace_has_dependencies(curdir, &first_manifest)?;
         if !workspace_has_deps {
             warn!("⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
         }
+        global_has_deps = global_has_deps || workspace_has_deps;
     } else if !has_deps {
-        info!("😄 This extra manifest does not seem to have any dependencies.");
+        info!("😄 This manifest does not seem to have any dependencies.");
         info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
     }
 
+    global_has_deps = global_has_deps || has_deps;
     manifest_paths.iter().try_for_each(|manifest| {
         let extra_full_manifest_path = curdir.join(manifest);
         if extra_full_manifest_path.exists() {
+            let is_manifest_workspace = is_workspace(&extra_full_manifest_path)?;
+            let has_deps = has_dependencies(&extra_full_manifest_path)?;
+            if is_manifest_workspace {
+                info!("ℹ️ This manifest is in WORKSPACE configuration.");
+                let workspace_has_deps = workspace_has_dependencies(curdir, &first_manifest)?;
+                if !workspace_has_deps {
+                    warn!("⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
+                }
+                global_has_deps = global_has_deps || workspace_has_deps;
+            } else if !has_deps {
+                info!("😄 This manifest does not seem to have any dependencies.");
+                info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
+            };
             default_options.push("--sync".to_string());
             default_options.push(manifest.to_string_lossy().to_string());
         } else {
@@ -195,7 +211,10 @@ pub fn cargo_vendor(
         })?;
     }
     info!("🛡️🙂 All lockfiles are audited");
-
+    if !global_has_deps {
+        info!("🎉 Nothing to vendor.");
+        return Ok(None);
+    }
     match res {
         Ok(output_cargo_configuration) => {
             info!("🏪 `cargo {}` finished.", &which_subcommand);
