@@ -52,7 +52,7 @@ commit_parsers = [
   { message = "^perf", group = "Performance" },
   { message = "^refactor", group = "Refactor" },
   { message = "^style", group = "Styling" },
-  { message = "^test", group = "Testing" },
+  { message = "^test*", group = "Testing" },
   { message = "^chore\\(release\\): prepare for", skip = true },
   { message = "^chore", group = "Miscellaneous Tasks" },
   { message = "^misc", group = "Miscellaneous Tasks" },
