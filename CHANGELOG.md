@@ -2,7 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Improvements
+
+- Address soundness and correctness issues [3e6865b](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3e6865bee6015588e6b60baf8aa6148481b811da)
+
+### Miscellaneous Tasks
+
+- V4.0.3 [2dcb09d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2dcb09da74577e60732bdffea8d2c9a108984464)
+
+### Other
+
+- Run cargo fmt [0531da1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/0531da14131acd246aaeae8dcffafb5cba20269b)
+
+### Testing
+
+- Set the first one to false. [2cec8f6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2cec8f63dc0de9d6a92b8c76c3986fd138d93c54)
+- This should not equal to in tests [a1f67ad](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a1f67ad3411e9c46e83357faa6d8497120ff4dec)
+- Change from sha2 to blake3 [ccc236d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ccc236d1a590d5ff5eca3f0598384225f11207e5)
+- Add tests for lockfile updates [9472614](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9472614caacdf1fe1baf014ce2fa5a0484bb1590)
+
 ## [4.0.2] - 2024-11-06
+
+### Miscellaneous Tasks
+
+- V4.0.2 [60e23ad](https://github.com/openSUSE-Rust/obs-service-cargo/commit/60e23adbc2c9fe3edec92d479520052fef16fe8d)
 
 ### Refactor
 
@@ -72,14 +97,17 @@ All notable changes to this project will be documented in this file.
 - Update service file [96afe40](https://github.com/openSUSE-Rust/obs-service-cargo/commit/96afe40e5611bf309c721271855fa9c0a61a0a4d)
 - Improve explainer about lockfiles [f884fd8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f884fd8531de5ea6f3b82431a286c7803361014b)
 
+### Improvements
+
+- Improve messages [1c08baf](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1c08baf676163d8359e7f311af196a5825ae96b5)
+- Set env before everything for registry [3da6198](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3da619818576a3808de46fdfc5a407e0b6325187)
+
 ### Miscellaneous Tasks
 
 - V4.0.0 [ed3b800](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ed3b800179cdd259f6e5300970491010df6f4178)
 
 ### Other
 
-- Improve messages [1c08baf](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1c08baf676163d8359e7f311af196a5825ae96b5)
-- Set env before everything for registry [3da6198](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3da619818576a3808de46fdfc5a407e0b6325187)
 - Check the else clause [784264a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/784264a643010042be70e33d8186a8a6db4180c4)
 
 ### Refactor
@@ -394,13 +422,13 @@ All notable changes to this project will be documented in this file.
 - Update README [ci skip] [4c15d8e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4c15d8e6f7dac07267d558199e71bb6939aeb75b)
 - Add status badge in the readme [06b24c0](https://github.com/openSUSE-Rust/obs-service-cargo/commit/06b24c0c733c7d08bf7e838889a0b393f1ec85f8)
 
+### Improvements
+
+- Better handling on when and when not to vendor [751775c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/751775c2c070481c9a755fa86faeb12c503d8729)
+
 ### Miscellaneous Tasks
 
 - Remove redundant messages [d0cbcd4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d0cbcd437c9f604566ac3fba6923ea6b8d14b8a4)
-
-### Other
-
-- Better handling on when and when not to vendor [751775c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/751775c2c070481c9a755fa86faeb12c503d8729)
 
 ## [0.8.9] - 2023-11-17
 
