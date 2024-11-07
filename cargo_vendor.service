@@ -11,8 +11,8 @@
    </parameter>
    <parameter name="method">
       <description>Whether to use vendor or the registry. Default: vendor</description>
-      <allowedvalue>registry</allowedvalue>
-      <allowedvalue>vendor</allowedvalue>
+      <allowedvalues>registry</allowedvalues>
+      <allowedvalues>vendor</allowedvalues>
    </parameter>
    <parameter name="src">
       <description>Where to find sources. Source is either a directory or a source tarball AND cannot be both. Aliases: srctar, srcdir</description>
@@ -28,8 +28,8 @@
    </parameter>
    <parameter name="update">
       <description>Update dependencies or not. Default: true</description>
-      <allowedvalue>false</allowedvalue>
-      <allowedvalue>true</allowedvalue>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
    </parameter>
    <parameter name="no root manifest">
       <description>Available only if `--method` is set to registry. If a
@@ -37,8 +37,8 @@
       to set the manifest path manually. Useful in combination with
       `--manifest-path` (aliased as `--cargotoml`) flag. You have to replace the spaces with dashes (-) to make this work. Default: false
       </description>
-      <allowedvalue>false</allowedvalue>
-      <allowedvalue>true</allowedvalue>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
    </parameter>
    <parameter name="tag">
       <description>Tag some files for multi-vendor and multi-cargo_config projects</description>
@@ -59,13 +59,18 @@
    </parameter>
    <parameter name="filter">
       <description>Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies. Default: false</description>
-      <allowedvalue>false</allowedvalue>
-      <allowedvalue>true</allowedvalue>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
+   </parameter>
+   <parameter name="respect lockfile">
+      <description>Whether to respect Cargo.lock or lockfiles by passing the `--locked` flag. You have to replace the spaces with dashes (-) to make this work. Default: false</description>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
    </parameter>
    <parameter name="versioned dirs">
       <description>Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor. You have to replace the spaces with dashes (-) to make this work. Default: true</description>
-      <allowedvalue>false</allowedvalue>
-      <allowedvalue>true</allowedvalue>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
    </parameter>
 </service>
 
