@@ -30,6 +30,10 @@ pub fn run_cargo_vendor(
     let cargo_config_workdir = tmpdir_for_config.path();
     let mut custom_path_for_vendor_dir: String = String::new();
     // Let's attempt a clean environment here too.
+    let tempdir_for_home_registry_binding = tempfile::Builder::new()
+        .prefix(".cargo")
+        .rand_bytes(12)
+        .tempdir()?;
     let home_registry = &tempdir_for_home_registry_binding.path();
     let home_registry_dot_cargo = &home_registry.join(".cargo");
     std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
@@ -42,6 +46,7 @@ pub fn run_cargo_vendor(
             &vendor_opts.manifest_path,
             vendor_opts.update,
             &vendor_opts.i_accept_the_risk,
+            vendor_opts.respect_lockfile,
         )? {
             let lockfile_parent = lockfile.parent().unwrap_or(setup_workdir);
             let lockfile_parent_stripped = lockfile_parent

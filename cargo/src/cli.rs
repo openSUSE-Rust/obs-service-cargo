@@ -98,7 +98,13 @@ pub struct Opts {
         help = "Whether WHEN to color output or not"
     )]
     pub color: clap::ColorChoice,
-
+    #[arg(
+        long,
+        short = 'L',
+        help = "Whether to respect Cargo.lock or lockfiles by passing the `--locked` flag.",
+        default_value_t = false
+    )]
+    pub respect_lockfile: bool,
     #[arg(
         long,
         help = "A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it."

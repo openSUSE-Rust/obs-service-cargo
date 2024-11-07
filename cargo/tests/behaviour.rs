@@ -47,6 +47,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
         update: true,
         vendor_specific_args,
         outdir: outdir.to_path_buf(),
+        respect_lockfile: false,
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
     };
@@ -158,6 +159,7 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
         manifest_path: [PathBuf::from("rust/pvsecret/Cargo.toml")].to_vec(),
         update: true,
         vendor_specific_args,
+        respect_lockfile: false,
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
@@ -232,6 +234,7 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
         compression: Compression::default(),
         tag: Some(random_tag.clone()),
         manifest_path: [PathBuf::from("libflux/Cargo.toml")].to_vec(),
+        respect_lockfile: false,
         update: true,
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
@@ -295,6 +298,7 @@ async fn custom_root_test_1() -> io::Result<()> {
     };
     let opt = cli::Opts {
         no_root_manifest: false,
+        respect_lockfile: false,
         custom_root: Some("libflux".to_string()),
         method: Method::Vendor,
         src: outfile.to_path_buf(),
@@ -364,6 +368,7 @@ async fn custom_root_test_2() -> io::Result<()> {
     };
     let opt = cli::Opts {
         no_root_manifest: false,
+        respect_lockfile: false,
         custom_root: Some("libflux".to_string()),
         method: Method::Registry,
         src: outfile.to_path_buf(),

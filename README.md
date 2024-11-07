@@ -160,20 +160,20 @@ the root folder of the project.
 
 ## Respecting lockfiles
 
-Respecting lockfiles is just a matter of setting `update` from `true` to `false`.
+Respecting lockfiles is just a matter of setting `respect-lockfile` from `true` to `false`.
 
 > [!WARNING]
 > If a lockfile do needs updating, you're ultimately stuck at
-> setting the `update` to `true` unless upstream uploads an updated lockfile.
+> setting the `respect-lockfile` to `false` (which is the default) unless upstream uploads an updated lockfile.
 > The vendoring process will abort in case it happens.
 > Sadly, this is the behaviour of lockfiles. If there is an update of the version
 > with **semver** compatibility e.g. `x.y.1` -> `x.y.2`, then it's likely
 > the lockfile will attempt to be updated.
 >
-> You can think of `update` flag as a way to check if **there are
+> You can think of `respect-lockfile` flag as a way to check if **there are
 > any updates of the dependencies**. If set to false, it will try
 > to respect the version of the dependencies in lockfile by passing the `--locked` flag BUT
-> will try to update to the next compatible semver.
+> will try to update to the next compatible semver. And if there is, it will abort the operation.
 
 # Filter
 

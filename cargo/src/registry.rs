@@ -57,14 +57,19 @@ pub fn run_cargo_vendor_home_registry(
                     global_has_deps = has_deps;
                 }
                 if registry.update {
-                    cargo_update(custom_root, "")?;
+                    cargo_update(custom_root, "", registry.respect_lockfile)?;
                 }
                 info!(?setup_workdir, "🌳 Finished setting up workdir.");
                 info!("🔓Attempting to regenerate lockfile...");
-                cargo_generate_lockfile(custom_root, "", registry.update)?;
+                cargo_generate_lockfile(
+                    custom_root,
+                    "",
+                    registry.update,
+                    registry.respect_lockfile,
+                )?;
                 info!("🔒Regenerated lockfile.");
                 info!("🚝 Attempting to fetch dependencies.");
-                cargo_fetch(custom_root, "", registry.update)?;
+                cargo_fetch(custom_root, "", registry.update, registry.respect_lockfile)?;
                 info!("💼 Fetched dependencies.");
             }
         }
@@ -98,6 +103,7 @@ pub fn run_cargo_vendor_home_registry(
                     cargo_update(
                         full_manifest_path_parent,
                         &full_manifest_path.to_string_lossy(),
+                        registry.respect_lockfile,
                     )?;
                     info!(
                         ?full_manifest_path,
@@ -112,6 +118,7 @@ pub fn run_cargo_vendor_home_registry(
                     full_manifest_path_parent,
                     &full_manifest_path.to_string_lossy(),
                     registry.update,
+                    registry.respect_lockfile,
                 )?;
                 info!(
                     ?full_manifest_path,
@@ -125,6 +132,7 @@ pub fn run_cargo_vendor_home_registry(
                     custom_root,
                     &full_manifest_path.to_string_lossy(),
                     registry.update,
+                    registry.respect_lockfile,
                 )?;
                 info!(
                     ?full_manifest_path,
