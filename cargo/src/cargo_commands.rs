@@ -47,7 +47,7 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
         }
     } else {
         info!("🔓Attempting to regenerate lockfile...");
-        cargo_generate_lockfile(curdir, "", respect_lockfile)?;
+        cargo_generate_lockfile(curdir, manifest)?;
         info!("🔒Regenerated lockfile.");
     }
     if !manifest.is_empty() {
@@ -167,7 +167,7 @@ pub fn cargo_vendor(
 				 false to true."
         );
         info!("🔓Attempting to regenerate lockfile...");
-        cargo_generate_lockfile(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
+        cargo_generate_lockfile(curdir, &first_manifest.to_string_lossy())?;
         info!("🔒Regenerated lockfile.");
     }
 
@@ -232,24 +232,17 @@ pub fn cargo_vendor(
     }
 }
 
-pub fn cargo_generate_lockfile(
-    curdir: &Path,
-    manifest: &str,
-    respect_lockfile: bool,
-) -> io::Result<String> {
+pub fn cargo_generate_lockfile(curdir: &Path, manifest: &str) -> io::Result<String> {
     info!("🔓 💂 Running `cargo generate-lockfile`...");
-    let mut hasher1 = blake3::Hasher::new();
+    let mut hasher = blake3::Hasher::new();
     let mut hasher2 = blake3::Hasher::new();
     let mut default_options: Vec<String> = vec![];
     let manifest_path = PathBuf::from(&manifest);
     let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
     let possible_lockfile = manifest_path_parent.join("Cargo.lock");
     if possible_lockfile.is_file() {
-        if respect_lockfile {
-            default_options.push("--locked".to_string());
-        }
         let lockfile_bytes = fs::read(&possible_lockfile)?;
-        hasher1.update(&lockfile_bytes);
+        hasher.update(&lockfile_bytes);
     } else {
         warn!("⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from false to true.");
     }
@@ -262,22 +255,10 @@ pub fn cargo_generate_lockfile(
         let lockfile_bytes = fs::read(&possible_lockfile)?;
         hasher2.update(&lockfile_bytes);
     }
-    let hash1 = hasher1.finalize();
-    let hash2 = hasher2.finalize();
-    if hash1 != hash2 {
-        debug!(?hash1, ?hash2);
-        warn!("⚠️ Lockfile has changed");
-        warn!("Previous hash: {}", hash1);
-        warn!("New hash: {}", hash2);
-        warn!("⚠️ If you wish to respect the lockfile, consider setting `--respect-lockfile` to true. However, this MIGHT FAIL in some cases.");
-    } else {
-        info!(
-            "🔒 Lockfile was not regenerated for `{}`",
-            possible_lockfile.display()
-        );
-        info!("Previous hash: {}", hash1);
-        info!("New hash: {}", hash2);
-    }
+    let hash = hasher.finalize();
+    debug!(?hash,);
+    warn!("⚠️ New lockfile generated");
+    warn!(?hash, "Hash");
     res.inspect(|_| {
         info!("🔓 💂 `cargo generate-lockfile` finished.");
     })
