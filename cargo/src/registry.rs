@@ -29,9 +29,9 @@ pub fn run_cargo_vendor_home_registry(
         .tempdir()?;
     let home_registry = &tempdir_for_home_registry_binding.path();
     let home_registry_dot_cargo = &home_registry.join(".cargo");
+    std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
     let mut global_has_deps = false;
     let res = {
-        std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
         debug!(?home_registry_dot_cargo);
         if !registry.no_root_manifest {
             let possible_root_manifest = custom_root.join("Cargo.toml");
