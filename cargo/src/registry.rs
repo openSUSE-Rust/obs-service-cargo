@@ -250,15 +250,13 @@ pub fn run_cargo_vendor_home_registry(
             ignore_git: false,
             ignore_hidden: false,
         };
-        roast_opts(&roast_args, false)?;
-        Ok(())
+        roast_opts(&roast_args, false)
     };
-    if res.is_ok() {
+    res.map(|val| {
+        trace!(?val);
         info!("📦 Cargo Vendor Home Registry finished.");
         info!("🧹 Cleaning up temporary directory...");
         tempdir_for_home_registry_binding.close()?;
-    } else {
-        return res;
-    }
-    Ok(())
+        Ok(())
+    })?
 }

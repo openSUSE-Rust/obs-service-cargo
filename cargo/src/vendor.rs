@@ -104,17 +104,14 @@ pub fn run_cargo_vendor(
             ignore_git: false,
             ignore_hidden: false,
         };
-        roast_opts(&roast_args, false)?;
-        Ok(())
+        roast_opts(&roast_args, false)
     };
-    if res.is_ok() {
+    res.map(|val| {
+        trace!(?val);
         info!("📦 Cargo Vendor finished.");
         info!("🧹 Cleaning up temporary directory...");
-        tmpdir_for_config.close()?;
-    } else {
-        return res;
-    }
-    Ok(())
+        tmpdir_for_config.close()
+    })?
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -128,8 +125,17 @@ struct TomlManifest {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
+struct WorkspaceTable {
+    members: Option<Vec<PathBuf>>,
+    default_members: Option<Vec<PathBuf>>,
+    #[serde(flatten)]
+    extra: Option<TomlManifest>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 struct WorkspaceTomlManifest {
-    workspace: TomlManifest,
+    workspace: WorkspaceTable,
 }
 
 pub fn is_workspace(src: &Path) -> io::Result<bool> {
@@ -152,22 +158,47 @@ pub fn is_workspace(src: &Path) -> io::Result<bool> {
 }
 
 pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
+    let mut global_has_deps = false;
     if let Ok(manifest) = fs::read_to_string(src) {
         match toml::from_str::<WorkspaceTomlManifest>(&manifest) {
             Ok(manifest_data) => {
-                return Ok(match manifest_data.workspace.dependencies {
-                    Some(deps) => !deps.is_empty(),
-                    None => false,
-                } || match manifest_data.workspace.dev_dependencies {
-                    Some(deps) => !deps.is_empty(),
-                    None => false,
-                } || match manifest_data.workspace.build_dependencies {
-                    Some(deps) => !deps.is_empty(),
-                    None => false,
-                } || match manifest_data.workspace.target {
-                    Some(deps) => !deps.is_empty(),
-                    None => false,
-                });
+                if let Some(extra_data) = manifest_data.workspace.extra {
+                    return Ok(match extra_data.dependencies {
+                        Some(deps) => !deps.is_empty(),
+                        None => false,
+                    } || match extra_data.dev_dependencies {
+                        Some(deps) => !deps.is_empty(),
+                        None => false,
+                    } || match extra_data.build_dependencies {
+                        Some(deps) => !deps.is_empty(),
+                        None => false,
+                    });
+                }
+                let mut members_paths: Vec<PathBuf> = Vec::new();
+                if let Some(mut members) = manifest_data.workspace.members {
+                    members_paths.append(&mut members);
+                };
+                if let Some(mut members) = manifest_data.workspace.default_members {
+                    members_paths.append(&mut members);
+                }
+                members_paths.dedup();
+                for member in members_paths {
+                    let member_path = src.join(member).join("Cargo.toml");
+                    if member_path.is_file() {
+                        info!(?member_path, "🐈 Found a membered path.");
+                        let is_workspace = is_workspace(&member_path)?;
+                        if is_workspace {
+                            global_has_deps = workspace_has_dependencies(&member_path)?;
+                        } else {
+                            global_has_deps = has_dependencies(&member_path)?;
+                        }
+                    } else {
+                        let msg = "The member path does not seem to be a file.";
+                        error!(?member_path, msg);
+                        return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+                    }
+                }
+                return Ok(global_has_deps);
             }
             Err(err) => {
                 error!(?err, "Failed to deserialize TOML manifest file.");
@@ -175,6 +206,7 @@ pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
             }
         };
     };
+
     Err(io::Error::new(
         io::ErrorKind::Other,
         format!(
@@ -183,6 +215,7 @@ pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
         ),
     ))
 }
+
 pub fn has_dependencies(src: &Path) -> io::Result<bool> {
     if let Ok(manifest) = fs::read_to_string(src) {
         match toml::from_str::<TomlManifest>(&manifest) {
@@ -195,9 +228,6 @@ pub fn has_dependencies(src: &Path) -> io::Result<bool> {
                     Some(deps) => !deps.is_empty(),
                     None => false,
                 } || match manifest_data.build_dependencies {
-                    Some(deps) => !deps.is_empty(),
-                    None => false,
-                } || match manifest_data.target {
                     Some(deps) => !deps.is_empty(),
                     None => false,
                 });

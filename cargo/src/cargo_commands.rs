@@ -80,16 +80,14 @@ pub fn cargo_vendor(
     i_accept_the_risk: &[String],
 ) -> io::Result<Option<(PathBuf, String)>> {
     let which_subcommand = if filter { "vendor-filterer" } else { "vendor" };
-    info!("🏪 Running `cargo {}`...", &which_subcommand);
     let mut has_update_value_changed = false;
     let mut default_options: Vec<String> = vec![];
     if versioned_dirs {
         default_options.push("--versioned-dirs".to_string());
     }
     let mut first_manifest = curdir.join("Cargo.toml");
+    let mut first_lockfile_exists = false;
     let mut lockfiles: Vec<PathBuf> = Vec::new();
-    let mut hasher1 = Sha256::default();
-    let mut hasher2 = Sha256::default();
     if !first_manifest.is_file() {
         warn!("⚠️ Root manifest seems to not exist. Will attempt to fallback to manifest paths.");
         if let Some(first) = &manifest_paths.first() {
@@ -152,13 +150,12 @@ pub fn cargo_vendor(
 
         info!(?possible_lockfile, "🔓 Adding lockfile.");
         lockfiles.push(possible_lockfile.as_path().to_path_buf());
-        let bytes = fs::read(&possible_lockfile)?;
-        hasher1.update(&bytes);
     } else {
         warn!(
             "⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from \
 				 false to true."
         );
+        first_lockfile_exists = false;
         update = true;
         has_update_value_changed = update;
     }
@@ -174,47 +171,40 @@ pub fn cargo_vendor(
         // It's usually enabled on `cargo build -F` tbh...
         default_options.push("--all-features".to_string());
     }
+
+    if has_update_value_changed && update {
+        warn!(
+            "⚠️ Reminder: Update was SET from FALSE to TRUE. Your dependencies MIGHT have updated."
+        );
+        if !first_lockfile_exists {
+            warn!("⚠️ This might be because the lockfile did not exist prior.");
+        }
+        if filter {
+            warn!("⚠️ This is because `--filter` option is set to true 🧺.");
+        }
+    }
+
     if !update {
         warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
     } else {
         cargo_update(curdir, &first_manifest.to_string_lossy())?;
     }
-    cargo_fetch(curdir, &first_manifest.to_string_lossy(), update)?;
+    info!("🔓Attempting to regenerate lockfile...");
     cargo_generate_lockfile(curdir, &first_manifest.to_string_lossy(), update)?;
+    info!("🔒Regenerated lockfile.");
+    info!("🚝 Attempting to fetch dependencies.");
+    cargo_fetch(curdir, &first_manifest.to_string_lossy(), update)?;
+    info!("💼 Fetched dependencies.");
 
     // NOTE: Vendor filterer's default output format is directory so we
     // don't need to set that ourselves.
+    info!("🏪 Running `cargo {}`...", &which_subcommand);
     let res = cargo_command(which_subcommand, &default_options, curdir);
 
     if possible_lockfile.is_file() {
         default_options.push("--locked".to_string());
         info!(?possible_lockfile, "🔓 Adding lockfile.");
         lockfiles.push(possible_lockfile.as_path().to_path_buf());
-        let bytes = fs::read(&possible_lockfile)?;
-        hasher2.update(&bytes);
-    }
-    let hash1 = hex::encode(hasher1.finalize());
-    let hash2 = hex::encode(hasher2.finalize());
-    if hash1 != hash2 {
-        debug!(?hash1, ?hash2);
-        warn!("⚠️ Lockfile has changed");
-        warn!("Previous hash: {}", hash1);
-        warn!("New hash: {}", hash2);
-        warn!("⚠️ If you wish to respect the lockfile, consider not setting `--update` to true. However, this MIGHT FAIL in some cases.");
-        if has_update_value_changed && update {
-            let mut msg: String = "⚠️ Update was SET from FALSE to TRUE , hence a NEW LOCKFILE was CREATED since there was NO LOCKFILE prior. Your dependencies MIGHT have updated.".to_string();
-            if filter {
-                msg.push_str(" This is because `--filter` option is set to true 🧺.");
-            }
-            warn!(msg);
-        }
-    } else {
-        info!(
-            "🔒 Lockfile was not regenerated for `{}`",
-            possible_lockfile.display()
-        );
-        info!("Previous hash: {}", hash1);
-        info!("New hash: {}", hash2);
     }
 
     info!("🛡️🫥 Auditing lockfiles...");
@@ -225,6 +215,7 @@ pub fn cargo_vendor(
         })?;
     }
     info!("🛡️🙂 All lockfiles are audited");
+
     match res {
         Ok(output_cargo_configuration) => {
             info!("🏪 `cargo {}` finished.", &which_subcommand);
