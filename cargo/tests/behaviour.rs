@@ -1,5 +1,6 @@
 #![allow(clippy::unwrap_used)]
 
+use blake3::Hasher;
 use libroast::{
     common::Compression,
     operations::{cli::RawArgs, raw::raw_opts},
@@ -11,6 +12,99 @@ use test_log::test;
 use tokio::fs;
 use tokio_test::task::spawn;
 use tracing::info;
+
+async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf> {
+    let mut rng = rand::thread_rng();
+    let random_tag: u8 = rng.gen();
+    let random_tag = random_tag.to_string();
+    let response = reqwest::get(source).await.unwrap();
+    let fname = response
+        .url()
+        .path_segments()
+        .and_then(|segments| segments.last())
+        .and_then(|name| if name.is_empty() { None } else { Some(name) })
+        .unwrap_or("balls");
+    info!("Source file: {}", &fname);
+    let outfile = format!("/{}/{}", "tmp", &fname);
+    info!("Downloaded to: '{:?}'", &outfile);
+    fs::File::create(&outfile).await.unwrap();
+    let outfile = PathBuf::from(&outfile);
+    let data = response.bytes().await.unwrap();
+    let data = data.to_vec();
+    fs::write(&outfile, data).await.unwrap();
+    let outdir = PathBuf::from("/tmp");
+    let vendor_specific_args = VendorArgs {
+        filter: false,
+        versioned_dirs: true,
+    };
+    let opt = cli::Opts {
+        method: Method::Vendor,
+        src: outfile.to_path_buf(),
+        custom_root: None,
+        no_root_manifest: false,
+        compression: Compression::default(),
+        tag: Some(random_tag.clone()),
+        manifest_path: vec![],
+        update,
+        outdir: outdir.to_path_buf(),
+        color: clap::ColorChoice::Auto,
+        i_accept_the_risk: vec![],
+        vendor_specific_args,
+        respect_lockfile: false,
+    };
+
+    let res = opt.run_vendor();
+    assert!(res.is_ok());
+    let vendor_tarball = match opt.method {
+        Method::Registry => format!("registry-{}.tar.zst", &random_tag),
+        Method::Vendor => format!("vendor-{}.tar.zst", &random_tag),
+    };
+    let vendor_tarball_path = &outdir.join(vendor_tarball);
+
+    let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
+    let raw_args = RawArgs {
+        target: vendor_tarball_path.to_path_buf(),
+        outdir: Some(raw_outdir.clone()),
+    };
+    raw_opts(raw_args, false)?;
+    let cargo_lockfile_path = raw_outdir.join("Cargo.lock");
+    assert!(cargo_lockfile_path.is_file());
+    Ok(cargo_lockfile_path)
+}
+
+#[test(tokio::test)]
+async fn lockfile_does_not_change_if_update_is_false() -> io::Result<()> {
+    let source =
+        "https://github.com/openSUSE-Rust/obs-service-cargo/archive/refs/tags/v4.0.2.tar.gz";
+    let first = another_vendor_helper(source, false).await?;
+    let second = another_vendor_helper(source, false).await?;
+    let mut hasher1 = Hasher::default();
+    let mut hasher2 = Hasher::default();
+    let first_bytes = fs::read(&first).await?;
+    let second_bytes = fs::read(&second).await?;
+    hasher1.update(&first_bytes);
+    hasher2.update(&second_bytes);
+
+    assert!(hasher1.finalize() == hasher2.finalize());
+    Ok(())
+}
+
+#[test(tokio::test)]
+async fn lockfile_does_change_if_update_is_true() -> io::Result<()> {
+    let source =
+        "https://github.com/openSUSE-Rust/obs-service-cargo/archive/refs/tags/v4.0.2.tar.gz";
+    let first = another_vendor_helper(source, false).await?;
+    let second = another_vendor_helper(source, true).await?;
+    let mut hasher1 = Hasher::default();
+    let mut hasher2 = Hasher::default();
+    let first_bytes = fs::read(&first).await?;
+    let second_bytes = fs::read(&second).await?;
+    hasher1.update(&first_bytes);
+    hasher2.update(&second_bytes);
+
+    assert!(hasher1.finalize() != hasher2.finalize());
+    Ok(())
+}
 
 async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     let mut rng = rand::thread_rng();
