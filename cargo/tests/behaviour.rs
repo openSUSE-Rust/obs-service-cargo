@@ -204,7 +204,7 @@ async fn lockfile_does_change_if_update_is_true() -> io::Result<()> {
     // NOTE: Only known version to have that does allow `--locked` to be passed.
     let source =
         "https://github.com/openSUSE-Rust/obs-service-cargo/archive/refs/tags/v4.0.2.tar.gz";
-    let first = another_vendor_helper(source, true).await?;
+    let first = another_vendor_helper(source, false).await?;
     let second = another_vendor_helper(source, true).await?;
     let mut hasher1 = Hasher::default();
     let mut hasher2 = Hasher::default();
