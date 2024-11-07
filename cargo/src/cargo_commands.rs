@@ -248,7 +248,7 @@ pub fn cargo_generate_lockfile(
         warn!("⚠️ Lockfile has changed");
         warn!("Previous hash: {}", hash1);
         warn!("New hash: {}", hash2);
-        warn!("⚠️ If you wish to respect the lockfile, consider setting `--locked` to true. However, this MIGHT FAIL in some cases.");
+        warn!("⚠️ If you wish to respect the lockfile, consider setting `--respect-lockfile` to true. However, this MIGHT FAIL in some cases.");
     } else {
         info!(
             "🔒 Lockfile was not regenerated for `{}`",
@@ -265,7 +265,6 @@ pub fn cargo_generate_lockfile(
     })
 }
 
-// Do not set `--locked` here. As explained in <https://doc.rust-lang.org/cargo/commands/cargo-update.html#manifest-options>
 pub fn cargo_update(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io::Result<String> {
     info!("⏫ Updating dependencies...");
     let mut default_options = vec![];
