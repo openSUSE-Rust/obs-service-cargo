@@ -101,6 +101,7 @@ pub struct Opts {
     #[arg(
         long,
         short = 'L',
+        action = clap::ArgAction::Set,
         help = "Whether to respect Cargo.lock or lockfiles by passing the `--locked` flag.",
         default_value_t = false
     )]

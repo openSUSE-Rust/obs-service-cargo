@@ -43,6 +43,10 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
     let possible_lockfile = manifest_path_parent.join("Cargo.lock");
     if possible_lockfile.is_file() && respect_lockfile {
         default_options.push("--locked".to_string());
+    } else {
+        info!("🔓Attempting to regenerate lockfile...");
+        cargo_generate_lockfile(curdir, "", respect_lockfile)?;
+        info!("🔒Regenerated lockfile.");
     }
     if !manifest.is_empty() {
         default_options.push("--manifest-path".to_string());
@@ -144,6 +148,9 @@ pub fn cargo_vendor(
             "⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from \
 				 false to true."
         );
+        info!("🔓Attempting to regenerate lockfile...");
+        cargo_generate_lockfile(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
+        info!("🔒Regenerated lockfile.");
     }
 
     if filter {
@@ -164,9 +171,6 @@ pub fn cargo_vendor(
     } else {
         cargo_update(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
     }
-    info!("🔓Attempting to regenerate lockfile...");
-    cargo_generate_lockfile(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
-    info!("🔒Regenerated lockfile.");
     info!("🚝 Attempting to fetch dependencies.");
     cargo_fetch(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
     info!("💼 Fetched dependencies.");
