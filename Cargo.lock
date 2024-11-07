@@ -200,9 +200,9 @@ dependencies = [
 
 [[package]]
 name = "borsh"
-version = "1.5.1"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6362ed55def622cddc70a4746a68554d7b687713770de539e59a739b249f8ed"
+checksum = "f5327f6c99920069d1fe374aa743be1af0031dea9f250852cdf1ae6a0861ee24"
 dependencies = [
  "cfg_aliases",
 ]
@@ -2022,7 +2022,7 @@ dependencies = [
 
 [[package]]
 name = "obs-service-cargo"
-version = "4.0.5"
+version = "4.1.0"
 dependencies = [
  "blake3",
  "clap",

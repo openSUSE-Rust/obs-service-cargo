@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.0] - 2024-11-07
+
+### Bug Fixes
+
+- This should pass a valid manifest path-like-string [c484a0d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c484a0dea71ca5e5ce6d10f1f9259cda3620d753)
+- This if-else condition is stupid. fixed [a41eb0c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a41eb0ca5e4fd56c558086cad9bc6ba0e18be67e)
+- Reintroduce respect-lockfile flag [61d6f40](https://github.com/openSUSE-Rust/obs-service-cargo/commit/61d6f4072926f0e66eca08a5ba2ae3e5d52ea952)
+
+### Continuous Integrations
+
+- Refresh, distro-upgrade, then install [d4f981c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d4f981c50c4c82b48aebe147f7662c7f60996123)
+
+### Documentation
+
+- Update README explaining how respect-lockfile behaves [dad8585](https://github.com/openSUSE-Rust/obs-service-cargo/commit/dad8585d586007cd028116ce4b05e2741061ccf1)
+- Include respect-lockfile, and allowedvalue should be allowedvalues [ee551b7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ee551b76c99b6cfc50ac942ce15c35604754408d)
+
+### Improvements
+
+- Use new dependency detection and return properly [71d1ddc](https://github.com/openSUSE-Rust/obs-service-cargo/commit/71d1ddcebc76e240a6c53327739e3736d3caf8fc)
+- Fix issues with how we respect lockfile [64090df](https://github.com/openSUSE-Rust/obs-service-cargo/commit/64090df2e37c5dea7670eead60e15b195d37c181)
+- Introduce the new dependency detection [8da15a7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/8da15a736801bb54d2dad5e71d416b9e50c230df)
+- Properly detect dependencies [1dd4b48](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1dd4b48b8472b4716e9afe4da650349ca58aa832)
+- Adjust where we pass around the update variable [419299f](https://github.com/openSUSE-Rust/obs-service-cargo/commit/419299f062d41771d4e27b6b6b7d3fcb04b5338c)
+
+### Miscellaneous Tasks
+
+- Update warning message and remove comment [ci skip] [fde3c98](https://github.com/openSUSE-Rust/obs-service-cargo/commit/fde3c981362519408d213aa62773e8d7683b1d5b)
+- Make vendor have a separate registry as well [e676ac0](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e676ac02ca140c0609d28ce6e2ff5c4819f0f64c)
+- Move over the env initialisation to here [bfff7aa](https://github.com/openSUSE-Rust/obs-service-cargo/commit/bfff7aa3d42ad650e0bc4d307c7b113e5a463cf0)
+
+### Other
+
+- Run cargo fmt [ci skip] [33f9016](https://github.com/openSUSE-Rust/obs-service-cargo/commit/33f9016a49394bc296712a548483e9c06ea80c8f)
+
+### Testing
+
+- Readd tests for lockfile hash comparisons between update false and update true [76e8755](https://github.com/openSUSE-Rust/obs-service-cargo/commit/76e8755a337d9dc507e8ab005b8646e3b4152405)
+
 ## [4.0.3] - 2024-11-07
 
 ### Bug Fixes
@@ -17,6 +56,10 @@ All notable changes to this project will be documented in this file.
 ### Improvements
 
 - Address soundness and correctness issues [3e6865b](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3e6865bee6015588e6b60baf8aa6148481b811da)
+
+### Miscellaneous Tasks
+
+- V4.0.3 [2db4740](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2db4740b6eaa156a50cc0540f253037c30e6c163)
 
 ### Other
 
