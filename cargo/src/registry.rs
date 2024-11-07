@@ -55,11 +55,19 @@ pub fn run_cargo_vendor_home_registry(
                 }
                 global_has_deps = has_deps || global_has_deps;
                 if registry.update {
-                    cargo_update(custom_root, &possible_root_manifest.to_string_lossy(), registry.respect_lockfile)?;
+                    cargo_update(
+                        custom_root,
+                        &possible_root_manifest.to_string_lossy(),
+                        registry.respect_lockfile,
+                    )?;
                 }
                 info!(?setup_workdir, "🌳 Finished setting up workdir.");
                 info!("🚝 Attempting to fetch dependencies.");
-                cargo_fetch(custom_root, &possible_root_manifest.to_string_lossy(), registry.respect_lockfile)?;
+                cargo_fetch(
+                    custom_root,
+                    &possible_root_manifest.to_string_lossy(),
+                    registry.respect_lockfile,
+                )?;
                 info!("💼 Fetched dependencies.");
             }
         }
