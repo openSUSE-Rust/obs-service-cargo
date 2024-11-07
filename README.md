@@ -166,6 +166,14 @@ Respecting lockfiles is just a matter of setting `update` from `true` to `false`
 > If a lockfile do needs updating, you're ultimately stuck at
 > setting the `update` to `true` unless upstream uploads an updated lockfile.
 > The vendoring process will abort in case it happens.
+> Sadly, this is the behaviour of lockfiles. If there is an update of the version
+> with **semver** compatibility e.g. `x.y.1` -> `x.y.2`, then it's likely
+> the lockfile will attempt to be updated.
+>
+> You can think of `update` flag as a way to check if **there are
+> any updates of the dependencies**. If set to false, it will try
+> to respect the version of the dependencies in lockfile by passing the `--locked` flag BUT
+> will try to update to the next compatible semver.
 
 # Filter
 
@@ -421,7 +429,7 @@ The following are the parameters you can use with this utility:
    <summary>OBS Source Service to vendor all crates.io and dependencies for a Rust project</summary>
    <description><![CDATA[This service extracts a Rust application source,
   searches for a Rust application containing a Cargo.toml file,
-  download all crates.io and dependecies,
+  download all crates.io and dependencies,
   and creates a vendor.tar[.<tar compression>] to be committed allowing fully offline
   builds of Rust applications.]]></description>
    <parameter name="strategy">
