@@ -150,29 +150,58 @@ struct WorkspaceTomlManifest {
 pub fn is_workspace(src: &Path) -> io::Result<bool> {
     if let Ok(manifest) = fs::read_to_string(src) {
         if let Ok(manifest_data) = toml::from_str::<toml::Value>(&manifest) {
-            if manifest_data.get("workspace").is_some() {
-                return Ok(true);
+            if let Some(data) = manifest_data.get("workspace") {
+                if let Some(table) = data.as_table() {
+                    if let Some(members) = table.get("members") {
+                        if let Some(array) = members.as_array() {
+                            if array.is_empty() {
+                                return Ok(false);
+                            }
+                            Ok(true)
+                        } else {
+                            Ok(false)
+                        }
+                    } else if let Some(members) = table.get("default-members") {
+                        if let Some(array) = members.as_array() {
+                            if array.is_empty() {
+                                return Ok(false);
+                            }
+                            return Ok(true);
+                        } else {
+                            return Ok(false);
+                        }
+                    } else {
+                        return Ok(false);
+                    }
+                } else {
+                    Ok(false)
+                }
             } else {
-                return Ok(false);
-            };
-        };
+                Ok(false)
+            }
+        } else {
+            Ok(false)
+        }
+    } else {
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to check manifest file at path {}",
+                src.to_string_lossy()
+            ),
+        ))
     }
-    Err(io::Error::new(
-        io::ErrorKind::Other,
-        format!(
-            "Failed to check manifest file at path {}",
-            src.to_string_lossy()
-        ),
-    ))
 }
 
 pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
     let mut global_has_deps = false;
+    let binding = PathBuf::new();
+    let src_parent = src.parent().unwrap_or(&binding);
     if let Ok(manifest) = fs::read_to_string(src) {
         match toml::from_str::<WorkspaceTomlManifest>(&manifest) {
             Ok(manifest_data) => {
                 if let Some(extra_data) = manifest_data.workspace.extra {
-                    return Ok(match extra_data.dependencies {
+                    global_has_deps = match extra_data.dependencies {
                         Some(deps) => !deps.is_empty(),
                         None => false,
                     } || match extra_data.dev_dependencies {
@@ -181,7 +210,7 @@ pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
                     } || match extra_data.build_dependencies {
                         Some(deps) => !deps.is_empty(),
                         None => false,
-                    });
+                    }
                 }
                 let mut members_paths: Vec<PathBuf> = Vec::new();
                 if let Some(mut members) = manifest_data.workspace.members {
@@ -190,16 +219,18 @@ pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
                 if let Some(mut members) = manifest_data.workspace.default_members {
                     members_paths.append(&mut members);
                 }
+                members_paths.sort();
                 members_paths.dedup();
                 for member in members_paths {
-                    let member_path = src.join(member).join("Cargo.toml");
+                    let member_path = src_parent.join(member).join("Cargo.toml");
                     if member_path.is_file() {
                         info!(?member_path, "🐈 Found a membered path.");
                         let is_workspace = is_workspace(&member_path)?;
                         if is_workspace {
-                            global_has_deps = workspace_has_dependencies(&member_path)?;
+                            global_has_deps =
+                                global_has_deps || workspace_has_dependencies(&member_path)?;
                         } else {
-                            global_has_deps = has_dependencies(&member_path)?;
+                            global_has_deps = global_has_deps || has_dependencies(&member_path)?;
                         }
                     } else {
                         let msg = "The member path does not seem to be a file.";
@@ -207,13 +238,13 @@ pub fn workspace_has_dependencies(src: &Path) -> io::Result<bool> {
                         return Err(io::Error::new(io::ErrorKind::NotFound, msg));
                     }
                 }
-                return Ok(global_has_deps);
             }
             Err(err) => {
                 error!(?err, "Failed to deserialize TOML manifest file.");
                 return Err(io::Error::new(io::ErrorKind::InvalidData, err.to_string()));
             }
         };
+        return Ok(global_has_deps);
     };
 
     Err(io::Error::new(
