@@ -142,6 +142,9 @@ pub fn cargo_vendor(
             update = true;
             has_update_value_changed = update;
         }
+        if !update {
+            default_options.push("--locked".to_string());
+        }
 
         info!(?possible_lockfile, "🔓 Adding lockfile.");
         lockfiles.push(possible_lockfile.as_path().to_path_buf());
@@ -199,7 +202,6 @@ pub fn cargo_vendor(
     let res = cargo_command(which_subcommand, &default_options, curdir);
 
     if possible_lockfile.is_file() {
-        default_options.push("--locked".to_string());
         info!(?possible_lockfile, "🔓 Adding lockfile.");
         lockfiles.push(possible_lockfile.as_path().to_path_buf());
     }
