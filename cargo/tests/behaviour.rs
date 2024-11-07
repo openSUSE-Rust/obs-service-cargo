@@ -1,12 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
+use blake3::Hasher;
 use libroast::{
     common::Compression,
     operations::{cli::RawArgs, raw::raw_opts},
 };
 use obs_service_cargo::cli::{self, Method, VendorArgs};
 use rand::prelude::*;
-use blake3::Hasher;
 use std::{io, path::PathBuf};
 use test_log::test;
 use tokio::fs;
