@@ -2,15 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [4.0.3] - 2024-11-07
+
+### Bug Fixes
+
+- Remove unused import [c0da245](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c0da245edb88fe3f09bf578cb8f2deb476a0514e)
+- Locked flag should be passed here [a1a8120](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a1a8120603235c26154639e753f762a6b930c8b2)
+
+### Documentation
+
+- Insert lockfile behaviour in README [949532b](https://github.com/openSUSE-Rust/obs-service-cargo/commit/949532b8b88262e4d2b49e647700ec425d7b9d99)
+- Update CHANGELOG [3b98869](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3b988699825e97041c1312a8b924bad6b232b260)
 
 ### Improvements
 
 - Address soundness and correctness issues [3e6865b](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3e6865bee6015588e6b60baf8aa6148481b811da)
-
-### Miscellaneous Tasks
-
-- V4.0.3 [2dcb09d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2dcb09da74577e60732bdffea8d2c9a108984464)
 
 ### Other
 
@@ -18,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 ### Testing
 
+- We have removed this as we lockfile behaviour should also be documented [72ff856](https://github.com/openSUSE-Rust/obs-service-cargo/commit/72ff856e9af69b6df3b08bafa531efff2e7112cf)
 - Set the first one to false. [2cec8f6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2cec8f63dc0de9d6a92b8c76c3986fd138d93c54)
 - This should not equal to in tests [a1f67ad](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a1f67ad3411e9c46e83357faa6d8497120ff4dec)
 - Change from sha2 to blake3 [ccc236d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ccc236d1a590d5ff5eca3f0598384225f11207e5)
