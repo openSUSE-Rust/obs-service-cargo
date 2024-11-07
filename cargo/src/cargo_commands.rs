@@ -107,14 +107,14 @@ pub fn cargo_vendor(
     let has_deps = has_dependencies(&first_manifest)?;
 
     if is_workspace {
-        info!("ℹ️ This project is a WORKSPACE configuration.");
-        if !workspace_has_dependencies(&first_manifest)? {
-            warn!("⚠️ The WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
+        info!("ℹ️ This manifest is in WORKSPACE configuration.");
+        let workspace_has_deps = workspace_has_dependencies(&first_manifest)?;
+        if !workspace_has_deps {
+            warn!("⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
         }
     } else if !has_deps {
-        info!("😄 This project does not seem to have any dependencies. Check manifest if we have no need to vendor.");
+        info!("😄 This extra manifest does not seem to have any dependencies.");
         info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
-        return Ok(None);
     }
 
     manifest_paths.iter().try_for_each(|manifest| {
