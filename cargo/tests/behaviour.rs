@@ -213,7 +213,7 @@ async fn lockfile_does_change_if_update_is_true() -> io::Result<()> {
     hasher1.update(&first_bytes);
     hasher2.update(&second_bytes);
 
-    assert!(hasher1.finalize() == hasher2.finalize());
+    assert!(hasher1.finalize() != hasher2.finalize());
     Ok(())
 }
 

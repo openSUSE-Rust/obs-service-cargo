@@ -137,9 +137,7 @@ pub fn cargo_vendor(
     })?;
 
     if possible_lockfile.is_file() {
-        if !filter {
-            default_options.push("--locked".to_string());
-        } else {
+        if filter {
             warn!("⚠️ Vendor filterer does not support lockfile verification. Your dependencies MIGHT get updated.");
             update = true;
             has_update_value_changed = update;
@@ -156,6 +154,7 @@ pub fn cargo_vendor(
         update = true;
         has_update_value_changed = update;
     }
+
     if filter {
         default_options.push("--platform=*-unknown-linux-gnu".to_string());
         default_options.push("--platform=wasm32-unknown-unknown".to_string());
@@ -183,6 +182,7 @@ pub fn cargo_vendor(
 
     if !update {
         warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
+        default_options.push("--locked".to_string());
     } else {
         cargo_update(curdir, &first_manifest.to_string_lossy())?;
     }
