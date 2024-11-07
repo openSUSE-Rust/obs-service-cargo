@@ -29,6 +29,10 @@ pub fn run_cargo_vendor(
         .tempdir()?;
     let cargo_config_workdir = tmpdir_for_config.path();
     let mut custom_path_for_vendor_dir: String = String::new();
+    // Let's attempt a clean environment here too.
+    let home_registry = &tempdir_for_home_registry_binding.path();
+    let home_registry_dot_cargo = &home_registry.join(".cargo");
+    std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
     // Cargo vendor stdouts the configuration for config.toml
     let res = {
         if let Some((lockfile, cargo_config_output)) = cargo_vendor(
