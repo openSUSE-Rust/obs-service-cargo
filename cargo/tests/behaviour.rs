@@ -1,6 +1,5 @@
 #![allow(clippy::unwrap_used)]
 
-use blake3::Hasher;
 use libroast::{
     common::Compression,
     operations::{cli::RawArgs, raw::raw_opts},
