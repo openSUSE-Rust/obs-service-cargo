@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.1] - 2024-11-08
+
+### Other
+
+- Remove unnecessary if-elses. [59f70c0](https://github.com/openSUSE-Rust/obs-service-cargo/commit/59f70c032c138fea9e203caec7c499ffc1380cf3)
+
 ## [4.1.0] - 2024-11-07
 
 ### Bug Fixes
@@ -29,6 +35,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
+- V4.1.0 [09ef9c7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/09ef9c71bf6049a1ca7e4f2f13e65d6ac1040660)
 - Update warning message and remove comment [ci skip] [fde3c98](https://github.com/openSUSE-Rust/obs-service-cargo/commit/fde3c981362519408d213aa62773e8d7683b1d5b)
 - Make vendor have a separate registry as well [e676ac0](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e676ac02ca140c0609d28ce6e2ff5c4819f0f64c)
 - Move over the env initialisation to here [bfff7aa](https://github.com/openSUSE-Rust/obs-service-cargo/commit/bfff7aa3d42ad650e0bc4d307c7b113e5a463cf0)
