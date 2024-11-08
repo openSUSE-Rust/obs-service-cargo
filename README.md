@@ -262,7 +262,7 @@ specifically, `$CARGO_HOME/registry`. The service file will look like this
      <param name="src">s390-tools*.tar.gz</param>
 	 <param name="update">true</param>
 	 <param name="method">registry</param>
-	 <param name="no_root_manifest">true</param>
+	 <param name="no-root-manifest">true</param>
 	 <param name="cargotoml">rust/pvsecret/Cargo.toml</param>
 	 <param name="cargotoml">rust/pv/Cargo.toml</param>
 	 <param name="cargotoml">rust/utils/Cargo.toml</param>
