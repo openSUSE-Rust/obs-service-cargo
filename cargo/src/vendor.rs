@@ -150,35 +150,7 @@ struct WorkspaceTomlManifest {
 pub fn is_workspace(src: &Path) -> io::Result<bool> {
     if let Ok(manifest) = fs::read_to_string(src) {
         if let Ok(manifest_data) = toml::from_str::<toml::Value>(&manifest) {
-            if let Some(data) = manifest_data.get("workspace") {
-                if let Some(table) = data.as_table() {
-                    if let Some(members) = table.get("members") {
-                        if let Some(array) = members.as_array() {
-                            if array.is_empty() {
-                                return Ok(false);
-                            }
-                            Ok(true)
-                        } else {
-                            Ok(false)
-                        }
-                    } else if let Some(members) = table.get("default-members") {
-                        if let Some(array) = members.as_array() {
-                            if array.is_empty() {
-                                return Ok(false);
-                            }
-                            return Ok(true);
-                        } else {
-                            return Ok(false);
-                        }
-                    } else {
-                        return Ok(false);
-                    }
-                } else {
-                    Ok(false)
-                }
-            } else {
-                Ok(false)
-            }
+            Ok(manifest_data.get("workspace").is_some())
         } else {
             Ok(false)
         }
