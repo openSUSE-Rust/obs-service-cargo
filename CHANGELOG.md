@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.2] - 2024-11-08
+
+### Bug Fixes
+
+- Correct error message for lockfiles [176a5f8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/176a5f83598dfe23b92f281c7c921c65e31cd999)
+
+### Documentation
+
+- Replace underscore with dash [4e2ba58](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4e2ba58534dabdcdd45923bb4804d231c0fea823)
+
 ## [4.1.1] - 2024-11-08
+
+### Miscellaneous Tasks
+
+- V4.1.1 [7855a85](https://github.com/openSUSE-Rust/obs-service-cargo/commit/7855a85d41ba1f9bf5b6df8dbec211a71ea1cf1d)
 
 ### Other
 
