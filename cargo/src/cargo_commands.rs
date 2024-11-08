@@ -62,7 +62,7 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
         {
             if !respect_lockfile {
                 debug!(?err);
-                error!("🛑 The lockfile needs to be updated. This operation will fail. Please set the setting `--update` to true.");
+                error!("🛑 The lockfile needs to be updated. This operation will fail. Please set the setting `--respect-lockfile` to false.");
                 error!(?possible_lockfile, "❌ 🔒 Lockfile was not regenerated for and needs update. Aborting gracefully...");
             }
         }
