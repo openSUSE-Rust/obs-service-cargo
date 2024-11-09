@@ -171,7 +171,7 @@ Respecting lockfiles is just a matter of setting `respect-lockfile` from `true` 
 > the lockfile will attempt to be updated.
 >
 > You can think of `respect-lockfile` flag as a way to check if **there are
-> any updates of the dependencies**. If set to false, it will try
+> any updates of the dependencies**. If set to true, it will try
 > to respect the version of the dependencies in lockfile by passing the `--locked` flag BUT
 > will try to update to the next compatible semver. And if there is, it will abort the operation.
 >
