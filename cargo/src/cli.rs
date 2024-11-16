@@ -113,7 +113,7 @@ pub struct Opts {
     pub i_accept_the_risk: Vec<String>,
     #[arg(
         long,
-        help = "Set of specific crates to update. If not empty, it will set the global update flag to false. See `cargo help update` for info about how to update specific crates."
+        help = "Set of specific crates to update. If not empty, it will set the global update flag to false. You can specify a valid version string by adding a `@` after the crate name e.g. `foo@1.2.3`. You can also do recursive updates of a crate by appending `recursive` to `@` e.g. `foo@recursive`. However, recursive can't be used with precise. See `cargo help update` for info about how to update specific crates."
     )]
     pub update_crate: Vec<String>,
     #[clap(flatten)]
