@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.0] - 2024-11-16
+
+### Bug Fixes
+
+- Can now determine a member that uses a glob pattern [2e9bad2](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2e9bad24aac2846a5bc0557c55adec3bacccee97)
+
+### Documentation
+
+- If set to true [c9fb0c2](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c9fb0c253dbfe3d4fc8d16b27be4306f89408d09)
+
+### Features
+
+- Update can now specify recursive or precise [b4e8525](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b4e852538ed5fe29c9d7b1cc7e5fb1dbd6b15941)
+- Add all target triples as no opt for cargo-fetch [a34992c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a34992cbf696150573cd89e2a0e607b1f2380a45)
+
 ## [4.1.2] - 2024-11-08
 
 ### Bug Fixes
@@ -11,6 +26,10 @@ All notable changes to this project will be documented in this file.
 ### Documentation
 
 - Replace underscore with dash [4e2ba58](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4e2ba58534dabdcdd45923bb4804d231c0fea823)
+
+### Miscellaneous Tasks
+
+- V4.1.2 [72eae19](https://github.com/openSUSE-Rust/obs-service-cargo/commit/72eae19a79db12b1cfce4fe182f591cca494017d)
 
 ## [4.1.1] - 2024-11-08
 
