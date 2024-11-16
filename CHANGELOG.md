@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.2] - 2024-11-16
+
+### Bug Fixes
+
+- Add warning [18a17da](https://github.com/openSUSE-Rust/obs-service-cargo/commit/18a17da069998e8d5e4e7b7881edeaab83f2fd01)
+
 ## [4.2.1] - 2024-11-16
 
 ### Bug Fixes
 
 - Ignore error when crate dependency does not exist for manifest path [60f04a4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/60f04a44a043556f929ea93c8269008e1ada931d)
+
+### Miscellaneous Tasks
+
+- V4.2.1 [8b411db](https://github.com/openSUSE-Rust/obs-service-cargo/commit/8b411db17dc4008f4eb4dbde51366773de595b64)
 
 ## [4.2.0] - 2024-11-16
 
