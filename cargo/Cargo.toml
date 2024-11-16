@@ -19,6 +19,7 @@ terminfo = "0.9"
 toml = "0.8"
 libroast.workspace = true
 blake3 = "1"
+semver = "1.0.23"
 
 [lints]
 workspace = true

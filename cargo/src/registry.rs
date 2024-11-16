@@ -54,13 +54,13 @@ pub fn run_cargo_vendor_home_registry(
                     }
                 }
                 global_has_deps = has_deps || global_has_deps;
-                if registry.update {
-                    cargo_update(
-                        custom_root,
-                        &possible_root_manifest.to_string_lossy(),
-                        registry.respect_lockfile,
-                    )?;
-                }
+                cargo_update(
+                    registry.update,
+                    &registry.update_crate,
+                    custom_root,
+                    &possible_root_manifest.to_string_lossy(),
+                    registry.respect_lockfile,
+                )?;
                 info!(?setup_workdir, "🌳 Finished setting up workdir.");
                 info!("🚝 Attempting to fetch dependencies.");
                 cargo_fetch(
@@ -92,21 +92,22 @@ pub fn run_cargo_vendor_home_registry(
                     info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
                 }
                 global_has_deps = has_deps || global_has_deps;
-                if registry.update {
-                    info!(
-                        ?full_manifest_path,
-                        "⏫ Updating dependencies for extra manifest path..."
-                    );
-                    cargo_update(
-                        full_manifest_path_parent,
-                        &full_manifest_path.to_string_lossy(),
-                        registry.respect_lockfile,
-                    )?;
-                    info!(
-                        ?full_manifest_path,
-                        "✅ Updated dependencies for extra manifest path."
-                    );
-                } else {
+                info!(
+                    ?full_manifest_path,
+                    "⏫ Updating dependencies for extra manifest path..."
+                );
+                cargo_update(
+                    registry.update,
+                    &registry.update_crate,
+                    full_manifest_path_parent,
+                    &full_manifest_path.to_string_lossy(),
+                    registry.respect_lockfile,
+                )?;
+                info!(
+                    ?full_manifest_path,
+                    "✅ Updated dependencies for extra manifest path."
+                );
+                if !registry.update {
                     warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
                 }
                 info!(

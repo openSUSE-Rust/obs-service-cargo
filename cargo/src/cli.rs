@@ -111,6 +111,11 @@ pub struct Opts {
         help = "A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it."
     )]
     pub i_accept_the_risk: Vec<String>,
+    #[arg(
+        long,
+        help = "Set of specific crates to update. If not empty, it will set the global update flag to false. See `cargo help update` for info about how to update specific crates."
+    )]
+    pub update_crate: Vec<String>,
     #[clap(flatten)]
     pub vendor_specific_args: VendorArgs,
 }
@@ -134,7 +139,7 @@ pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Res
 }
 
 impl Opts {
-    pub fn run_vendor(&self) -> io::Result<()> {
+    pub fn run_vendor(&mut self) -> io::Result<()> {
         debug!(?self);
         let tempdir_for_workdir = tempfile::Builder::new()
             .prefix(VENDOR_PATH_PREFIX)
@@ -204,6 +209,11 @@ impl Opts {
         } else {
             setup_workdir.to_path_buf()
         };
+
+        // It won't make sense for update to be globally true while specifying to update a package
+        if !&self.update_crate.is_empty() {
+            self.update = false;
+        }
 
         if setup_workdir.exists() && setup_workdir.is_dir() {
             match &self.method {

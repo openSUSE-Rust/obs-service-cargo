@@ -37,7 +37,7 @@ async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf
         filter: false,
         versioned_dirs: true,
     };
-    let opt = cli::Opts {
+    let mut opt = cli::Opts {
         method: Method::Vendor,
         src: outfile.to_path_buf(),
         custom_root: None,
@@ -46,6 +46,7 @@ async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf
         tag: Some(random_tag.clone()),
         manifest_path: vec![],
         update,
+        update_crate: vec![],
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
@@ -130,8 +131,9 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
         filter,
         versioned_dirs: true,
     };
-    let opt = cli::Opts {
+    let mut opt = cli::Opts {
         method: Method::Vendor,
+        update_crate: vec![],
         custom_root: None,
         no_root_manifest: false,
         src: outfile.to_path_buf(),
@@ -243,8 +245,9 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
         filter: true,
         versioned_dirs: true,
     };
-    let opt = cli::Opts {
+    let mut opt = cli::Opts {
         custom_root: None,
+        update_crate: vec![],
         no_root_manifest: true,
         method: Method::Registry,
         src: outfile.to_path_buf(),
@@ -320,7 +323,8 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
         filter: false,
         versioned_dirs: true,
     };
-    let opt = cli::Opts {
+    let mut opt = cli::Opts {
+        update_crate: vec![],
         no_root_manifest: false,
         custom_root: None,
         method: Method::Vendor,
@@ -390,7 +394,8 @@ async fn custom_root_test_1() -> io::Result<()> {
         filter: false,
         versioned_dirs: true,
     };
-    let opt = cli::Opts {
+    let mut opt = cli::Opts {
+        update_crate: vec![],
         no_root_manifest: false,
         respect_lockfile: false,
         custom_root: Some("libflux".to_string()),
@@ -460,7 +465,8 @@ async fn custom_root_test_2() -> io::Result<()> {
         filter: false,
         versioned_dirs: true,
     };
-    let opt = cli::Opts {
+    let mut opt = cli::Opts {
+        update_crate: vec![],
         no_root_manifest: false,
         respect_lockfile: false,
         custom_root: Some("libflux".to_string()),

@@ -74,6 +74,7 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn cargo_vendor(
     curdir: &Path,
     versioned_dirs: bool,
@@ -81,6 +82,7 @@ pub fn cargo_vendor(
     manifest_paths: &[PathBuf],
     i_accept_the_risk: &[String],
     update: bool,
+    crates: &[String],
     respect_lockfile: bool,
 ) -> io::Result<Option<(PathBuf, String)>> {
     let which_subcommand = if filter { "vendor-filterer" } else { "vendor" };
@@ -191,9 +193,14 @@ pub fn cargo_vendor(
 
     if !update {
         warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
-    } else {
-        cargo_update(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
     }
+    cargo_update(
+        update,
+        crates,
+        curdir,
+        &first_manifest.to_string_lossy(),
+        respect_lockfile,
+    )?;
     info!("🚝 Attempting to fetch dependencies.");
     cargo_fetch(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
     info!("💼 Fetched dependencies.");
@@ -272,24 +279,73 @@ pub fn cargo_generate_lockfile(curdir: &Path, manifest: &str) -> io::Result<Stri
     })
 }
 
-pub fn cargo_update(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io::Result<String> {
-    info!("⏫ Updating dependencies...");
+pub fn cargo_update(
+    global_update: bool,
+    crates: &[String],
+    curdir: &Path,
+    manifest: &str,
+    respect_lockfile: bool,
+) -> io::Result<String> {
     let mut default_options = vec![];
-    let manifest_path = PathBuf::from(&manifest);
-    let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
-    let possible_lockfile = manifest_path_parent.join("Cargo.lock");
-    if !manifest.is_empty() {
-        default_options.push("--manifest-path".to_string());
-        default_options.push(manifest.to_string());
+    if global_update {
+        info!("⏫ Updating dependencies...");
+        let manifest_path = PathBuf::from(&manifest);
+        let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
+        let possible_lockfile = manifest_path_parent.join("Cargo.lock");
+        if !manifest.is_empty() {
+            default_options.push("--manifest-path".to_string());
+            default_options.push(manifest.to_string());
+        }
+        if possible_lockfile.is_file() && respect_lockfile {
+            default_options.push("--locked".to_string());
+        }
+        cargo_command("update", &default_options, curdir)
+            .inspect(|_| {
+                info!("✅ Updated dependencies.");
+            })
+            .inspect_err(|err| {
+                error!(?err);
+            })
+    } else
+    // If global update is false, it's possible that crates variable is not empty
+    // and user might have specified specific crates to update
+    if !crates.is_empty() {
+        for crate_ in crates.iter() {
+            if let Some((crate_name, crate_ver)) = crate_.split_once("@") {
+                default_options.push(crate_name.to_string());
+                if !crate_ver.trim().is_empty() {
+                    if *crate_ver == *"recursive" {
+                        default_options.push("--recursive".to_string());
+                    } else if semver::Version::parse(crate_ver)
+                        .map_err(|err| {
+                            error!(?err);
+                            let msg = format!("Expected a valid version string. Got {}", crate_ver);
+                            io::Error::new(io::ErrorKind::InvalidInput, msg)
+                        })
+                        .is_ok()
+                    {
+                        default_options.push("--precise".to_string());
+                        default_options.push(crate_ver.to_string());
+                    } else {
+                        let msg = format!(
+                            "Expected a valid `cargo update` option for {}. Got {}",
+                            crate_name, crate_ver
+                        );
+                        return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                    }
+                }
+            }
+        }
+        cargo_command("update", &default_options, curdir)
+            .inspect(|_| {
+                info!("✅ Updated dependencies.");
+            })
+            .inspect_err(|err| {
+                error!(?err);
+            })
+    } else {
+        let msg = "🫠 Nothing to update.".to_string();
+        info!("{}", &msg);
+        Ok(msg)
     }
-    if possible_lockfile.is_file() && respect_lockfile {
-        default_options.push("--locked".to_string());
-    }
-    cargo_command("update", &default_options, curdir)
-        .inspect(|_| {
-            info!("✅ Updated dependencies.");
-        })
-        .inspect_err(|err| {
-            error!(?err);
-        })
 }

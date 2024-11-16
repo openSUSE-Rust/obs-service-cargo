@@ -2032,6 +2032,7 @@ dependencies = [
  "rand",
  "reqwest",
  "rustsec",
+ "semver",
  "serde",
  "tempfile",
  "terminfo",

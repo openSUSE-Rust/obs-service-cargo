@@ -19,7 +19,7 @@ use tracing::{debug, error, info, warn, Level};
 use tracing_subscriber::EnvFilter;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = cli::Opts::parse();
+    let mut args = cli::Opts::parse();
 
     let terminfodb = Database::from_env().map_err(|e| {
         error!(err = ?e, "Unable to access terminfo db. This is a bug!");
