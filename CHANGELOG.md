@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.1] - 2024-11-16
+
+### Bug Fixes
+
+- Ignore error when crate dependency does not exist for manifest path [60f04a4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/60f04a44a043556f929ea93c8269008e1ada931d)
+
 ## [4.2.0] - 2024-11-16
 
 ### Bug Fixes
@@ -16,6 +22,10 @@ All notable changes to this project will be documented in this file.
 
 - Update can now specify recursive or precise [b4e8525](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b4e852538ed5fe29c9d7b1cc7e5fb1dbd6b15941)
 - Add all target triples as no opt for cargo-fetch [a34992c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a34992cbf696150573cd89e2a0e607b1f2380a45)
+
+### Miscellaneous Tasks
+
+- V4.2.0 [4109120](https://github.com/openSUSE-Rust/obs-service-cargo/commit/410912084d973597bc9fb78ef59778cfae90fdc5)
 
 ## [4.1.2] - 2024-11-08
 
