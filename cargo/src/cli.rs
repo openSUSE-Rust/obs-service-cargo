@@ -212,6 +212,9 @@ impl Opts {
 
         // It won't make sense for update to be globally true while specifying to update a package
         if !&self.update_crate.is_empty() {
+            warn!(
+                "⚠️ Global update flag was set to false because specific crates to update are set!"
+            );
             self.update = false;
         }
 
