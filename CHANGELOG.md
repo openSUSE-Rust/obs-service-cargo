@@ -6,7 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Add more info [1b76898](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1b76898784a4ef099fb5886c9750a60d4047d5d3)
 - Add warning [18a17da](https://github.com/openSUSE-Rust/obs-service-cargo/commit/18a17da069998e8d5e4e7b7881edeaab83f2fd01)
+
+### Miscellaneous Tasks
+
+- Update crate version [cfa227d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/cfa227d748227c6d47e660bc7cd84a089f51c5b1)
 
 ## [4.2.1] - 2024-11-16
 
