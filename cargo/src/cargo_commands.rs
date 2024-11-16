@@ -315,6 +315,10 @@ pub fn cargo_update(
                 default_options.push(crate_name.to_string());
                 if !crate_ver.trim().is_empty() {
                     if *crate_ver == *"recursive" {
+                        info!(
+                            "📦🔄 Applying recursive update for crate dependency {}",
+                            crate_name
+                        );
                         default_options.push("--recursive".to_string());
                     } else if semver::Version::parse(crate_ver)
                         .map_err(|err| {
@@ -324,6 +328,10 @@ pub fn cargo_update(
                         })
                         .is_ok()
                     {
+                        info!(
+                            "📦🥄 Applying precise update for crate dependency {} to version {}",
+                            crate_name, crate_ver
+                        );
                         default_options.push("--precise".to_string());
                         default_options.push(crate_ver.to_string());
                     } else {
