@@ -336,13 +336,19 @@ pub fn cargo_update(
                 }
             }
         }
-        cargo_command("update", &default_options, curdir)
+        let _ = cargo_command("update", &default_options, curdir)
             .inspect(|_| {
                 info!("✅ Updated dependencies.");
             })
             .inspect_err(|err| {
                 error!(?err);
-            })
+                // There is no point of handling error if a PKGID or crate does not exist for a particular manifest path
+                // because at the end of the day, if two manifest paths do have the same crate that was specified to update
+                // then the one in the registry or vendor gets updated with the same version as well.
+                // NOTE: Maybe in the future we can add ways to be specific on each manifest path
+                warn!("This error will be ignored.");
+            });
+        Ok("".to_string())
     } else {
         let msg = "🫠 Nothing to update.".to_string();
         info!("{}", &msg);
