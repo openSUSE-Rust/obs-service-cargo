@@ -336,111 +336,184 @@ pub fn cargo_update(
         for crate_ in crates.iter() {
             let mut new_cur_dir = curdir.to_path_buf();
             if let Some((crate_name, string_tail)) = crate_.split_once("@") {
+                info!(
+                    "🦀 Applying update for specified crate dependency {}.",
+                    crate_name
+                );
                 default_options.push(crate_name.to_string());
-                if let Some((crate_ver, dependent)) = string_tail.split_once("+") {
-                    if !crate_ver.trim().is_empty() {
-                        if *crate_ver == *"recursive" {
+                if !string_tail.is_empty() {
+                    if let Some((crate_ver, dependent)) = string_tail.split_once("+") {
+                        if !crate_ver.trim().is_empty() {
+                            if *crate_ver == *"recursive" {
+                                info!(
+                                    "📦🔄 Applying recursive update for crate dependency {}",
+                                    crate_name
+                                );
+                                default_options.push("--recursive".to_string());
+                            } else if semver::Version::parse(crate_ver)
+                                .map_err(|err| {
+                                    error!(?err);
+                                    let msg = format!(
+                                        "Expected a valid version string. Got {}",
+                                        crate_ver
+                                    );
+                                    io::Error::new(io::ErrorKind::InvalidInput, msg)
+                                })
+                                .is_ok()
+                            {
+                                info!(
+                            "📦🥄 Applying precise update for crate dependency {} to version {}",
+                            crate_name, crate_ver
+                        );
+                                default_options.push("--precise".to_string());
+                                default_options.push(crate_ver.to_string());
+                            } else {
+                                let msg = format!(
+                                    "Expected a valid `cargo update` option for {}. Got {}",
+                                    crate_name, crate_ver
+                                );
+                                return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                            }
+                        }
+
+                        if !dependent.trim().is_empty() {
+                            if !dependent.ends_with("Cargo.toml") {
+                                let msg = format!(
+                                    "Expected a valid manifest filename. Got {}.",
+                                    dependent,
+                                );
+                                error!(?dependent, msg);
+                                return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                            }
+                            info!("🏗️ Updating {} at {}.", crate_name, dependent);
+                            let dependent_manifest_path = curdir.join(dependent).canonicalize()?;
+                            default_options.push("--manifest-path".to_string());
+                            default_options
+                                .push(dependent_manifest_path.to_string_lossy().to_string());
+                            let manifest_path_parent =
+                                dependent_manifest_path.parent().unwrap_or(curdir);
+                            new_cur_dir = manifest_path_parent.to_path_buf();
+                            let possible_lockfile = manifest_path_parent.join("Cargo.lock");
+                            if possible_lockfile.is_file() && respect_lockfile {
+                                default_options.push("--locked".to_string());
+                            }
+                        }
+                    } else {
+                        // NOTE: string_tail then is now our crate version
+                        if *string_tail == *"recursive" {
                             info!(
                                 "📦🔄 Applying recursive update for crate dependency {}",
                                 crate_name
                             );
                             default_options.push("--recursive".to_string());
-                        } else if semver::Version::parse(crate_ver)
+                        } else if semver::Version::parse(string_tail)
                             .map_err(|err| {
                                 error!(?err);
                                 let msg =
-                                    format!("Expected a valid version string. Got {}", crate_ver);
+                                    format!("Expected a valid version string. Got {}", string_tail);
                                 io::Error::new(io::ErrorKind::InvalidInput, msg)
                             })
                             .is_ok()
                         {
                             info!(
                             "📦🥄 Applying precise update for crate dependency {} to version {}",
-                            crate_name, crate_ver
+                            crate_name, string_tail
                         );
                             default_options.push("--precise".to_string());
-                            default_options.push(crate_ver.to_string());
+                            default_options.push(string_tail.to_string());
                         } else {
                             let msg = format!(
                                 "Expected a valid `cargo update` option for {}. Got {}",
-                                crate_name, crate_ver
+                                crate_name, string_tail
                             );
                             return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
-                        }
-                    }
-
-                    if !dependent.trim().is_empty() {
-                        if !dependent.ends_with("Cargo.toml") {
-                            let msg =
-                                format!("Expected a valid manifest filename. Got {}.", dependent,);
-                            error!(?dependent, msg);
-                            return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
-                        }
-                        info!("🏗️ Updating {} at {}.", crate_name, dependent);
-                        let dependent_manifest_path = curdir.join(dependent).canonicalize()?;
-                        default_options.push("--manifest-path".to_string());
-                        default_options.push(dependent_manifest_path.to_string_lossy().to_string());
-                        let manifest_path_parent =
-                            dependent_manifest_path.parent().unwrap_or(curdir);
-                        new_cur_dir = manifest_path_parent.to_path_buf();
-                        let possible_lockfile = manifest_path_parent.join("Cargo.lock");
-                        if possible_lockfile.is_file() && respect_lockfile {
-                            default_options.push("--locked".to_string());
                         }
                     }
                 }
             // NOTE: `+` can be first then `@` second.
             } else if let Some((crate_name, string_tail)) = crate_.split_once("+") {
                 default_options.push(crate_name.to_string());
-                if let Some((dependent, crate_ver)) = string_tail.split_once("@") {
-                    if !crate_ver.trim().is_empty() {
-                        if *crate_ver == *"recursive" {
-                            info!(
-                                "📦🔄 Applying recursive update for crate dependency {}",
-                                crate_name
-                            );
-                            default_options.push("--recursive".to_string());
-                        } else if semver::Version::parse(crate_ver)
-                            .map_err(|err| {
-                                error!(?err);
-                                let msg =
-                                    format!("Expected a valid version string. Got {}", crate_ver);
-                                io::Error::new(io::ErrorKind::InvalidInput, msg)
-                            })
-                            .is_ok()
-                        {
-                            info!(
+                if !string_tail.is_empty() {
+                    if let Some((dependent, crate_ver)) = string_tail.split_once("@") {
+                        if !crate_ver.trim().is_empty() {
+                            if *crate_ver == *"recursive" {
+                                info!(
+                                    "📦🔄 Applying recursive update for crate dependency {}",
+                                    crate_name
+                                );
+                                default_options.push("--recursive".to_string());
+                            } else if semver::Version::parse(crate_ver)
+                                .map_err(|err| {
+                                    error!(?err);
+                                    let msg = format!(
+                                        "Expected a valid version string. Got {}",
+                                        crate_ver
+                                    );
+                                    io::Error::new(io::ErrorKind::InvalidInput, msg)
+                                })
+                                .is_ok()
+                            {
+                                info!(
                             "📦🥄 Applying precise update for crate dependency {} to version {}",
                             crate_name, crate_ver
                         );
-                            default_options.push("--precise".to_string());
-                            default_options.push(crate_ver.to_string());
-                        } else {
-                            let msg = format!(
-                                "Expected a valid `cargo update` option for {}. Got {}",
-                                crate_name, crate_ver
-                            );
-                            return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                                default_options.push("--precise".to_string());
+                                default_options.push(crate_ver.to_string());
+                            } else {
+                                let msg = format!(
+                                    "Expected a valid `cargo update` option for {}. Got {}",
+                                    crate_name, crate_ver
+                                );
+                                return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                            }
                         }
-                    }
 
-                    if !dependent.trim().is_empty() {
-                        if !dependent.ends_with("Cargo.toml") {
-                            let msg =
-                                format!("Expected a valid manifest filename. Got {}.", dependent,);
-                            error!(?dependent, msg);
-                            return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                        if !dependent.trim().is_empty() {
+                            if !dependent.ends_with("Cargo.toml") {
+                                let msg = format!(
+                                    "Expected a valid manifest filename. Got {}.",
+                                    dependent,
+                                );
+                                error!(?dependent, msg);
+                                return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                            }
+                            info!("🏗️ Updating {} at {}.", crate_name, dependent);
+                            let dependent_manifest_path = curdir.join(dependent).canonicalize()?;
+                            default_options.push("--manifest-path".to_string());
+                            default_options
+                                .push(dependent_manifest_path.to_string_lossy().to_string());
+                            let manifest_path_parent =
+                                dependent_manifest_path.parent().unwrap_or(curdir);
+                            let possible_lockfile = manifest_path_parent.join("Cargo.lock");
+                            new_cur_dir = manifest_path_parent.to_path_buf();
+                            if possible_lockfile.is_file() && respect_lockfile {
+                                default_options.push("--locked".to_string());
+                            }
                         }
-                        info!("🏗️ Updating {} at {}.", crate_name, dependent);
-                        let dependent_manifest_path = curdir.join(dependent).canonicalize()?;
-                        default_options.push("--manifest-path".to_string());
-                        default_options.push(dependent_manifest_path.to_string_lossy().to_string());
-                        let manifest_path_parent =
-                            dependent_manifest_path.parent().unwrap_or(curdir);
-                        let possible_lockfile = manifest_path_parent.join("Cargo.lock");
-                        new_cur_dir = manifest_path_parent.to_path_buf();
-                        if possible_lockfile.is_file() && respect_lockfile {
-                            default_options.push("--locked".to_string());
+                    } else {
+                        // NOTE: string_tail is now our dependent crate here.
+                        if !string_tail.trim().is_empty() {
+                            if !string_tail.ends_with("Cargo.toml") {
+                                let msg = format!(
+                                    "Expected a valid manifest filename. Got {}.",
+                                    string_tail,
+                                );
+                                error!(?string_tail, msg);
+                                return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                            }
+                            info!("🏗️ Updating {} at {}.", crate_name, string_tail);
+                            let string_tail_manifest_path =
+                                curdir.join(string_tail).canonicalize()?;
+                            default_options.push("--manifest-path".to_string());
+                            default_options
+                                .push(string_tail_manifest_path.to_string_lossy().to_string());
+                            let manifest_path_parent =
+                                string_tail_manifest_path.parent().unwrap_or(curdir);
+                            let possible_lockfile = manifest_path_parent.join("Cargo.lock");
+                            new_cur_dir = manifest_path_parent.to_path_buf();
+                            if possible_lockfile.is_file() && respect_lockfile {
+                                default_options.push("--locked".to_string());
+                            }
                         }
                     }
                 }
