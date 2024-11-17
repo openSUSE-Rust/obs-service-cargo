@@ -54,17 +54,21 @@ pub fn run_cargo_vendor_home_registry(
                     }
                 }
                 global_has_deps = has_deps || global_has_deps;
+                let possible_root_manifest_parent = possible_root_manifest
+                    .parent()
+                    .unwrap_or(custom_root)
+                    .canonicalize()?;
                 cargo_update(
                     registry.update,
                     &registry.update_crate,
-                    custom_root,
+                    &possible_root_manifest_parent,
                     &possible_root_manifest.to_string_lossy(),
                     registry.respect_lockfile,
                 )?;
                 info!(?setup_workdir, "🌳 Finished setting up workdir.");
                 info!("🚝 Attempting to fetch dependencies.");
                 cargo_fetch(
-                    custom_root,
+                    &possible_root_manifest_parent,
                     &possible_root_manifest.to_string_lossy(),
                     registry.respect_lockfile,
                 )?;
@@ -119,7 +123,7 @@ pub fn run_cargo_vendor_home_registry(
                     "🚝 Attempting to fetch dependencies at extra manifest path..."
                 );
                 cargo_fetch(
-                    custom_root,
+                    full_manifest_path_parent,
                     &full_manifest_path.to_string_lossy(),
                     registry.respect_lockfile,
                 )?;
