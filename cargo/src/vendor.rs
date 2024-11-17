@@ -25,10 +25,10 @@ pub fn run_cargo_vendor(
     debug!(?vendor_opts);
     info!("📦 Starting Cargo Vendor");
     let tmpdir_for_config = tempfile::Builder::new()
-        .prefix(".cargo_config")
+        .prefix(".vendor_out")
         .rand_bytes(12)
         .tempdir()?;
-    let cargo_config_workdir = tmpdir_for_config.path();
+    let to_vendor_cargo_config_dir = tmpdir_for_config.path();
     let mut custom_path_for_vendor_dir: String = String::new();
     // Let's attempt a clean environment here too.
     let tempdir_for_home_registry_binding = tempfile::Builder::new()
@@ -49,6 +49,7 @@ pub fn run_cargo_vendor(
             vendor_opts.update,
             &vendor_opts.update_crate,
             vendor_opts.respect_lockfile,
+            to_vendor_cargo_config_dir,
         )? {
             let lockfile_parent = lockfile.parent().unwrap_or(setup_workdir);
             let lockfile_parent_stripped = lockfile_parent
@@ -56,10 +57,10 @@ pub fn run_cargo_vendor(
                 .unwrap_or(setup_workdir);
             custom_path_for_vendor_dir.push_str(&lockfile_parent_stripped.to_string_lossy());
             // NOTE: Both lockfile and dot cargo should have the same parent path.
-            let path_to_lockfile = &cargo_config_workdir
+            let path_to_lockfile = &to_vendor_cargo_config_dir
                 .join(lockfile_parent_stripped)
                 .join("Cargo.lock");
-            let path_to_dot_cargo = &cargo_config_workdir
+            let path_to_dot_cargo = &to_vendor_cargo_config_dir
                 .join(lockfile_parent_stripped)
                 .join(".cargo");
             fs::create_dir_all(path_to_dot_cargo)?;
@@ -93,21 +94,11 @@ pub fn run_cargo_vendor(
                 "Unable to set extension",
             ));
         }
-        let vendor_path = &custom_root.join("vendor");
-        if !vendor_path.is_dir() {
-            return Err(io::Error::new(io::ErrorKind::NotFound, "No vendor path found! Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."));
-        }
-        // Process them here
-        let additional_paths = vec![format!(
-            "{},{}",
-            vendor_path.to_string_lossy(),
-            custom_path_for_vendor_dir
-        )];
         let roast_args = RoastArgs {
-            target: PathBuf::from(&cargo_config_workdir),
+            target: PathBuf::from(&to_vendor_cargo_config_dir),
             include: None,
             exclude: None,
-            additional_paths: Some(additional_paths),
+            additional_paths: None,
             outfile,
             outdir: Some(vendor_opts.outdir.to_path_buf()),
             preserve_root: false,
