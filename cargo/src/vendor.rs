@@ -41,6 +41,7 @@ pub fn run_cargo_vendor(
     // Cargo vendor stdouts the configuration for config.toml
     let res = {
         if let Some((lockfile, cargo_config_output)) = cargo_vendor(
+            setup_workdir,
             custom_root,
             vendor_opts.vendor_specific_args.versioned_dirs,
             vendor_opts.vendor_specific_args.filter,

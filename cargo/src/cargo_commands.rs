@@ -80,7 +80,8 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
 
 #[allow(clippy::too_many_arguments)]
 pub fn cargo_vendor(
-    curdir: &Path,
+    setup_workdir: &Path,
+    custom_root: &Path,
     versioned_dirs: bool,
     filter: bool,
     manifest_paths: &[PathBuf],
@@ -95,7 +96,7 @@ pub fn cargo_vendor(
     if versioned_dirs {
         default_options.push("--versioned-dirs".to_string());
     }
-    let mut first_manifest = curdir.join("Cargo.toml");
+    let mut first_manifest = custom_root.join("Cargo.toml");
     let mut lockfiles: Vec<PathBuf> = Vec::new();
     let mut global_has_deps = false;
 
@@ -107,7 +108,7 @@ pub fn cargo_vendor(
         warn!(msg, ?first_manifest);
         warn!("⚠️ Root manifest does not exist. Will attempt to fallback to manifest paths.");
         if let Some(first) = manifest_paths.first() {
-            let fallback_manifest = curdir.join(first);
+            let fallback_manifest = custom_root.join(first);
             info!(?fallback_manifest, "🐥 Fallback root manifest found.");
             if fallback_manifest.exists() {
                 first_manifest = fallback_manifest.to_path_buf();
@@ -124,14 +125,17 @@ pub fn cargo_vendor(
         };
     }
 
-    let first_manifest_parent = first_manifest.parent().unwrap_or(curdir).canonicalize()?;
+    let first_manifest_parent = first_manifest
+        .parent()
+        .unwrap_or(custom_root)
+        .canonicalize()?;
     let possible_lockfile = first_manifest_parent.join("Cargo.lock");
     let is_manifest_workspace = is_workspace(&first_manifest)?;
     let has_deps = has_dependencies(&first_manifest)?;
 
     if is_manifest_workspace {
         info!("ℹ️ This manifest is in WORKSPACE configuration.");
-        let workspace_has_deps = workspace_has_dependencies(curdir, &first_manifest)?;
+        let workspace_has_deps = workspace_has_dependencies(custom_root, &first_manifest)?;
         if !workspace_has_deps {
             warn!("⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
         }
@@ -143,13 +147,13 @@ pub fn cargo_vendor(
 
     global_has_deps = global_has_deps || has_deps;
     manifest_paths.iter().try_for_each(|manifest| {
-        let extra_full_manifest_path = curdir.join(manifest).canonicalize()?;
+        let extra_full_manifest_path = custom_root.join(manifest).canonicalize()?;
         if extra_full_manifest_path.exists() {
             let is_manifest_workspace = is_workspace(&extra_full_manifest_path)?;
             let has_deps = has_dependencies(&extra_full_manifest_path)?;
             if is_manifest_workspace {
                 info!(?extra_full_manifest_path, "ℹ️ This manifest is in WORKSPACE configuration.");
-                let workspace_has_deps = workspace_has_dependencies(curdir, &first_manifest)?;
+                let workspace_has_deps = workspace_has_dependencies(custom_root, &first_manifest)?;
                 if !workspace_has_deps {
                     warn!("⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
                 }
@@ -219,7 +223,7 @@ pub fn cargo_vendor(
         respect_lockfile,
     )?;
     let vendor_dir = first_manifest_parent
-        .strip_prefix(curdir)
+        .strip_prefix(setup_workdir)
         .unwrap_or(&first_manifest_parent);
     let vendor_dir = to_vendor_cargo_config_dir.join(vendor_dir).join("vendor");
     default_options.push(vendor_dir.to_string_lossy().to_string());
