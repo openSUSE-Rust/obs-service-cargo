@@ -135,6 +135,7 @@ pub fn cargo_vendor(
 
     if is_manifest_workspace {
         info!("ℹ️ This manifest is in WORKSPACE configuration.");
+        default_options.push("--workspace".to_string());
         let workspace_has_deps = workspace_has_dependencies(custom_root, &first_manifest)?;
         if !workspace_has_deps {
             warn!("⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
@@ -210,6 +211,7 @@ pub fn cargo_vendor(
 
     cargo_update(
         update,
+        is_manifest_workspace,
         crates,
         &first_manifest_parent,
         &first_manifest.to_string_lossy(),
@@ -304,6 +306,7 @@ pub fn cargo_generate_lockfile(curdir: &Path, manifest: &str) -> io::Result<Stri
 
 pub fn cargo_update(
     global_update: bool,
+    is_workspace: bool,
     crates: &[String],
     curdir: &Path,
     manifest: &str,
@@ -311,6 +314,9 @@ pub fn cargo_update(
 ) -> io::Result<String> {
     let mut default_options = vec![];
     if global_update {
+        if is_workspace {
+            default_options.push("--workspace".to_string());
+        }
         info!("⏫ Updating dependencies...");
         let manifest_path = PathBuf::from(&manifest).canonicalize()?;
         let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
@@ -335,6 +341,10 @@ pub fn cargo_update(
     if !crates.is_empty() {
         for crate_ in crates.iter() {
             let mut new_cur_dir = curdir.to_path_buf();
+            default_options = Vec::new();
+            if is_workspace {
+                default_options.push("--workspace".to_string());
+            }
             if let Some((crate_name, string_tail)) = crate_.split_once("@") {
                 info!(
                     "🦀 Applying update for specified crate dependency {}.",
@@ -517,6 +527,12 @@ pub fn cargo_update(
                         }
                     }
                 }
+            } else {
+                info!(
+                    "🥺 Doing best effort update for specified crate dependency {}",
+                    crate_
+                );
+                default_options.push(crate_.to_string());
             }
             cargo_command("update", &default_options, new_cur_dir)
                 .inspect(|_| {

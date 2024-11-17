@@ -60,6 +60,7 @@ pub fn run_cargo_vendor_home_registry(
                     .canonicalize()?;
                 cargo_update(
                     registry.update,
+                    is_workspace,
                     &registry.update_crate,
                     &possible_root_manifest_parent,
                     &possible_root_manifest.to_string_lossy(),
@@ -112,6 +113,7 @@ pub fn run_cargo_vendor_home_registry(
                 }
                 cargo_update(
                     registry.update,
+                    is_workspace,
                     &registry.update_crate,
                     full_manifest_path_parent,
                     &full_manifest_path.to_string_lossy(),
