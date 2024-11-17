@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.0] - 2024-11-17
+
+### Bug Fixes
+
+- Resolve location for the vendor directory [d075067](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d075067848d1dc419650ce710a36e59e631dd61c)
+- Do not canonicalize in first_manifest [9391bbf](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9391bbf9f522059b36963bac602b0a7fa76b00a3)
+- Remove the wrongly used else-clause [9b599a0](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9b599a07ce3df2fa5112aca4f6bb2d057d6b5da6)
+
+### Documentation
+
+- Update docs to include the new feature with feature additions [9fbb7e5](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9fbb7e55d21a6a705b854959e39d9fca02a5d852)
+
+### Improvements
+
+- Ensure that the additional manifest paths ends with `Cargo.toml` [37a9d48](https://github.com/openSUSE-Rust/obs-service-cargo/commit/37a9d48d0974b1240e086a93ce5cfd31134a706d)
+- Parent path of Cargo.toml files are now set as current directory when invoking commands [d3354d8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d3354d8cc1b806a19a7b6a7dee94754aae913611)
+
+### Removed
+
+- It's not our bug. using `--target` for multiple triples now removed [8c33c19](https://github.com/openSUSE-Rust/obs-service-cargo/commit/8c33c19572a0977a776c6efda012540cd28609b4)
+
 ## [4.2.2] - 2024-11-16
 
 ### Bug Fixes
@@ -11,6 +32,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
+- V4.2.2 [bb7019c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/bb7019c08fa6ac1b38e58c1a5cd275a3651f4a53)
 - Update crate version [cfa227d](https://github.com/openSUSE-Rust/obs-service-cargo/commit/cfa227d748227c6d47e660bc7cd84a089f51c5b1)
 
 ## [4.2.1] - 2024-11-16
