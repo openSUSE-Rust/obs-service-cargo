@@ -77,6 +77,14 @@ pub fn run_cargo_vendor_home_registry(
         }
         let mut lockfiles: Vec<PathBuf> = Vec::new();
         for manifest in &registry.manifest_path {
+            if !manifest.ends_with("Cargo.toml") {
+                let msg = format!(
+                    "Expected a valid manifest filename. Got {}.",
+                    manifest.display()
+                );
+                error!(?manifest, msg);
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+            }
             let full_manifest_path = &custom_root.join(manifest);
             let full_manifest_path_parent = full_manifest_path.parent().unwrap_or(setup_workdir);
             if full_manifest_path.is_file() {

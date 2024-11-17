@@ -362,6 +362,12 @@ pub fn cargo_update(
                     }
 
                     if !dependent.trim().is_empty() {
+                        if !dependent.ends_with("Cargo.toml") {
+                            let msg =
+                                format!("Expected a valid manifest filename. Got {}.", dependent,);
+                            error!(?dependent, msg);
+                            return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                        }
                         info!("🏗️ Updating {} at {}.", crate_name, dependent);
                         let dependent_manifest_path = curdir.join(dependent).canonicalize()?;
                         default_options.push("--manifest-path".to_string());
@@ -411,6 +417,12 @@ pub fn cargo_update(
                     }
 
                     if !dependent.trim().is_empty() {
+                        if !dependent.ends_with("Cargo.toml") {
+                            let msg =
+                                format!("Expected a valid manifest filename. Got {}.", dependent,);
+                            error!(?dependent, msg);
+                            return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
+                        }
                         info!("🏗️ Updating {} at {}.", crate_name, dependent);
                         let dependent_manifest_path = curdir.join(dependent).canonicalize()?;
                         default_options.push("--manifest-path".to_string());
