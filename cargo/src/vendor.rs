@@ -2,6 +2,7 @@ use glob::glob;
 use libroast::common::Compression;
 use libroast::operations::cli::RoastArgs;
 use libroast::operations::roast::roast_opts;
+use libroast::utils;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -29,7 +30,6 @@ pub fn run_cargo_vendor(
         .rand_bytes(12)
         .tempdir()?;
     let to_vendor_cargo_config_dir = tmpdir_for_config.path();
-    let mut custom_path_for_vendor_dir: String = String::new();
     // Let's attempt a clean environment here too.
     let tempdir_for_home_registry_binding = tempfile::Builder::new()
         .prefix(".cargo")
@@ -41,7 +41,6 @@ pub fn run_cargo_vendor(
     // Cargo vendor stdouts the configuration for config.toml
     let res = {
         if let Some((lockfile, cargo_config_output)) = cargo_vendor(
-            setup_workdir,
             custom_root,
             vendor_opts.vendor_specific_args.versioned_dirs,
             vendor_opts.vendor_specific_args.filter,
@@ -50,25 +49,35 @@ pub fn run_cargo_vendor(
             vendor_opts.update,
             &vendor_opts.update_crate,
             vendor_opts.respect_lockfile,
-            to_vendor_cargo_config_dir,
         )? {
             let lockfile_parent = lockfile.parent().unwrap_or(setup_workdir);
             let lockfile_parent_stripped = lockfile_parent
                 .strip_prefix(setup_workdir)
                 .unwrap_or(setup_workdir);
-            custom_path_for_vendor_dir.push_str(&lockfile_parent_stripped.to_string_lossy());
             // NOTE: Both lockfile and dot cargo should have the same parent path.
-            let path_to_lockfile = &to_vendor_cargo_config_dir
+            let target_archive_path_for_lockfile = &to_vendor_cargo_config_dir
                 .join(lockfile_parent_stripped)
                 .join("Cargo.lock");
-            let path_to_dot_cargo = &to_vendor_cargo_config_dir
+            let target_archive_path_for_dot_cargo = &to_vendor_cargo_config_dir
                 .join(lockfile_parent_stripped)
                 .join(".cargo");
-            fs::create_dir_all(path_to_dot_cargo)?;
-            fs::copy(lockfile, path_to_lockfile)?;
+            // NOTE: It's always in the same directory as Cargo.lock.
+            let path_to_vendor_dir = lockfile_parent.join("vendor");
+            if !path_to_vendor_dir.is_dir() {
+                let msg = "🫠 Vendor directory not found... Aborting process. Please report a bug to <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.";
+                error!(msg);
+                return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+            }
+            let target_archive_path_for_vendor_dir = &to_vendor_cargo_config_dir
+                .join(lockfile_parent_stripped)
+                .join("vendor");
+            fs::create_dir_all(target_archive_path_for_dot_cargo)?;
+            fs::copy(lockfile, target_archive_path_for_lockfile)?;
+            utils::copy_dir_all(path_to_vendor_dir, target_archive_path_for_vendor_dir)?;
             // NOTE maybe in the future, we might need to respect import
             // an existing `cargo.toml` but I doubt that's necessary?
-            let path_to_dot_cargo_cargo_config = &path_to_dot_cargo.join("config.toml");
+            let path_to_dot_cargo_cargo_config =
+                &target_archive_path_for_dot_cargo.join("config.toml");
             let mut cargo_config_file = fs::File::create(path_to_dot_cargo_cargo_config)?;
             cargo_config_file.write_all(cargo_config_output.as_bytes())?;
             debug!(?cargo_config_file);

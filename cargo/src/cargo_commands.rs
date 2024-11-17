@@ -80,7 +80,6 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
 
 #[allow(clippy::too_many_arguments)]
 pub fn cargo_vendor(
-    setup_workdir: &Path,
     custom_root: &Path,
     versioned_dirs: bool,
     filter: bool,
@@ -89,7 +88,6 @@ pub fn cargo_vendor(
     update: bool,
     crates: &[String],
     respect_lockfile: bool,
-    to_vendor_cargo_config_dir: &Path,
 ) -> io::Result<Option<(PathBuf, String)>> {
     let which_subcommand = if filter { "vendor-filterer" } else { "vendor" };
     let mut default_options: Vec<String> = vec![];
@@ -222,11 +220,6 @@ pub fn cargo_vendor(
         &first_manifest.to_string_lossy(),
         respect_lockfile,
     )?;
-    let vendor_dir = first_manifest_parent
-        .strip_prefix(setup_workdir)
-        .unwrap_or(&first_manifest_parent);
-    let vendor_dir = to_vendor_cargo_config_dir.join(vendor_dir).join("vendor");
-    default_options.push(vendor_dir.to_string_lossy().to_string());
     info!("💼 Fetched dependencies.");
     info!("🏪 Running `cargo {}`...", &which_subcommand);
     let res = cargo_command(which_subcommand, &default_options, first_manifest_parent);
