@@ -2024,7 +2024,7 @@ dependencies = [
 
 [[package]]
 name = "obs-service-cargo"
-version = "4.3.1"
+version = "4.3.2"
 dependencies = [
  "blake3",
  "clap",

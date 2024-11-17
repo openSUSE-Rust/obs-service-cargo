@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.2] - 2024-11-17
+
+### Bug Fixes
+
+- Updating specific crates was not properly implemented. now resolved. [4ce3473](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4ce347325b6b25587b852fa3c1e64ac29b8ab7d0)
+
 ## [4.3.1] - 2024-11-17
 
 ### Bug Fixes
 
 - Correctly use setup_workdir and custom_root [e8b84fd](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e8b84fdbf36e1e5aec6f2398cd71b674b6f6337a)
+
+### Miscellaneous Tasks
+
+- V4.3.1 [add2cd1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/add2cd140d56bf452b4dae5e62e141cbacac0a3b)
 
 ## [4.3.0] - 2024-11-17
 
