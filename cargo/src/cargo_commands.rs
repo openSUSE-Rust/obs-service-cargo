@@ -94,7 +94,7 @@ pub fn cargo_vendor(
     if versioned_dirs {
         default_options.push("--versioned-dirs".to_string());
     }
-    let mut first_manifest = curdir.join("Cargo.toml").canonicalize()?;
+    let mut first_manifest = curdir.join("Cargo.toml");
     let mut lockfiles: Vec<PathBuf> = Vec::new();
     let mut global_has_deps = false;
 
@@ -105,10 +105,11 @@ pub fn cargo_vendor(
         );
         warn!(msg, ?first_manifest);
         warn!("⚠️ Root manifest seems to not exist. Will attempt to fallback to manifest paths.");
-        if let Some(first) = &manifest_paths.first() {
-            let _first_manifest = &curdir.join(first);
-            if _first_manifest.exists() {
-                first_manifest = _first_manifest.to_path_buf();
+        if let Some(first) = manifest_paths.first() {
+            let fallback_manifest = curdir.join(first);
+            info!(?fallback_manifest, "🐥 Fallback root manifest found.");
+            if fallback_manifest.exists() {
+                first_manifest = fallback_manifest.to_path_buf();
             } else {
                 return Err(io::Error::new(
                     io::ErrorKind::NotFound,
@@ -141,12 +142,12 @@ pub fn cargo_vendor(
 
     global_has_deps = global_has_deps || has_deps;
     manifest_paths.iter().try_for_each(|manifest| {
-        let extra_full_manifest_path = curdir.join(manifest);
+        let extra_full_manifest_path = curdir.join(manifest).canonicalize()?;
         if extra_full_manifest_path.exists() {
             let is_manifest_workspace = is_workspace(&extra_full_manifest_path)?;
             let has_deps = has_dependencies(&extra_full_manifest_path)?;
             if is_manifest_workspace {
-                info!("ℹ️ This manifest is in WORKSPACE configuration.");
+                info!(?extra_full_manifest_path, "ℹ️ This manifest is in WORKSPACE configuration.");
                 let workspace_has_deps = workspace_has_dependencies(curdir, &first_manifest)?;
                 if !workspace_has_deps {
                     warn!("⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
@@ -157,7 +158,7 @@ pub fn cargo_vendor(
                 info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
             };
             default_options.push("--sync".to_string());
-            default_options.push(manifest.to_string_lossy().to_string());
+            default_options.push(extra_full_manifest_path.to_string_lossy().to_string());
         } else {
             let msg = "Manifest path does not exist. Aborting operation.";
             error!(?extra_full_manifest_path, msg);
@@ -211,7 +212,11 @@ pub fn cargo_vendor(
     )?;
 
     info!("🚝 Attempting to fetch dependencies.");
-    cargo_fetch(curdir, &first_manifest.to_string_lossy(), respect_lockfile)?;
+    cargo_fetch(
+        &first_manifest_parent,
+        &first_manifest.to_string_lossy(),
+        respect_lockfile,
+    )?;
     info!("💼 Fetched dependencies.");
 
     // NOTE: Vendor filterer's default output format is directory so we
