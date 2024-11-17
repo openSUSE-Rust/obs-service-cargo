@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.1] - 2024-11-17
+
+### Bug Fixes
+
+- Correctly use setup_workdir and custom_root [e8b84fd](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e8b84fdbf36e1e5aec6f2398cd71b674b6f6337a)
+
 ## [4.3.0] - 2024-11-17
 
 ### Bug Fixes
@@ -18,6 +24,10 @@ All notable changes to this project will be documented in this file.
 
 - Ensure that the additional manifest paths ends with `Cargo.toml` [37a9d48](https://github.com/openSUSE-Rust/obs-service-cargo/commit/37a9d48d0974b1240e086a93ce5cfd31134a706d)
 - Parent path of Cargo.toml files are now set as current directory when invoking commands [d3354d8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d3354d8cc1b806a19a7b6a7dee94754aae913611)
+
+### Miscellaneous Tasks
+
+- V4.3.0 [36a5942](https://github.com/openSUSE-Rust/obs-service-cargo/commit/36a59427cedbeab67f6166e047d0df93919fd5d1)
 
 ### Removed
 
