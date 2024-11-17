@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use tracing::{debug, error, info, trace, warn, Level};
 
 use crate::audit;
-use crate::target::TARGET_TRIPLES;
+// use crate::target::TARGET_TRIPLES;
 use crate::vendor::has_dependencies;
 use crate::vendor::is_workspace;
 use crate::vendor::workspace_has_dependencies;
@@ -59,10 +59,10 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
         cargo_generate_lockfile(curdir, manifest)?;
         info!("🔒Regenerated lockfile.");
     }
-    TARGET_TRIPLES.iter().for_each(|target| {
-        default_options.push("--target".to_string());
-        default_options.push(target.to_string());
-    });
+    // TARGET_TRIPLES.iter().for_each(|target| {
+    //     default_options.push("--target".to_string());
+    //     default_options.push(target.to_string());
+    // });
     let res = cargo_command("fetch", &default_options, curdir);
     res.inspect(|_| {
             info!("✅ `cargo fetch` finished!");
