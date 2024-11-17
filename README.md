@@ -31,6 +31,23 @@ A good example would be the [zellij](https://zellij.dev) project. Users will jus
 </services>
 ```
 
+## Updating dependencies
+
+Updating crate dependencies require users to set `--update` to true. This is
+a global update flag. If a user wishes to update specific crate dependencies,
+this global `--update` flag will be overriden and set to false. The syntax
+for updating specific crates are as follows:
+- To pass a `--precise` flag to `cargo-update`, just add `@` and then a
+valid version string e.g. `foo@1.0.0`.
+- To pass a `--recursive` flag to `cargo-update`, just add `@` and then the
+word `recursive` e.g. `foo@recursive`.
+- To pass a specific manifest path that depends on the crate
+dependency, just add `+` and then add the specific manifest path
+e.g. `foo@1.0.0+foo/path/Cargo.toml`.
+
+> [!IMPORTANT]
+> Note that you cannot combine `--precise` and `--recursive` as stated in `cargo-help update`.
+
 ## Versioned Dirs
 
 The `--versioned-dirs` flag is used when you
@@ -437,7 +454,7 @@ The following are the parameters you can use with this utility:
    <summary>OBS Source Service to vendor all crates.io and dependencies for a Rust project</summary>
    <description><![CDATA[This service extracts a Rust application source,
   searches for a Rust application containing a Cargo.toml file,
-  download all crates.io and dependencies,
+  download all crates.io and dependecies,
   and creates a vendor.tar[.<tar compression>] to be committed allowing fully offline
   builds of Rust applications.]]></description>
    <parameter name="strategy">
@@ -445,8 +462,8 @@ The following are the parameters you can use with this utility:
    </parameter>
    <parameter name="method">
       <description>Whether to use vendor or the registry. Default: vendor</description>
-      <allowedvalue>registry</allowedvalue>
-      <allowedvalue>vendor</allowedvalue>
+      <allowedvalues>registry</allowedvalues>
+      <allowedvalues>vendor</allowedvalues>
    </parameter>
    <parameter name="src">
       <description>Where to find sources. Source is either a directory or a source tarball AND cannot be both. Aliases: srctar, srcdir</description>
@@ -462,8 +479,8 @@ The following are the parameters you can use with this utility:
    </parameter>
    <parameter name="update">
       <description>Update dependencies or not. Default: true</description>
-      <allowedvalue>false</allowedvalue>
-      <allowedvalue>true</allowedvalue>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
    </parameter>
    <parameter name="no root manifest">
       <description>Available only if `--method` is set to registry. If a
@@ -471,8 +488,8 @@ The following are the parameters you can use with this utility:
       to set the manifest path manually. Useful in combination with
       `--manifest-path` (aliased as `--cargotoml`) flag. You have to replace the spaces with dashes (-) to make this work. Default: false
       </description>
-      <allowedvalue>false</allowedvalue>
-      <allowedvalue>true</allowedvalue>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
    </parameter>
    <parameter name="tag">
       <description>Tag some files for multi-vendor and multi-cargo_config projects</description>
@@ -493,13 +510,21 @@ The following are the parameters you can use with this utility:
    </parameter>
    <parameter name="filter">
       <description>Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies. Default: false</description>
-      <allowedvalue>false</allowedvalue>
-      <allowedvalue>true</allowedvalue>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
+   </parameter>
+   <parameter name="respect lockfile">
+      <description>Whether to respect Cargo.lock or lockfiles by passing the `--locked` flag. You have to replace the spaces with dashes (-) to make this work. Default: false</description>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
    </parameter>
    <parameter name="versioned dirs">
       <description>Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor. You have to replace the spaces with dashes (-) to make this work. Default: true</description>
-      <allowedvalue>false</allowedvalue>
-      <allowedvalue>true</allowedvalue>
+      <allowedvalues>false</allowedvalues>
+      <allowedvalues>true</allowedvalues>
+   </parameter>
+   <parameter name="update crate">
+      <description>Set of specific crates to update. If not empty, it will set the global update flag to false. You can specify a valid version string by adding a `@` after the crate name e.g. `foo@1.2.3`. You can also do recursive updates of a crate by appending `recursive` to `@` e.g. `foo@recursive`. However, recursive can't be used with precise. You can specify a manifest path to update a package with `+` e.g. `foo@1.0+foo/better/Cargo.toml`. See `cargo help update` for info about how to update specific crates. You have to replace the spaces with dashes (-) to make this work.</description>
    </parameter>
 </service>
 ```
