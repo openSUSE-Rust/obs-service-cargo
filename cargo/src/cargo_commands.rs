@@ -39,10 +39,10 @@ fn cargo_command(
 pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io::Result<String> {
     info!("⤵️ Running `cargo fetch`...");
     let mut default_options: Vec<String> = vec![];
-    let manifest_path = PathBuf::from(&manifest);
+    let manifest_path = PathBuf::from(&manifest).canonicalize()?;
     if !manifest_path.is_file() {
         let msg = format!(
-            "There seems to be no manifest at this path `{}`.",
+            "🛑 There seems to be no manifest at this path `{}`.",
             manifest_path.display()
         );
         error!(msg, ?manifest_path);
@@ -94,22 +94,25 @@ pub fn cargo_vendor(
     if versioned_dirs {
         default_options.push("--versioned-dirs".to_string());
     }
-    let mut first_manifest = curdir.join("Cargo.toml");
+    let mut first_manifest = curdir.join("Cargo.toml").canonicalize()?;
     let mut lockfiles: Vec<PathBuf> = Vec::new();
     let mut global_has_deps = false;
+
     if !first_manifest.is_file() {
+        let msg = format!(
+            "⚠️ There seems to be no manifest at this path `{}`.",
+            first_manifest.display()
+        );
+        warn!(msg, ?first_manifest);
         warn!("⚠️ Root manifest seems to not exist. Will attempt to fallback to manifest paths.");
         if let Some(first) = &manifest_paths.first() {
             let _first_manifest = &curdir.join(first);
             if _first_manifest.exists() {
-                default_options.push("--manifest-path".to_string());
-                let string_lossy = &_first_manifest.to_string_lossy();
-                default_options.push(string_lossy.to_string());
                 first_manifest = _first_manifest.to_path_buf();
             } else {
                 return Err(io::Error::new(
                     io::ErrorKind::NotFound,
-                    "Failed to vendor as their are no manifest files to use.",
+                    "No manifest in this path.",
                 ));
             }
         } else {
@@ -117,13 +120,6 @@ pub fn cargo_vendor(
             error!(msg, ?manifest_paths);
             return Err(io::Error::new(io::ErrorKind::NotFound, msg));
         };
-    } else {
-        let msg = format!(
-            "There seems to be no manifest at this path `{}`.",
-            first_manifest.display()
-        );
-        error!(msg, ?first_manifest);
-        return Err(io::Error::new(io::ErrorKind::NotFound, msg));
     }
 
     let first_manifest_parent = first_manifest.parent().unwrap_or(curdir).canonicalize()?;
