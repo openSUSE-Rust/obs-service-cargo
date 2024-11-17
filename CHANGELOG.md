@@ -2,11 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.3] - 2024-11-17
+
+### Bug Fixes
+
+- Let cargo just put where the vendor directory is by default which is the curdir [4facec0](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4facec0ef23a074763bd12fe5d831cbff52af588)
+
+### Improvements
+
+- If workspace, pass the workspace flag in cargo update [ccfcfd4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ccfcfd4cb247d00fe78a47bb80fbec648993bb4b)
+
 ## [4.3.2] - 2024-11-17
 
 ### Bug Fixes
 
 - Updating specific crates was not properly implemented. now resolved. [4ce3473](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4ce347325b6b25587b852fa3c1e64ac29b8ab7d0)
+
+### Miscellaneous Tasks
+
+- V4.3.2 [5efa1c7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5efa1c79a626eb4436c678829f5724e024fcf804)
 
 ## [4.3.1] - 2024-11-17
 
