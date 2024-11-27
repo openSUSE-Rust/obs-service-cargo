@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.4] - 2024-11-27
+
+### Miscellaneous Tasks
+
+- Update roast to 5.1.7. update other dependencies as well. [1f83e79](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1f83e79c5992717a80d0abbd36e487701070a356)
+
 ## [4.3.3] - 2024-11-17
 
 ### Bug Fixes
@@ -11,6 +17,10 @@ All notable changes to this project will be documented in this file.
 ### Improvements
 
 - If workspace, pass the workspace flag in cargo update [ccfcfd4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ccfcfd4cb247d00fe78a47bb80fbec648993bb4b)
+
+### Miscellaneous Tasks
+
+- V4.3.3 [bde0300](https://github.com/openSUSE-Rust/obs-service-cargo/commit/bde030067fa40e61894d89082e9b2a348700efb2)
 
 ## [4.3.2] - 2024-11-17
 
