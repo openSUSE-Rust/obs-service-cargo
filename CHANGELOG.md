@@ -2,10 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.5] - 2024-11-27
+
+### Bug Fixes
+
+- Finally added the alias. 🫠 [6edd986](https://github.com/openSUSE-Rust/obs-service-cargo/commit/6edd986a6f2b2c1b94fd700bd3002d88904dbab1)
+
 ## [4.3.4] - 2024-11-27
 
 ### Miscellaneous Tasks
 
+- V4.3.4 [5534b17](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5534b1754c9d2c89023a48d8b69cbf1dc06b7baf)
 - Update roast to 5.1.7. update other dependencies as well. [1f83e79](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1f83e79c5992717a80d0abbd36e487701070a356)
 
 ## [4.3.3] - 2024-11-17
