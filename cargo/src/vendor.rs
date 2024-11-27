@@ -93,7 +93,7 @@ pub fn run_cargo_vendor(
         let extension = match &vendor_opts.compression {
             Compression::Gz => "tar.gz",
             Compression::Xz => "tar.xz",
-            Compression::Zst => "tar.zst",
+            Compression::Zst | Compression::Zstd => "tar.zst",
             Compression::Bz2 => "tar.bz",
             Compression::Not => "tar",
         };

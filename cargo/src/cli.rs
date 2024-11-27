@@ -132,7 +132,7 @@ pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Res
     match comp_type {
         Compression::Gz => decompress::targz(outdir, src),
         Compression::Xz => decompress::tarxz(outdir, src),
-        Compression::Zst => decompress::tarzst(outdir, src),
+        Compression::Zst | Compression::Zstd => decompress::tarzst(outdir, src),
         Compression::Bz2 => decompress::tarbz2(outdir, src),
         Compression::Not => decompress::vanilla(outdir, src),
     }

@@ -238,7 +238,7 @@ pub fn run_cargo_vendor_home_registry(
         let extension = match &registry.compression {
             Compression::Gz => "tar.gz",
             Compression::Xz => "tar.xz",
-            Compression::Zst => "tar.zst",
+            Compression::Zst | Compression::Zstd => "tar.zst",
             Compression::Bz2 => "tar.bz",
             Compression::Not => "tar",
         };
