@@ -224,7 +224,24 @@ impl Opts {
                     run_cargo_vendor_home_registry(&setup_workdir, &custom_root, self)
                 }
                 Method::Vendor => run_cargo_vendor(&setup_workdir, &custom_root, self),
-            }?;
+            }.inspect_err(|err| {
+                match err.kind() {
+                    io::ErrorKind::StorageFull => {
+                        let dir = std::env::temp_dir();
+			error!(?err);
+			error!(
+r#"🛑 Your `$TMPDIR` at {} has less storage space.
+Ensure that your `$TMPDIR` at {} has a large storage space than the vendor, registry, and extracted or copied source code.
+ℹ️ A workaround is setting `$TMPDIR` to another directory larger than the total size of your vendored tarball. For example,
+```
+export TMPDIR="$HOME/.cache"
+osc service -vvv mr cargo_vendor
+```
+"#, dir.display(), dir.display());
+                    }
+                    _ => error!(?err)
+                }
+            })?;
         } else {
             let mut msg: String =
                 "It seems that the setup workdir is not a directory or does not exist.".to_string();
