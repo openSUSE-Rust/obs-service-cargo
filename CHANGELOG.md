@@ -2,16 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.6] - 2024-12-08
+
+### Improvements
+
+- Ensure to communicate well to users when a "No space left on device occurs" [951b67a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/951b67a6ea66f0aae510d4c82ac768af5af972d5)
+
 ## [4.3.5] - 2024-11-27
 
 ### Bug Fixes
 
 - Finally added the alias. 🫠 [6edd986](https://github.com/openSUSE-Rust/obs-service-cargo/commit/6edd986a6f2b2c1b94fd700bd3002d88904dbab1)
 
-## [4.3.4] - 2024-11-27
-
 ### Miscellaneous Tasks
 
+- V4.3.5 [b439a64](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b439a648b092b9927c35f18b5e60b246e80f7f8b)
 - V4.3.4 [5534b17](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5534b1754c9d2c89023a48d8b69cbf1dc06b7baf)
 - Update roast to 5.1.7. update other dependencies as well. [1f83e79](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1f83e79c5992717a80d0abbd36e487701070a356)
 
