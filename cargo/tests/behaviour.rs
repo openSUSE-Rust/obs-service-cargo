@@ -539,8 +539,8 @@ async fn custom_root_test_3() -> io::Result<()> {
         versioned_dirs: true,
     };
     let manifest_path = vec![
-        PathBuf::from_str("bindings/python/Cargo.toml"),
-        PathBuf::from_str("tokenizers/Cargo.toml"),
+        PathBuf::from("bindings/python/Cargo.toml"),
+        PathBuf::from("tokenizers/Cargo.toml"),
     ];
 
     let mut opt = cli::Opts {
