@@ -7,7 +7,7 @@ use libroast::{
 };
 use obs_service_cargo::cli::{self, Method, VendorArgs};
 use rand::prelude::*;
-use std::{io, path::PathBuf};
+use std::{io, path::PathBuf, str::FromStr};
 use test_log::test;
 use tokio::fs;
 use tokio_test::task::spawn;
@@ -76,7 +76,7 @@ async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf
 #[test(tokio::test)]
 async fn lockfile_does_not_change_if_update_is_false() -> io::Result<()> {
     let source =
-        "https://github.com/openSUSE-Rust/obs-service-cargo/archive/refs/tags/v4.0.2.tar.gz";
+        "https://github.com/openSUSE-Rust/obs-service-cargo/archive/refs/tags/v4.3.6.tar.gz";
     let first = another_vendor_helper(source, false).await?;
     let second = another_vendor_helper(source, false).await?;
     let mut hasher1 = Hasher::default();
@@ -93,7 +93,7 @@ async fn lockfile_does_not_change_if_update_is_false() -> io::Result<()> {
 #[test(tokio::test)]
 async fn lockfile_does_change_if_update_is_true() -> io::Result<()> {
     let source =
-        "https://github.com/openSUSE-Rust/obs-service-cargo/archive/refs/tags/v4.0.2.tar.gz";
+        "https://github.com/openSUSE-Rust/obs-service-cargo/archive/refs/tags/v4.3.6.tar.gz";
     let first = another_vendor_helper(source, false).await?;
     let second = another_vendor_helper(source, true).await?;
     let mut hasher1 = Hasher::default();
@@ -189,7 +189,7 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
         // NOTE: This should not vendor anything as it does not contain any dependencies
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
         // NOTE: This should vendor
-        "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.2.tar.gz",
+        "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.7.tar.gz",
     ];
     for src in sources {
         let _ = spawn(async move {
@@ -207,7 +207,7 @@ async fn filter_vendor_sources() -> io::Result<()> {
         // NOTE: This should not vendor anything as it does not contain any dependencies
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
         // NOTE: This should vendor
-        "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.2.tar.gz",
+        "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.7.tar.gz",
     ];
     for src in sources {
         let _ = spawn(async move {
@@ -504,6 +504,84 @@ async fn custom_root_test_2() -> io::Result<()> {
         .join(".cargo")
         .join("config.toml");
     let cargo_lock_path = raw_outdir.join("libflux").join("Cargo.lock");
+    let cargo_registry_path = raw_outdir.join(".cargo").join("registry");
+    assert!(!vendor_path.is_dir());
+    assert!(!cargo_config_path.is_file());
+    assert!(cargo_lock_path.is_file());
+    assert!(cargo_registry_path.is_dir());
+    Ok(())
+}
+
+#[test(tokio::test)]
+async fn custom_root_test_3() -> io::Result<()> {
+    let source = "https://github.com/huggingface/tokenizers/archive/refs/tags/v0.21.0.tar.gz";
+    let mut rng = rand::thread_rng();
+    let random_tag: u8 = rng.gen();
+    let random_tag = random_tag.to_string();
+    let response = reqwest::get(source).await.unwrap();
+    let fname = response
+        .url()
+        .path_segments()
+        .and_then(|segments| segments.last())
+        .and_then(|name| if name.is_empty() { None } else { Some(name) })
+        .unwrap_or("balls");
+    info!("Source file: {}", &fname);
+    let outfile = format!("/{}/{}", "tmp", &fname);
+    info!("Downloaded to: '{:?}'", &outfile);
+    fs::File::create(&outfile).await.unwrap();
+    let outfile = PathBuf::from(&outfile);
+    let data = response.bytes().await.unwrap();
+    let data = data.to_vec();
+    fs::write(&outfile, data).await.unwrap();
+    let outdir = PathBuf::from("/tmp");
+    let vendor_specific_args = VendorArgs {
+        filter: false,
+        versioned_dirs: true,
+    };
+    let manifest_path = vec![
+        PathBuf::from_str("bindings/python/Cargo.toml"),
+        PathBuf::from_str("tokenizers/Cargo.toml"),
+    ];
+
+    let mut opt = cli::Opts {
+        update_crate: vec![],
+        no_root_manifest: true,
+        respect_lockfile: false,
+        custom_root: None,
+        method: Method::Registry,
+        src: outfile.to_path_buf(),
+        compression: Compression::default(),
+        tag: Some(random_tag.clone()),
+        manifest_path,
+        update: true,
+        outdir: outdir.to_path_buf(),
+        color: clap::ColorChoice::Auto,
+        i_accept_the_risk: vec![],
+        vendor_specific_args,
+    };
+
+    let res = opt.run_vendor();
+    assert!(res.is_ok());
+    let vendor_tarball = match opt.method {
+        Method::Registry => format!("registry-{}.tar.zst", &random_tag),
+        Method::Vendor => format!("vendor-{}.tar.zst", &random_tag),
+    };
+
+    let vendor_tarball_path = &outdir.join(vendor_tarball);
+    assert!(vendor_tarball_path.is_file());
+
+    let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
+    let raw_args = RawArgs {
+        target: vendor_tarball_path.to_path_buf(),
+        outdir: Some(raw_outdir.clone()),
+    };
+    raw_opts(raw_args, false)?;
+    let vendor_path = raw_outdir.join("tokenizers").join("vendor");
+    let cargo_config_path = raw_outdir
+        .join("tokenizers")
+        .join(".cargo")
+        .join("config.toml");
+    let cargo_lock_path = raw_outdir.join("tokenizers").join("Cargo.lock");
     let cargo_registry_path = raw_outdir.join(".cargo").join("registry");
     assert!(!vendor_path.is_dir());
     assert!(!cargo_config_path.is_file());
