@@ -49,7 +49,18 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
         return Err(io::Error::new(io::ErrorKind::NotFound, msg));
     }
     let manifest_path_parent = manifest_path.parent().unwrap_or(curdir).canonicalize()?;
-    let possible_lockfile = manifest_path_parent.join("Cargo.lock").canonicalize()?;
+    let possible_lockfile = manifest_path_parent.join("Cargo.lock").canonicalize();
+    let possible_lockfile = match possible_lockfile {
+        Ok(canonicalized_path_to_lockfile) => canonicalized_path_to_lockfile,
+        Err(_) => {
+            warn!("Lockfile not found in path... will attempt to regenerate");
+            cargo_generate_lockfile(&manifest_path_parent, manifest)?;
+            let possible_lockfile_check_again =
+                manifest_path_parent.join("Cargo.lock").canonicalize()?;
+            possible_lockfile_check_again
+        }
+    };
+
     if possible_lockfile.is_file() {
         if respect_lockfile {
             default_options.push("--locked".to_string());
@@ -127,7 +138,27 @@ pub fn cargo_vendor(
         .parent()
         .unwrap_or(custom_root)
         .canonicalize()?;
-    let possible_lockfile = first_manifest_parent.join("Cargo.lock");
+    let possible_lockfile = first_manifest_parent.join("Cargo.lock").canonicalize();
+    let possible_lockfile = match possible_lockfile {
+        Ok(canonicalized_path_to_lockfile) => canonicalized_path_to_lockfile,
+        Err(_) => {
+            warn!("Lockfile not found in path... will attempt to regenerate");
+            cargo_generate_lockfile(&first_manifest_parent, &first_manifest.to_string_lossy())?;
+            let possible_lockfile_check_again =
+                first_manifest_parent.join("Cargo.lock").canonicalize()?;
+            possible_lockfile_check_again
+        }
+    };
+
+    let mut hash = blake3::Hasher::new();
+
+    if possible_lockfile.is_file() {
+        let lockfile_bytes = fs::read(&possible_lockfile)?;
+        hash.update(&lockfile_bytes);
+        let output_hash = hash.finalize();
+        info!(?output_hash, "🔒 Lockfile hash before: ");
+    }
+
     let is_manifest_workspace = is_workspace(&first_manifest)?;
     let has_deps = has_dependencies(&first_manifest)?;
 
@@ -144,6 +175,7 @@ pub fn cargo_vendor(
     }
 
     global_has_deps = global_has_deps || has_deps;
+
     manifest_paths.iter().try_for_each(|manifest| {
         let extra_full_manifest_path = custom_root.join(manifest).canonicalize()?;
         if extra_full_manifest_path.exists() {
@@ -225,6 +257,10 @@ pub fn cargo_vendor(
     let res = cargo_command(which_subcommand, &default_options, first_manifest_parent);
 
     if possible_lockfile.is_file() {
+        let lockfile_bytes = fs::read(&possible_lockfile)?;
+        hash.update(&lockfile_bytes);
+        let output_hash = hash.finalize();
+        info!(?output_hash, "🔒 Lockfile hash after: ");
         info!(?possible_lockfile, "🔓 Adding lockfile.");
         lockfiles.push(possible_lockfile.as_path().to_path_buf());
     }
@@ -262,18 +298,20 @@ pub fn cargo_vendor(
 
 pub fn cargo_generate_lockfile(curdir: &Path, manifest: &str) -> io::Result<String> {
     info!("🔓 💂 Running `cargo generate-lockfile`...");
-    let mut hasher = blake3::Hasher::new();
-    let mut hasher2 = blake3::Hasher::new();
+    let mut original_hasher = blake3::Hasher::new();
+    let mut regenerated_hasher = blake3::Hasher::new();
     let mut default_options: Vec<String> = vec![];
     let manifest_path = PathBuf::from(&manifest);
     let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
     let possible_lockfile = manifest_path_parent.join("Cargo.lock");
+
     if possible_lockfile.is_file() {
         let lockfile_bytes = fs::read(&possible_lockfile)?;
-        hasher.update(&lockfile_bytes);
+        original_hasher.update(&lockfile_bytes);
     } else {
-        warn!("⚠️ No lockfile present. This might UPDATE your dependency. Overriding `update` from false to true.");
+        warn!("⚠️ No lockfile present. This **MIGHT** UPDATE your dependency.");
     }
+
     if !manifest.is_empty() {
         default_options.push("--manifest-path".to_string());
         default_options.push(manifest.to_string());
@@ -281,12 +319,15 @@ pub fn cargo_generate_lockfile(curdir: &Path, manifest: &str) -> io::Result<Stri
     let res = cargo_command("generate-lockfile", &default_options, curdir);
     if possible_lockfile.exists() {
         let lockfile_bytes = fs::read(&possible_lockfile)?;
-        hasher2.update(&lockfile_bytes);
+        regenerated_hasher.update(&lockfile_bytes);
     }
-    let hash = hasher.finalize();
-    debug!(?hash,);
-    warn!("⚠️ New lockfile generated");
-    warn!(?hash, "Hash");
+    let original_hash = original_hasher.finalize();
+    let regenerated_hash = regenerated_hasher.finalize();
+    debug!(?original_hash, ?regenerated_hash);
+    if original_hash != regenerated_hash {
+        warn!("⚠️ New lockfile generated");
+        warn!(?regenerated_hash, "Lockfile hash");
+    }
     res.inspect(|_| {
         info!("🔓 💂 `cargo generate-lockfile` finished.");
     })
@@ -307,14 +348,27 @@ pub fn cargo_update(
         info!("⏫ Updating dependencies...");
         let manifest_path = PathBuf::from(&manifest).canonicalize()?;
         let manifest_path_parent = manifest_path.parent().unwrap_or(curdir);
-        let possible_lockfile = manifest_path_parent.join("Cargo.lock").canonicalize()?;
+        let possible_lockfile = manifest_path_parent.join("Cargo.lock").canonicalize();
+        let possible_lockfile = match possible_lockfile {
+            Ok(canonicalized_path_to_lockfile) => canonicalized_path_to_lockfile,
+            Err(_) => {
+                warn!("Lockfile not found in path... will attempt to regenerate");
+                cargo_generate_lockfile(&manifest_path_parent, manifest)?;
+                let possible_lockfile_check_again =
+                    manifest_path_parent.join("Cargo.lock").canonicalize()?;
+                possible_lockfile_check_again
+            }
+        };
+
         if !manifest.is_empty() {
             default_options.push("--manifest-path".to_string());
             default_options.push(manifest.to_string());
         }
+
         if possible_lockfile.is_file() && respect_lockfile {
             default_options.push("--locked".to_string());
         }
+
         cargo_command("update", &default_options, curdir)
             .inspect(|_| {
                 info!("✅ Updated dependencies.");

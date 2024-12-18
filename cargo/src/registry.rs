@@ -21,7 +21,6 @@ pub fn run_cargo_vendor_home_registry(
     custom_root: &Path,
     registry: &Opts,
 ) -> io::Result<()> {
-
     debug!(?registry);
     info!("🛖🏃📦 Starting Cargo Vendor Home Registry");
 
@@ -33,11 +32,13 @@ pub fn run_cargo_vendor_home_registry(
     let home_registry = &tempdir_for_home_registry_binding.path();
     let home_registry_dot_cargo = &home_registry.join(".cargo");
     let mut global_has_deps = false;
+
     std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
 
     let res = {
         debug!(?home_registry_dot_cargo);
         if !registry.no_root_manifest {
+            let mut hash = blake3::Hasher::new();
             let possible_root_manifest = custom_root.join("Cargo.toml");
             if possible_root_manifest.is_file() {
                 let is_workspace = is_workspace(&possible_root_manifest)?;
@@ -60,10 +61,26 @@ pub fn run_cargo_vendor_home_registry(
                 }
 
                 global_has_deps = has_deps || global_has_deps;
+
                 let possible_root_manifest_parent = possible_root_manifest
                     .parent()
                     .unwrap_or(custom_root)
                     .canonicalize()?;
+
+                let possible_lockfile = possible_root_manifest_parent.join("Cargo.lock");
+
+                if possible_lockfile.is_file() {
+                    let lockfile_bytes = fs::read(&possible_lockfile)?;
+                    hash.update(&lockfile_bytes);
+                    let output_hash = hash.finalize();
+                    info!(?output_hash, "🔒 Lockfile hash before: ");
+                } else {
+                    let output_hash = hash.finalize();
+                    info!(
+                        ?output_hash,
+                        "🔒 Lockfile not found. Showing default generated hash: "
+                    );
+                }
 
                 cargo_update(
                     registry.update,
@@ -82,6 +99,13 @@ pub fn run_cargo_vendor_home_registry(
                     registry.respect_lockfile,
                 )?;
 
+                if possible_lockfile.is_file() {
+                    let lockfile_bytes = fs::read(&possible_lockfile)?;
+                    hash.update(&lockfile_bytes);
+                    let output_hash = hash.finalize();
+                    info!(?output_hash, "🔒 Lockfile hash after: ");
+                }
+
                 info!("💼 Fetched dependencies.");
             }
         }
@@ -89,6 +113,7 @@ pub fn run_cargo_vendor_home_registry(
         let mut lockfiles: Vec<PathBuf> = Vec::new();
 
         for manifest in &registry.manifest_path {
+            let mut hash = blake3::Hasher::new();
             if !manifest.ends_with("Cargo.toml") {
                 let msg = format!(
                     "Expected a valid manifest filename. Got {}.",
@@ -104,6 +129,20 @@ pub fn run_cargo_vendor_home_registry(
             if full_manifest_path.is_file() {
                 let is_workspace = is_workspace(full_manifest_path)?;
                 let has_deps = has_dependencies(full_manifest_path)?;
+                let possible_lockfile = full_manifest_path_parent.join("Cargo.lock");
+
+                if possible_lockfile.is_file() {
+                    let lockfile_bytes = fs::read(&possible_lockfile)?;
+                    hash.update(&lockfile_bytes);
+                    let output_hash = hash.finalize();
+                    info!(?output_hash, "🔒 Lockfile hash before: ");
+                } else {
+                    let output_hash = hash.finalize();
+                    info!(
+                        ?output_hash,
+                        "🔒 Lockfile not found. Showing default generated hash: "
+                    );
+                }
 
                 if is_workspace {
                     info!("ℹ️ This manifest is in WORKSPACE configuration.");
@@ -168,29 +207,29 @@ pub fn run_cargo_vendor_home_registry(
             }
 
             let possible_lockfile = full_manifest_path_parent.join("Cargo.lock");
-            let possible_lockfile = &possible_lockfile
-                .canonicalize()
-                .unwrap_or(possible_lockfile.to_path_buf());
 
-            if possible_lockfile.exists() {
+            if possible_lockfile.is_file() {
+                let lockfile_bytes = fs::read(&possible_lockfile)?;
+                hash.update(&lockfile_bytes);
+                let output_hash = hash.finalize();
+                info!(?output_hash, "🔒 Lockfile hash after: ");
                 info!(
                     ?possible_lockfile,
                     "🔒 👀 Found an extra lockfile. Adding it to home registry for vendoring."
                 );
-                let stripped_lockfile_path = possible_lockfile
+                let stripped_lockfile_path = &possible_lockfile
                     .strip_prefix(setup_workdir)
-                    .unwrap_or(possible_lockfile);
+                    .unwrap_or(&possible_lockfile);
                 let new_lockfile_path = &home_registry.join(stripped_lockfile_path);
                 let new_lockfile_parent = new_lockfile_path.parent().unwrap_or(home_registry);
                 fs::create_dir_all(new_lockfile_parent)?;
-                fs::copy(possible_lockfile, new_lockfile_path)?;
+                fs::copy(&possible_lockfile, new_lockfile_path)?;
                 info!(
                     ?possible_lockfile,
                     "🔒 🌟 Successfully added extra lockfile."
                 );
                 lockfiles.push(possible_lockfile.to_path_buf());
             }
-
         }
 
         if !registry.no_root_manifest {
