@@ -7,7 +7,7 @@ use libroast::{
 };
 use obs_service_cargo::cli::{self, Method, VendorArgs};
 use rand::prelude::*;
-use std::{io, path::PathBuf, str::FromStr};
+use std::{io, path::PathBuf};
 use test_log::test;
 use tokio::fs;
 use tokio_test::task::spawn;
