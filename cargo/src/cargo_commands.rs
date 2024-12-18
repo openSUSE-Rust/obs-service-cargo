@@ -55,9 +55,7 @@ pub fn cargo_fetch(curdir: &Path, manifest: &str, respect_lockfile: bool) -> io:
         Err(_) => {
             warn!("Lockfile not found in path... will attempt to regenerate");
             cargo_generate_lockfile(&manifest_path_parent, manifest)?;
-            let possible_lockfile_check_again =
-                manifest_path_parent.join("Cargo.lock").canonicalize()?;
-            possible_lockfile_check_again
+            manifest_path_parent.join("Cargo.lock").canonicalize()?
         }
     };
 
@@ -144,9 +142,7 @@ pub fn cargo_vendor(
         Err(_) => {
             warn!("Lockfile not found in path... will attempt to regenerate");
             cargo_generate_lockfile(&first_manifest_parent, &first_manifest.to_string_lossy())?;
-            let possible_lockfile_check_again =
-                first_manifest_parent.join("Cargo.lock").canonicalize()?;
-            possible_lockfile_check_again
+            first_manifest_parent.join("Cargo.lock").canonicalize()?
         }
     };
 
@@ -353,10 +349,8 @@ pub fn cargo_update(
             Ok(canonicalized_path_to_lockfile) => canonicalized_path_to_lockfile,
             Err(_) => {
                 warn!("Lockfile not found in path... will attempt to regenerate");
-                cargo_generate_lockfile(&manifest_path_parent, manifest)?;
-                let possible_lockfile_check_again =
-                    manifest_path_parent.join("Cargo.lock").canonicalize()?;
-                possible_lockfile_check_again
+                cargo_generate_lockfile(manifest_path_parent, manifest)?;
+                manifest_path_parent.join("Cargo.lock").canonicalize()?
             }
         };
 
