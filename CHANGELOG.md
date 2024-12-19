@@ -2,11 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.0] - 2024-12-19
+
+### Bug Fixes
+
+- It should be using custom_root and not setup_workdir [d742d0c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d742d0cb94b39119de976514fa4134ab76950e3a)
+
+### Improvements
+
+- Ensure paths are handled. also output the hashes of lockfiles before and after. [4f41305](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4f41305c7b1619c35931d31b7505648b35974859)
+
+### Miscellaneous Tasks
+
+- Apply clippy suggestions [a760d59](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a760d5988b90a938111db3396bbf7caead42bae3)
+- Set MSRV to 1.83 [5430b09](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5430b093fc5f6d4ab2ae31a8fabdd34bbd0691c7)
+- Update Cargo.lock [5c50afd](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5c50afd7c57b9ef0deb698bb78a5e9a4c814086d)
+
+### Testing
+
+- From_str to from in PathBuf [676d402](https://github.com/openSUSE-Rust/obs-service-cargo/commit/676d402b275d5264092867ec7488901ea53e6aa1)
+- Add tokenizers for registry method testing [68243ec](https://github.com/openSUSE-Rust/obs-service-cargo/commit/68243ec9a71e5ce8b9867fa4dec3e3997513b5d8)
+
 ## [4.3.6] - 2024-12-08
 
 ### Improvements
 
 - Ensure to communicate well to users when a "No space left on device occurs" [951b67a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/951b67a6ea66f0aae510d4c82ac768af5af972d5)
+
+### Miscellaneous Tasks
+
+- V4.3.6 [6f527e8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/6f527e894816f3a8428b8aa3c4cf1a84cee109b0)
 
 ## [4.3.5] - 2024-11-27
 
