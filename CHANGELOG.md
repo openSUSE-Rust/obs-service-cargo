@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.1] - 2024-12-20
+
+### Bug Fixes
+
+- Avoid infinite recursion causing stack overflow [411432a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/411432ae8efc9e900720027523f5e05c3674bd74)
+
+### Testing
+
+- Add just to the test vendored files [9b8a085](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9b8a085ad6c72152aef48cba2f15282cfd23f580)
+
 ## [4.4.0] - 2024-12-19
 
 ### Bug Fixes
@@ -14,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
+- V4.4.0 [b0bcb9b](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b0bcb9b4fd71a1d7b789cb8d8ebe39a85ca6e039)
 - Apply clippy suggestions [a760d59](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a760d5988b90a938111db3396bbf7caead42bae3)
 - Set MSRV to 1.83 [5430b09](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5430b093fc5f6d4ab2ae31a8fabdd34bbd0691c7)
 - Update Cargo.lock [5c50afd](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5c50afd7c57b9ef0deb698bb78a5e9a4c814086d)
