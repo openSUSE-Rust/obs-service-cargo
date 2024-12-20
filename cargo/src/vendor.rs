@@ -197,58 +197,68 @@ pub fn workspace_has_dependencies(workdir: &Path, src: &Path) -> io::Result<bool
                 members_paths.dedup();
                 debug!(?members_paths);
                 for member in members_paths {
-                    let member_path = src_parent.join(member);
-                    let mut member_glob_paths: Vec<PathBuf> = glob(&member_path.to_string_lossy())
-                        .map_err(|err| {
-                            error!(?err);
-                            io::Error::new(io::ErrorKind::NotFound, "Glob pattern not found")
-                        })?
-                        .flatten()
-                        .collect();
-                    debug!(?member_glob_paths);
-                    while let Some(glob_member_path) = member_glob_paths.pop() {
-                        debug!(?glob_member_path);
-                        let member_path_from_glob = src_parent.join(glob_member_path);
-                        if member_path_from_glob.is_dir() {
-                            let possible_manifest_at_path =
-                                member_path_from_glob.join("Cargo.toml");
-                            if possible_manifest_at_path.is_file() {
-                                info!(?possible_manifest_at_path, "🐈 Found a membered path.");
-                                let is_workspace = is_workspace(&possible_manifest_at_path)?;
-                                if is_workspace {
-                                    global_has_deps = global_has_deps
-                                        || workspace_has_dependencies(
-                                            workdir,
-                                            &possible_manifest_at_path,
-                                        )?;
-                                } else {
-                                    global_has_deps = global_has_deps
-                                        || has_dependencies(&possible_manifest_at_path)?;
-                                }
-                            } else {
-                                let msg = "The member path does not seem to be a file.";
-                                error!(?possible_manifest_at_path, msg);
-                                return Err(io::Error::new(io::ErrorKind::NotFound, msg));
-                            }
-                        } else if member_path_from_glob.is_file() {
-                            if let Some(filename) = member_path_from_glob.file_name() {
-                                let filename = filename.to_string_lossy();
-                                if filename == *"Cargo.toml" {
-                                    info!(?member_path_from_glob, "🐈 Found a membered path.");
-                                    let is_workspace = is_workspace(&member_path_from_glob)?;
+                    if *member.to_string_lossy() != *"." {
+                        let member_path = src_parent.join(member);
+                        let mut member_glob_paths: Vec<PathBuf> =
+                            glob(&member_path.to_string_lossy())
+                                .map_err(|err| {
+                                    error!(?err);
+                                    io::Error::new(
+                                        io::ErrorKind::NotFound,
+                                        "Glob pattern not found",
+                                    )
+                                })?
+                                .flatten()
+                                .collect();
+                        debug!(?member_glob_paths);
+                        while let Some(glob_member_path) = member_glob_paths.pop() {
+                            debug!(?glob_member_path);
+                            let member_path_from_glob = src_parent.join(glob_member_path);
+                            if member_path_from_glob.is_dir() {
+                                let possible_manifest_at_path =
+                                    member_path_from_glob.join("Cargo.toml");
+                                if possible_manifest_at_path.is_file() {
+                                    info!(?possible_manifest_at_path, "🐈 Found a membered path.");
+                                    let is_workspace = is_workspace(&possible_manifest_at_path)?;
                                     if is_workspace {
                                         global_has_deps = global_has_deps
                                             || workspace_has_dependencies(
                                                 workdir,
-                                                &member_path_from_glob,
+                                                &possible_manifest_at_path,
                                             )?;
                                     } else {
                                         global_has_deps = global_has_deps
-                                            || has_dependencies(&member_path_from_glob)?;
+                                            || has_dependencies(&possible_manifest_at_path)?;
+                                    }
+                                } else {
+                                    let msg = "The member path does not seem to be a file.";
+                                    error!(?possible_manifest_at_path, msg);
+                                    return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+                                }
+                            } else if member_path_from_glob.is_file() {
+                                if let Some(filename) = member_path_from_glob.file_name() {
+                                    let filename = filename.to_string_lossy();
+                                    if filename == *"Cargo.toml" {
+                                        info!(?member_path_from_glob, "🐈 Found a membered path.");
+                                        let is_workspace = is_workspace(&member_path_from_glob)?;
+                                        if is_workspace {
+                                            global_has_deps = global_has_deps
+                                                || workspace_has_dependencies(
+                                                    workdir,
+                                                    &member_path_from_glob,
+                                                )?;
+                                        } else {
+                                            global_has_deps = global_has_deps
+                                                || has_dependencies(&member_path_from_glob)?;
+                                        }
                                     }
                                 }
                             }
                         }
+                    } else {
+                        warn!("⚠️ Workspace has membered itself at the root of the project.");
+                        global_has_deps = true;
+                        continue;
                     }
                 }
             }
