@@ -190,7 +190,10 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
         // NOTE: This should vendor
         "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.7.tar.gz",
+        // NOTE: This should not stack overflow
+        "https://github.com/casey/just/archive/refs/tags/1.38.0.tar.gz",
     ];
+
     for src in sources {
         let _ = spawn(async move {
             vendor_source(src, false).await.unwrap();
@@ -198,6 +201,7 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
         })
         .await;
     }
+
     Ok(())
 }
 
@@ -208,6 +212,8 @@ async fn filter_vendor_sources() -> io::Result<()> {
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
         // NOTE: This should vendor
         "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.7.tar.gz",
+        // NOTE: This should not stack overflow
+        "https://github.com/casey/just/archive/refs/tags/1.38.0.tar.gz",
     ];
     for src in sources {
         let _ = spawn(async move {
