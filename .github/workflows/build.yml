@@ -14,6 +14,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  TOOLCHAIN_VERSION: 1.83
 
 jobs:
   build:
@@ -27,8 +28,8 @@ jobs:
         zypper --non-interactive -vvv ref -f
         zypper --non-interactive -vvv dup
         zypper --non-interactive -vvv in libzstd-devel rustup openssl-devel
-        rustup default stable
-        rustup update
+        # Seems to be a rustup inconsistency
+        rustup show
     - name: Build
       run: |
         cargo update
