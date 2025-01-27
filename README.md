@@ -471,7 +471,7 @@ The following are the parameters you can use with this utility:
    <parameter name="outdir">
       <description>Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry. If using with `osc service`, this option is automatically appended.</description>
    </parameter>
-   <parameter name="custom root>
+   <parameter name="custom root">
       <description>Whether you want to manually set the root of the
       project. Useful with a combination with `--manifest-path` (aliased as `--cargotoml`) or
       `--no-root-manifest`. You have to replace the spaces with dashes (-) to make this work.
