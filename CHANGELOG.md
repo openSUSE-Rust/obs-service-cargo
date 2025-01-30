@@ -2,11 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.5.0] - 2025-01-30
+
+### Bug Fixes
+
+- Missing last double quote now added. [195e00a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/195e00aa011c5e422c693ffe24da9ee3a2c64054)
+
+### Continuous Integrations
+
+- Install rust with \`rustup show\` command [b7afcc6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b7afcc631019cf9d4dc5fac4e4eb536fde141582)
+
+### Other
+
+- Add most used components for rust development [ed163f0](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ed163f00b53da431e4d10f840af1183aaa87cf4c)
+
+### Security
+
+- Update gix-worktree-state to 0.17.0 [1fda083](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1fda08353f006c8f109d8673d25ffe0ff446e118)
+
+### Testing
+
+- Update sources for roast. [92ed03e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/92ed03e61301f922ccaad933e714bb9b88575693)
+
 ## [4.4.1] - 2024-12-20
 
 ### Bug Fixes
 
 - Avoid infinite recursion causing stack overflow [411432a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/411432ae8efc9e900720027523f5e05c3674bd74)
+
+### Miscellaneous Tasks
+
+- V4.4.1 [a3c37da](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a3c37da9ebdb588046680e914a79b6ef90024d7c)
 
 ### Testing
 
