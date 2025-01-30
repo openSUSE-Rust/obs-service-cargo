@@ -189,7 +189,7 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
         // NOTE: This should not vendor anything as it does not contain any dependencies
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
         // NOTE: This should vendor
-        "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.7.tar.gz",
+        "https://codeberg.org/Rusty-Geckos/roast/archive/tags/v5.1.7.tar.gz",
         // NOTE: This should not stack overflow
         "https://github.com/casey/just/archive/refs/tags/1.38.0.tar.gz",
     ];
@@ -211,7 +211,7 @@ async fn filter_vendor_sources() -> io::Result<()> {
         // NOTE: This should not vendor anything as it does not contain any dependencies
         "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
         // NOTE: This should vendor
-        "https://github.com/openSUSE-Rust/roast/archive/refs/tags/v5.1.7.tar.gz",
+        "https://codeberg.org/Rusty-Geckos/roast/archive/tags/v5.1.7.tar.gz",
         // NOTE: This should not stack overflow
         "https://github.com/casey/just/archive/refs/tags/1.38.0.tar.gz",
     ];
