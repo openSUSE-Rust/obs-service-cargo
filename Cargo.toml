@@ -12,7 +12,7 @@ authors = [
         "Soc Virnyl Estela <socvirnyl.estela@uncomfyhalomacro.pl>",
         "William Brown <william@blackhats.net.au>",
 ]
-edition = "2021"
+edition = "2024"
 license = "MPL-2.0"
 
 [workspace.dependencies]
