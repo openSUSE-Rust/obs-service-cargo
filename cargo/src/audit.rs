@@ -25,12 +25,12 @@ pub const EXCLUDED_RUSTSECS: &[&str] = &[
 pub const OPENSUSE_CARGO_AUDIT_DB: &str = "/usr/share/cargo-audit-advisory-db";
 
 use rustsec::{
+    Database, Error as RustsecError, ErrorKind as RustsecErrorKind, Lockfile,
     advisory::Id,
     report::{Report, Settings as ReportSettings},
-    Database, Error as RustsecError, ErrorKind as RustsecErrorKind, Lockfile,
 };
 #[allow(unused_imports)]
-use tracing::{debug, error, info, trace, warn, Level};
+use tracing::{Level, debug, error, info, trace, warn};
 
 pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
     let mut passed = true;
@@ -77,9 +77,9 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
         Ok(())
     } else {
         error!(
-			"🛑 Vulnerabilities found in application dependencies. These must be actioned to proceed \
+            "🛑 Vulnerabilities found in application dependencies. These must be actioned to proceed \
 			 with vendoring."
-		);
+        );
         Err(io::Error::new(
 			io::ErrorKind::Interrupted,
 			"Vulnerabilities found in application dependencies. These must be actioned to proceed with \

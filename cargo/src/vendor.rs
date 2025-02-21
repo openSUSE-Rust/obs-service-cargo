@@ -13,7 +13,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 #[allow(unused_imports)]
-use tracing::{debug, error, info, trace, warn, Level};
+use tracing::{Level, debug, error, info, trace, warn};
 
 use crate::cargo_commands::cargo_vendor;
 use crate::cli::Opts;
@@ -37,7 +37,9 @@ pub fn run_cargo_vendor(
         .tempdir()?;
     let home_registry = &tempdir_for_home_registry_binding.path();
     let home_registry_dot_cargo = &home_registry.join(".cargo");
-    std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
+    unsafe {
+        std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
+    }
     // Cargo vendor stdouts the configuration for config.toml
     let res = {
         if let Some((lockfile, cargo_config_output)) = cargo_vendor(

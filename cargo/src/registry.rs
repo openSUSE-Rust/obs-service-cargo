@@ -7,7 +7,7 @@ use libroast::common::Compression;
 use libroast::operations::cli::RoastArgs;
 use libroast::operations::roast::roast_opts;
 #[allow(unused_imports)]
-use tracing::{debug, error, info, trace, warn, Level};
+use tracing::{Level, debug, error, info, trace, warn};
 
 use crate::audit;
 use crate::cargo_commands::*;
@@ -33,7 +33,9 @@ pub fn run_cargo_vendor_home_registry(
     let home_registry_dot_cargo = &home_registry.join(".cargo");
     let mut global_has_deps = false;
 
-    std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
+    unsafe {
+        std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
+    }
 
     let res = {
         debug!(?home_registry_dot_cargo);
@@ -50,11 +52,15 @@ pub fn run_cargo_vendor_home_registry(
                         workspace_has_dependencies(custom_root, &possible_root_manifest)?;
                     global_has_deps = workspace_has_deps || global_has_deps;
                     if !workspace_has_deps {
-                        warn!("⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
+                        warn!(
+                            "⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies."
+                        );
                     }
                 } else if !has_deps {
                     info!("😄 This extra manifest does not seem to have any dependencies.");
-                    info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
+                    info!(
+                        "🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."
+                    );
                     if registry.manifest_path.is_empty() {
                         info!("🎉 No other manifests. No dependencies. Nothing to vendor.");
                     }
@@ -150,11 +156,15 @@ pub fn run_cargo_vendor_home_registry(
                         workspace_has_dependencies(custom_root, full_manifest_path)?;
                     global_has_deps = workspace_has_deps || global_has_deps;
                     if !workspace_has_deps {
-                        warn!("⚠️ This extra WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
+                        warn!(
+                            "⚠️ This extra WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies."
+                        );
                     }
                 } else if !has_deps {
                     info!("😄 This extra manifest does not seem to have any dependencies.");
-                    info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
+                    info!(
+                        "🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."
+                    );
                 }
 
                 global_has_deps = has_deps || global_has_deps;
@@ -182,7 +192,9 @@ pub fn run_cargo_vendor_home_registry(
                 }
 
                 if !registry.update {
-                    warn!("😥 Disabled update of dependencies. You should enable this for security updates.");
+                    warn!(
+                        "😥 Disabled update of dependencies. You should enable this for security updates."
+                    );
                 }
 
                 info!(
@@ -273,7 +285,9 @@ pub fn run_cargo_vendor_home_registry(
 
         if !global_has_deps {
             info!("😄 This manifest does not seem to have any dependencies.");
-            info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
+            info!(
+                "🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."
+            );
             info!("🎉 Nothing to vendor.");
             return Ok(());
         }

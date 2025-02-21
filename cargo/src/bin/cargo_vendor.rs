@@ -13,9 +13,9 @@ use obs_service_cargo::cli;
 use std::io;
 use std::io::IsTerminal;
 
-use terminfo::{capability as cap, Database};
+use terminfo::{Database, capability as cap};
 #[allow(unused_imports)]
-use tracing::{debug, error, info, warn, Level};
+use tracing::{Level, debug, error, info, warn};
 use tracing_subscriber::EnvFilter;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

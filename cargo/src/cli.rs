@@ -21,7 +21,7 @@ use libroast::utils::copy_dir_all;
 use libroast::{decompress, utils};
 
 #[allow(unused_imports)]
-use tracing::{debug, error, info, trace, warn, Level};
+use tracing::{Level, debug, error, info, trace, warn};
 
 #[derive(Debug, Clone, ValueEnum, Default)]
 pub enum Method {
@@ -180,9 +180,9 @@ impl Opts {
                                 dir.path()
                             } else {
                                 error!(
-                                                                ?dir,
-                                                                "Tarball was extracted but got a file and not a possible top-level directory."
-                                                        );
+                                    ?dir,
+                                    "Tarball was extracted but got a file and not a possible top-level directory."
+                                );
                                 return Err(io::Error::new(
                                     io::ErrorKind::Interrupted,
                                     "No top-level directory found after tarball was extracted"

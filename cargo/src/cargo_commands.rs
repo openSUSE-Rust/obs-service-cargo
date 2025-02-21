@@ -4,7 +4,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 #[allow(unused_imports)]
-use tracing::{debug, error, info, trace, warn, Level};
+use tracing::{Level, debug, error, info, trace, warn};
 
 use crate::audit;
 // use crate::target::TARGET_TRIPLES;
@@ -162,12 +162,16 @@ pub fn cargo_vendor(
         info!("ℹ️ This manifest is in WORKSPACE configuration.");
         let workspace_has_deps = workspace_has_dependencies(custom_root, &first_manifest)?;
         if !workspace_has_deps {
-            warn!("⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies.");
+            warn!(
+                "⚠️ This WORKSPACE MANIFEST does not seem to contain workspace dependencies and dev-dependencies. Please check member dependencies."
+            );
         }
         global_has_deps = global_has_deps || workspace_has_deps;
     } else if !has_deps {
         info!("😄 This manifest does not seem to have any dependencies.");
-        info!("🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
+        info!(
+            "🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."
+        );
     }
 
     global_has_deps = global_has_deps || has_deps;
@@ -200,7 +204,9 @@ pub fn cargo_vendor(
 
     if possible_lockfile.is_file() {
         if filter {
-            warn!("⚠️ Vendor filterer does not support lockfile verification. Your dependencies MIGHT get updated.");
+            warn!(
+                "⚠️ Vendor filterer does not support lockfile verification. Your dependencies MIGHT get updated."
+            );
         } else if !filter && respect_lockfile {
             default_options.push("--locked".to_string());
         }
@@ -403,9 +409,9 @@ pub fn cargo_update(
                                 .is_ok()
                             {
                                 info!(
-                            "📦🥄 Applying precise update for crate dependency {} to version {}",
-                            crate_name, crate_ver
-                        );
+                                    "📦🥄 Applying precise update for crate dependency {} to version {}",
+                                    crate_name, crate_ver
+                                );
                                 default_options.push("--precise".to_string());
                                 default_options.push(crate_ver.to_string());
                             } else {
@@ -457,9 +463,9 @@ pub fn cargo_update(
                             .is_ok()
                         {
                             info!(
-                            "📦🥄 Applying precise update for crate dependency {} to version {}",
-                            crate_name, string_tail
-                        );
+                                "📦🥄 Applying precise update for crate dependency {} to version {}",
+                                crate_name, string_tail
+                            );
                             default_options.push("--precise".to_string());
                             default_options.push(string_tail.to_string());
                         } else {
@@ -495,9 +501,9 @@ pub fn cargo_update(
                                 .is_ok()
                             {
                                 info!(
-                            "📦🥄 Applying precise update for crate dependency {} to version {}",
-                            crate_name, crate_ver
-                        );
+                                    "📦🥄 Applying precise update for crate dependency {} to version {}",
+                                    crate_name, crate_ver
+                                );
                                 default_options.push("--precise".to_string());
                                 default_options.push(crate_ver.to_string());
                             } else {
