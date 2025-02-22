@@ -15,8 +15,8 @@ use tokio_test::task::spawn;
 use tracing::info;
 
 async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf> {
-    let mut rng = rand::thread_rng();
-    let random_tag: u8 = rng.r#gen();
+    let mut rng = rand::rng();
+    let random_tag: u8 = rng.random();
     let random_tag = random_tag.to_string();
     let response = reqwest::get(source).await.unwrap();
     let fname = response
@@ -109,8 +109,8 @@ async fn lockfile_does_change_if_update_is_true() -> io::Result<()> {
 }
 
 async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
-    let mut rng = rand::thread_rng();
-    let random_tag: u8 = rng.r#gen();
+    let mut rng = rand::rng();
+    let random_tag: u8 = rng.random();
     let random_tag = random_tag.to_string();
     let response = reqwest::get(source).await.unwrap();
     let fname = response
@@ -229,8 +229,8 @@ async fn filter_vendor_sources() -> io::Result<()> {
 #[test(tokio::test)]
 async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
     let source = "https://github.com/ibm-s390-linux/s390-tools/archive/refs/tags/v2.29.0.tar.gz";
-    let mut rng = rand::thread_rng();
-    let random_tag: u8 = rng.r#gen();
+    let mut rng = rand::rng();
+    let random_tag: u8 = rng.random();
     let random_tag = random_tag.to_string();
     let response = reqwest::get(source).await.unwrap();
     let fname = response
@@ -307,8 +307,8 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
 #[test(tokio::test)]
 async fn manifest_paths_with_vendor() -> io::Result<()> {
     let source = "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz";
-    let mut rng = rand::thread_rng();
-    let random_tag: u8 = rng.r#gen();
+    let mut rng = rand::rng();
+    let random_tag: u8 = rng.random();
     let random_tag = random_tag.to_string();
     let response = reqwest::get(source).await.unwrap();
     let fname = response
@@ -378,8 +378,8 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
 #[test(tokio::test)]
 async fn custom_root_test_1() -> io::Result<()> {
     let source = "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz";
-    let mut rng = rand::thread_rng();
-    let random_tag: u8 = rng.r#gen();
+    let mut rng = rand::rng();
+    let random_tag: u8 = rng.random();
     let random_tag = random_tag.to_string();
     let response = reqwest::get(source).await.unwrap();
     let fname = response
@@ -449,8 +449,8 @@ async fn custom_root_test_1() -> io::Result<()> {
 #[test(tokio::test)]
 async fn custom_root_test_2() -> io::Result<()> {
     let source = "https://github.com/influxdata/flux/archive/refs/tags/v0.194.4.tar.gz";
-    let mut rng = rand::thread_rng();
-    let random_tag: u8 = rng.r#gen();
+    let mut rng = rand::rng();
+    let random_tag: u8 = rng.random();
     let random_tag = random_tag.to_string();
     let response = reqwest::get(source).await.unwrap();
     let fname = response
@@ -522,8 +522,8 @@ async fn custom_root_test_2() -> io::Result<()> {
 #[test(tokio::test)]
 async fn custom_root_test_3() -> io::Result<()> {
     let source = "https://github.com/huggingface/tokenizers/archive/refs/tags/v0.21.0.tar.gz";
-    let mut rng = rand::thread_rng();
-    let random_tag: u8 = rng.r#gen();
+    let mut rng = rand::rng();
+    let random_tag: u8 = rng.random();
     let random_tag = random_tag.to_string();
     let response = reqwest::get(source).await.unwrap();
     let fname = response
