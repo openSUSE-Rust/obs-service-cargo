@@ -7,7 +7,6 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-gix-worktree-state = "0.17.0"
 rustsec = { workspace = true }
 clap = { workspace = true, features = ["derive", "wrap_help"] }
 quick-xml = { workspace = true, features = ["serialize"] }
@@ -26,7 +25,6 @@ semver = "1.0.23"
 workspace = true
 
 [dev-dependencies]
-gix-worktree-state = "0.17.0"
 rand = "0.9.0"
 reqwest = "0.12.9"
 tokio = { version = "1.41.0", features = ["full"] }
