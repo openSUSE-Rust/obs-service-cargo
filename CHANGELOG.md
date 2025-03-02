@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.0.0] - 2025-03-02
+
+### Miscellaneous Tasks
+
+- Bump deps [af0b3f8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/af0b3f86c11d655c720d775d011c8f57c4a02199)
+- Update MSRV to 1.85 and Rust edition to 2024 [93fb1a3](https://github.com/openSUSE-Rust/obs-service-cargo/commit/93fb1a386168ff336ed9caaac0d6c7f99f9e152b)
+
+### Other
+
+- Update Cargo.lock [1ea9031](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1ea9031c61bc05033040a129413bd7920422f785)
+- Trying to patch gix-worktree-state [c3dea6a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c3dea6af517b18f602949f95bee3332bb8f701e5)
+
+### Refactor
+
+- Update code to Rust 2024 edition [0c65f29](https://github.com/openSUSE-Rust/obs-service-cargo/commit/0c65f296e42415ccbca6290f7494a12272a7103d)
+
 ## [4.5.0] - 2025-01-30
 
 ### Bug Fixes
@@ -11,6 +27,10 @@ All notable changes to this project will be documented in this file.
 ### Continuous Integrations
 
 - Install rust with \`rustup show\` command [b7afcc6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b7afcc631019cf9d4dc5fac4e4eb536fde141582)
+
+### Miscellaneous Tasks
+
+- V4.5.0 [fa09f56](https://github.com/openSUSE-Rust/obs-service-cargo/commit/fa09f56ed1ecc2f9295a6c585da0025abab394ba)
 
 ### Other
 
