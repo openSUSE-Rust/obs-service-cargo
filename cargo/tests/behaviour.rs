@@ -22,7 +22,7 @@ async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf
     let fname = response
         .url()
         .path_segments()
-        .and_then(|segments| segments.next_back())
+        .and_then(|mut segments| segments.next_back())
         .and_then(|name| if name.is_empty() { None } else { Some(name) })
         .unwrap_or("balls");
     info!("Source file: {}", &fname);
@@ -116,7 +116,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     let fname = response
         .url()
         .path_segments()
-        .and_then(|segments| segments.next_back())
+        .and_then(|mut segments| segments.next_back())
         .and_then(|name| if name.is_empty() { None } else { Some(name) })
         .unwrap_or("balls");
     info!("Source file: {}", &fname);
@@ -236,7 +236,7 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
     let fname = response
         .url()
         .path_segments()
-        .and_then(|segments| segments.next_back())
+        .and_then(|mut segments| segments.next_back())
         .and_then(|name| if name.is_empty() { None } else { Some(name) })
         .unwrap_or("balls");
     info!("Source file: {}", &fname);
@@ -314,7 +314,7 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
     let fname = response
         .url()
         .path_segments()
-        .and_then(|segments| segments.next_back())
+        .and_then(|mut segments| segments.next_back())
         .and_then(|name| if name.is_empty() { None } else { Some(name) })
         .unwrap_or("balls");
     info!("Source file: {}", &fname);
@@ -385,7 +385,7 @@ async fn custom_root_test_1() -> io::Result<()> {
     let fname = response
         .url()
         .path_segments()
-        .and_then(|segments| segments.next_back())
+        .and_then(|mut segments| segments.next_back())
         .and_then(|name| if name.is_empty() { None } else { Some(name) })
         .unwrap_or("balls");
     info!("Source file: {}", &fname);
@@ -456,7 +456,7 @@ async fn custom_root_test_2() -> io::Result<()> {
     let fname = response
         .url()
         .path_segments()
-        .and_then(|segments| segments.next_back())
+        .and_then(|mut segments| segments.next_back())
         .and_then(|name| if name.is_empty() { None } else { Some(name) })
         .unwrap_or("balls");
     info!("Source file: {}", &fname);
@@ -529,7 +529,7 @@ async fn custom_root_test_3() -> io::Result<()> {
     let fname = response
         .url()
         .path_segments()
-        .and_then(|segments| segments.next_back())
+        .and_then(|mut segments| segments.next_back())
         .and_then(|name| if name.is_empty() { None } else { Some(name) })
         .unwrap_or("balls");
     info!("Source file: {}", &fname);
