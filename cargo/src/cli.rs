@@ -171,7 +171,7 @@ impl Opts {
                 debug!(?workdir);
                 workdir.to_path_buf()
             } else {
-                match dirs.into_iter().last() {
+                match dirs.into_iter().next_back() {
                     Some(p) => match p {
                         Ok(dir) => {
                             if dir.path().is_dir() {
