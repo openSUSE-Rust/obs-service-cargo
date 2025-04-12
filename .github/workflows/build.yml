@@ -5,11 +5,13 @@ on:
     paths:
       - '**.rs'
       - '**/Cargo.toml'
+      - '**/Cargo.lock'
       - '!**.md'
   pull_request:
     paths:
       - '**.rs'
       - '**/Cargo.toml'
+      - '**/Cargo.lock'
       - '!**.md'
 
 env:
