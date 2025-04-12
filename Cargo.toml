@@ -1,8 +1,6 @@
 [workspace]
 members = ["cargo"]
-
 default-members = ["cargo"]
-
 resolver = "2"
 
 [workspace.package]
