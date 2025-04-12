@@ -14,7 +14,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  TOOLCHAIN_VERSION: 1.83
+  TOOLCHAIN_VERSION: stable
 
 jobs:
   build:
