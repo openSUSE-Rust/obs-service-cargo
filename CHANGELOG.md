@@ -2,10 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.1.0] - 2025-04-13
+
+### Continuous Integrations
+
+- Run also when lockfile is updated. [b65b6a3](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b65b6a3e26f163b4d6fb54dfca64dd5cd8980857)
+- Set TOOLCHAIN_VERSION to stable [d972c41](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d972c41963b49277ef9d6d11e40ac7ca8d29397d)
+
+### Miscellaneous Tasks
+
+- Remove unnecessary newlines in Cargo.toml configuration. [e918141](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e918141025a8e6492109e760f8a25231fce822b2)
+
+### Other
+
+- Apply fix for "double_ended_iterator_last" clippy error here too [c30a632](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c30a632619be31030a43a255b5bd529e5f359ce9)
+- Apply fix for clippy error "double_ended_iterator_last" [afad759](https://github.com/openSUSE-Rust/obs-service-cargo/commit/afad759ca3a7f83ec62ace8de68dafdf754a0668)
+- Update Cargo.lock [5b5c3d7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5b5c3d768446c799227a0edd9fcb7a7a3f9cd528)
+- Always select stable [7acbe36](https://github.com/openSUSE-Rust/obs-service-cargo/commit/7acbe3675136e151a9397b55153a0c21fdc15e6f)
+
+### Testing
+
+- Make `segments` mutable [e7e7ed2](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e7e7ed2e469781518223f274f64fa98e72d916fe)
+
 ## [5.0.0] - 2025-03-02
 
 ### Miscellaneous Tasks
 
+- V5.0.0 [dcd5ba7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/dcd5ba7e9fa986932794c4e0f8b3fdd81f17173b)
 - Bump deps [af0b3f8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/af0b3f86c11d655c720d775d011c8f57c4a02199)
 - Update MSRV to 1.85 and Rust edition to 2024 [93fb1a3](https://github.com/openSUSE-Rust/obs-service-cargo/commit/93fb1a386168ff336ed9caaac0d6c7f99f9e152b)
 
