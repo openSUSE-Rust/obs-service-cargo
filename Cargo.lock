@@ -1917,7 +1917,7 @@ dependencies = [
 [[package]]
 name = "libroast"
 version = "6.1.0"
-source = "git+https://codeberg.org/Rusty-Geckos/roast?rev=78c12cdcfacdc997593168c91b2442b2ed7bde85#78c12cdcfacdc997593168c91b2442b2ed7bde85"
+source = "git+https://codeberg.org/Rusty-Geckos/roast?rev=87d709117a427f69fcae770b0d295b1fcb1652b2#87d709117a427f69fcae770b0d295b1fcb1652b2"
 dependencies = [
  "bzip2",
  "clap",
@@ -2155,6 +2155,7 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+ "url",
 ]
 
 [[package]]
