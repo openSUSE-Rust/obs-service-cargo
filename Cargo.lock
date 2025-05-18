@@ -1917,8 +1917,7 @@ dependencies = [
 [[package]]
 name = "libroast"
 version = "6.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b062e36f0b513e0b2445ec6d1ed3d80734a7cffb5e78188ac796ba5487d27253"
+source = "git+https://codeberg.org/Rusty-Geckos/roast?rev=78c12cdcfacdc997593168c91b2442b2ed7bde85#78c12cdcfacdc997593168c91b2442b2ed7bde85"
 dependencies = [
  "bzip2",
  "clap",
