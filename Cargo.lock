@@ -1917,7 +1917,7 @@ dependencies = [
 [[package]]
 name = "libroast"
 version = "6.1.0"
-source = "git+https://codeberg.org/Rusty-Geckos/roast?rev=c092a377c5263538002f8e21e0e1cd4b64f0e5b5#c092a377c5263538002f8e21e0e1cd4b64f0e5b5"
+source = "git+https://codeberg.org/Rusty-Geckos/roast?rev=fc1bfd66bd1cba0a78b3d7dca01fe34c814a6b5f#fc1bfd66bd1cba0a78b3d7dca01fe34c814a6b5f"
 dependencies = [
  "bzip2",
  "clap",

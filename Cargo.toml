@@ -16,7 +16,7 @@ license = "MPL-2.0"
 [workspace.dependencies]
 rustsec = "0.30"
 # This commit allows us to get the locally cloned repository as a source to vendor.
-libroast = { git = "https://codeberg.org/Rusty-Geckos/roast", rev = "c092a377c5263538002f8e21e0e1cd4b64f0e5b5" }
+libroast = { git = "https://codeberg.org/Rusty-Geckos/roast", rev = "fc1bfd66bd1cba0a78b3d7dca01fe34c814a6b5f" }
 clap = "4.4"
 glob = "0.3"
 tracing = { version = "0.1", features = [
