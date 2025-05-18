@@ -23,8 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let terminfodb = Database::from_env().map_err(|e| {
         error!(err = ?e, "Unable to access terminfo db. This is a bug!");
-        io::Error::new(
-            io::ErrorKind::Other,
+        io::Error::other(
             "Unable to access terminfo db. This is a bug! Setting color option to false!",
         )
     });

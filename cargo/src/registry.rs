@@ -333,8 +333,7 @@ pub fn run_cargo_vendor_home_registry(
         };
 
         if !outfile.set_extension(extension) {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(io::Error::other(
                 "Unable to set extension",
             ));
         }

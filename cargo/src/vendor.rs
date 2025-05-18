@@ -101,8 +101,7 @@ pub fn run_cargo_vendor(
         };
 
         if !outfile.set_extension(extension) {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(io::Error::other(
                 "Unable to set extension",
             ));
         }
@@ -160,8 +159,7 @@ pub fn is_workspace(src: &Path) -> io::Result<bool> {
             Ok(false)
         }
     } else {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
+        Err(io::Error::other(
             format!(
                 "Failed to check manifest file at path {}",
                 src.to_string_lossy()
@@ -272,8 +270,7 @@ pub fn workspace_has_dependencies(workdir: &Path, src: &Path) -> io::Result<bool
         return Ok(global_has_deps);
     };
 
-    Err(io::Error::new(
-        io::ErrorKind::Other,
+    Err(io::Error::other(
         format!(
             "Failed to check manifest file at path {}",
             src.to_string_lossy()
@@ -302,8 +299,7 @@ pub fn has_dependencies(src: &Path) -> io::Result<bool> {
             }
         };
     };
-    Err(io::Error::new(
-        io::ErrorKind::Other,
+    Err(io::Error::other(
         format!(
             "Failed to check manifest file at path {}",
             src.to_string_lossy()
