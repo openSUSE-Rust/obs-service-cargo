@@ -160,7 +160,9 @@ impl Opts {
                 warn!(
                     "⚠️ Ensure you pass a commit hash or version to `--revision`. Otherwise, this will fail."
                 );
-                warn!(" ⚠️ This is an experimental feature. Please file a bug report at <https://github.com/openSUSE-Rust/obs-service-cargo/issues/new/choose>. Thank you!");
+                warn!(
+                    " ⚠️ This is an experimental feature. Please file a bug report at <https://github.com/openSUSE-Rust/obs-service-cargo/issues/new/choose>. Thank you!"
+                );
             }
             std::path::Path::new(&self.src).to_path_buf()
         };
