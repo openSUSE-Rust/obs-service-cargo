@@ -54,7 +54,7 @@ pub struct Opts {
         visible_aliases = ["srctar", "srcdir", "target"],
         help = "Where to find sources. Source is either a directory or a source tarball AND cannot be both."
     )]
-    pub src: PathBuf,
+    pub src: String,
     #[arg(
         long,
         short = 'C',
