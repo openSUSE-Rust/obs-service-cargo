@@ -15,7 +15,7 @@ use crate::vendor::run_cargo_vendor;
 use libroast::common::Compression;
 
 use clap::{Args, Parser, ValueEnum};
-use libroast::operations::cli::RawArgs;
+use libroast::operations::cli::{RawArgs, RoastScmArgs};
 use libroast::operations::raw::raw_opts;
 use libroast::utils::copy_dir_all;
 use libroast::{decompress, utils};
@@ -55,6 +55,8 @@ pub struct Opts {
         help = "Where to find sources. Source is either a directory or a source tarball or a URL to a remote git repository."
     )]
     pub src: String,
+    #[arg(long, help = "Revision or tag. It can also be a specific commit hash.")]
+    pub revision: Option<String>,
     #[arg(
         long,
         short = 'C',
@@ -141,21 +143,65 @@ pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Res
 impl Opts {
     pub fn run_vendor(&mut self) -> io::Result<()> {
         debug!(?self);
+        let is_url = url::Url::parse(&self.src).is_ok();
         let tempdir_for_workdir = tempfile::Builder::new()
             .prefix(VENDOR_PATH_PREFIX)
             .rand_bytes(12)
             .tempdir()?;
-        let workdir = &tempdir_for_workdir.path();
+        let mut workdir = tempdir_for_workdir.path().to_path_buf();
         debug!(?workdir);
-        let target = utils::process_globs(&self.src)?;
+        let target = if let Ok(result) = utils::process_globs(std::path::Path::new(&self.src)) {
+            result
+        } else {
+            if is_url {
+                warn!(
+                    "⚠️ Not a glob input. Please check if you are passing a path to a file or a directory. We expect that you are passing a URL to a remote git repository."
+                );
+                warn!(
+                    "⚠️ Ensure you pass a commit hash or version to `--revision`. Otherwise, this will fail."
+                );
+                warn!(" ⚠️ This is an experimental feature. Please file a bug report at <https://github.com/openSUSE-Rust/obs-service-cargo/issues/new/choose>. Thank you!");
+            }
+            std::path::Path::new(&self.src).to_path_buf()
+        };
         if target.is_dir() {
-            copy_dir_all(&target, workdir)?;
+            copy_dir_all(&target, &workdir)?;
         } else if target.is_file() && utils::is_supported_format(&target).is_ok() {
             let raw_args = RawArgs {
                 target: target.to_path_buf(),
                 outdir: Some(workdir.to_path_buf()),
             };
             raw_opts(raw_args, false)?;
+        } else if is_url && self.revision.is_some() {
+            // We already evaluated that it is at a `Some` variant
+            let revision = self.revision.clone().unwrap_or_default().to_string();
+            let roast_scm_args = RoastScmArgs {
+                git_repository_url: self.src.to_string(),
+                exclude: None,
+                revision,
+                depth: 1,
+                is_temporary: false,
+                outfile: None,
+                outdir: Some(self.outdir.to_path_buf()),
+                reproducible: true,
+                ignore_git: true,
+                ignore_hidden: false,
+                compression: self.compression,
+            };
+            let roast_scm_result =
+                libroast::operations::roast_scm::roast_scm_opts(&roast_scm_args, false);
+            match roast_scm_result {
+                Ok(some_path) => match some_path {
+                    Some(local_clone_dir) => workdir = local_clone_dir,
+                    None => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::NotFound,
+                            "Target path does not exist!",
+                        ));
+                    }
+                },
+                Err(err) => return Err(err),
+            };
         } else {
             return Err(io::Error::new(
                 io::ErrorKind::Unsupported,
@@ -165,7 +211,7 @@ impl Opts {
 
         let setup_workdir = {
             let dirs: Vec<Result<std::fs::DirEntry, std::io::Error>> =
-                std::fs::read_dir(workdir)?.collect();
+                std::fs::read_dir(&workdir)?.collect();
             debug!(?dirs, "List of files and directories of the workdir");
             if dirs.len() > 1 {
                 debug!(?workdir);
@@ -251,7 +297,7 @@ osc service -vvv mr cargo_vendor
                 msg.push_str(" This seems to be a bug. Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
             }
             error!(msg);
-            return Err(io::Error::new(io::ErrorKind::Other, msg));
+            return Err(io::Error::other(msg));
         }
         info!("🌟 OBS Service Cargo finished.");
         info!("🧹 Cleaning up temporary directories...");
