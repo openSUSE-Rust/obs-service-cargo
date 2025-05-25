@@ -11,5 +11,4 @@ pub mod cargo_commands;
 pub mod cli;
 pub mod consts;
 pub mod registry;
-pub mod target;
 pub mod vendor;
