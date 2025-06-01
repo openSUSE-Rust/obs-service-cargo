@@ -679,7 +679,7 @@ fn vendor_git_source_of_package_itself_with_vendor_method() -> io::Result<()> {
     std::fs::create_dir_all(&outdir)?;
     let specfile_path = std::path::Path::new(MANIFEST_DIR).join("tests/obs-service-cargo.spec");
     std::env::set_current_dir(&outdir)?;
-    std::fs::copy(&specfile_path, &outdir.join("obs-service-cargo.spec"))?;
+    std::fs::copy(&specfile_path, outdir.join("obs-service-cargo.spec"))?;
     let vendor_specific_args = VendorArgs {
         filter: false,
         versioned_dirs: true,
@@ -725,7 +725,7 @@ fn vendor_git_source_of_package_itself_with_registry_method() -> io::Result<()> 
     std::fs::create_dir_all(&outdir)?;
     let specfile_path = std::path::Path::new(MANIFEST_DIR).join("tests/obs-service-cargo.spec");
     std::env::set_current_dir(&outdir)?;
-    std::fs::copy(&specfile_path, &outdir.join("obs-service-cargo.spec"))?;
+    std::fs::copy(&specfile_path, outdir.join("obs-service-cargo.spec"))?;
     let vendor_specific_args = VendorArgs {
         filter: false,
         versioned_dirs: true,
