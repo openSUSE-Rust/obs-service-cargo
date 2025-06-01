@@ -14,6 +14,8 @@ use tokio::fs;
 use tokio_test::task::spawn;
 use tracing::info;
 
+const MANIFEST_DIR: &str = std::env!("CARGO_MANIFEST_DIR", "No such manifest dir");
+
 async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf> {
     let mut rng = rand::rng();
     let random_tag: u8 = rng.random();
@@ -664,5 +666,97 @@ async fn custom_root_test_3() -> io::Result<()> {
     assert!(!cargo_config_path.is_file());
     assert!(cargo_lock_path.is_file());
     assert!(cargo_registry_path.is_dir());
+    Ok(())
+}
+
+#[test]
+fn vendor_git_source_of_package_itself_with_vendor_method() -> io::Result<()> {
+    let url = "https://github.com/openSUSE-Rust/obs-service-cargo";
+    let revision = "v5.1.0";
+    let tmp_binding = tempfile::TempDir::new()?;
+    let outdir = tmp_binding.path();
+    let outdir = outdir.join("obs-service-cargo");
+    std::fs::create_dir_all(&outdir)?;
+    let specfile_path = std::path::Path::new(MANIFEST_DIR).join("tests/obs-service-cargo.spec");
+    std::env::set_current_dir(&outdir)?;
+    std::fs::copy(&specfile_path, &outdir.join("obs-service-cargo.spec"))?;
+    let vendor_specific_args = VendorArgs {
+        filter: false,
+        versioned_dirs: true,
+    };
+    let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: Some(revision.to_string()),
+        versionrewriteregex: None,
+        versionrewritepattern: None,
+        update_crate: vec![],
+        no_root_manifest: true,
+        respect_lockfile: false,
+        custom_root: None,
+        method: Method::Vendor,
+        src: url.to_string(),
+        compression: Compression::default(),
+        tag: None,
+        manifest_path: vec![],
+        update: true,
+        outdir: outdir.to_path_buf(),
+        color: clap::ColorChoice::Auto,
+        i_accept_the_risk: vec![],
+        vendor_specific_args,
+    };
+    let res = opt.run_vendor();
+    assert!(res.is_ok());
+    Ok(())
+}
+
+#[test]
+fn vendor_git_source_of_package_itself_with_registry_method() -> io::Result<()> {
+    let url = "https://github.com/openSUSE-Rust/obs-service-cargo";
+    let revision = "v5.1.0";
+    let tmp_binding = tempfile::TempDir::new()?;
+    let outdir = tmp_binding.path();
+    let outdir = outdir.join("obs-service-cargo");
+    std::fs::create_dir_all(&outdir)?;
+    let specfile_path = std::path::Path::new(MANIFEST_DIR).join("tests/obs-service-cargo.spec");
+    std::env::set_current_dir(&outdir)?;
+    std::fs::copy(&specfile_path, &outdir.join("obs-service-cargo.spec"))?;
+    let vendor_specific_args = VendorArgs {
+        filter: false,
+        versioned_dirs: true,
+    };
+    let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: Some(revision.to_string()),
+        versionrewriteregex: None,
+        versionrewritepattern: None,
+        update_crate: vec![],
+        no_root_manifest: true,
+        respect_lockfile: false,
+        custom_root: None,
+        method: Method::Registry,
+        src: url.to_string(),
+        compression: Compression::default(),
+        tag: None,
+        manifest_path: vec![],
+        update: true,
+        outdir: outdir.to_path_buf(),
+        color: clap::ColorChoice::Auto,
+        i_accept_the_risk: vec![],
+        vendor_specific_args,
+    };
+    let res = opt.run_vendor();
+    assert!(res.is_ok());
     Ok(())
 }
