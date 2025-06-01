@@ -670,6 +670,7 @@ async fn custom_root_test_3() -> io::Result<()> {
 }
 
 #[test]
+#[ignored]
 fn vendor_git_source_of_package_itself_with_vendor_method() -> io::Result<()> {
     let url = "https://github.com/openSUSE-Rust/obs-service-cargo";
     let revision = "v5.1.0";
@@ -716,6 +717,7 @@ fn vendor_git_source_of_package_itself_with_vendor_method() -> io::Result<()> {
 }
 
 #[test]
+#[ignored]
 fn vendor_git_source_of_package_itself_with_registry_method() -> io::Result<()> {
     let url = "https://github.com/openSUSE-Rust/obs-service-cargo";
     let revision = "v5.1.0";

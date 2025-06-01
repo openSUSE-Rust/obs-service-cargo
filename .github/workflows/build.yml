@@ -51,3 +51,4 @@ jobs:
         export PATH="${PATH}:${HOME}/.cargo/bin"
         echo "${PATH}"
         cargo test --release -- --test-threads=1
+        cargo test --release -- --test-threads=1 --ignored
