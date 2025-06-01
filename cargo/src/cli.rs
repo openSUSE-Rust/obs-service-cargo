@@ -112,7 +112,7 @@ pub struct Opts {
     pub method: Method,
     #[arg(
         long,
-        visible_aliases = ["srctar", "srcdir", "target"],
+        visible_aliases = ["srctar", "srcdir", "target", "url"],
         help = "Where to find sources. Source is either a directory or a source tarball or a URL to a remote git repository."
     )]
     pub src: String,
