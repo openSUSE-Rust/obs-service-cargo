@@ -101,10 +101,7 @@ pub fn run_cargo_vendor(
         };
 
         if !outfile.set_extension(extension) {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Unable to set extension",
-            ));
+            return Err(io::Error::other("Unable to set extension"));
         }
         let roast_args = RoastArgs {
             target: PathBuf::from(&to_vendor_cargo_config_dir),
@@ -160,13 +157,10 @@ pub fn is_workspace(src: &Path) -> io::Result<bool> {
             Ok(false)
         }
     } else {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            format!(
-                "Failed to check manifest file at path {}",
-                src.to_string_lossy()
-            ),
-        ))
+        Err(io::Error::other(format!(
+            "Failed to check manifest file at path {}",
+            src.to_string_lossy()
+        )))
     }
 }
 
@@ -272,13 +266,10 @@ pub fn workspace_has_dependencies(workdir: &Path, src: &Path) -> io::Result<bool
         return Ok(global_has_deps);
     };
 
-    Err(io::Error::new(
-        io::ErrorKind::Other,
-        format!(
-            "Failed to check manifest file at path {}",
-            src.to_string_lossy()
-        ),
-    ))
+    Err(io::Error::other(format!(
+        "Failed to check manifest file at path {}",
+        src.to_string_lossy()
+    )))
 }
 
 pub fn has_dependencies(src: &Path) -> io::Result<bool> {
@@ -302,11 +293,8 @@ pub fn has_dependencies(src: &Path) -> io::Result<bool> {
             }
         };
     };
-    Err(io::Error::new(
-        io::ErrorKind::Other,
-        format!(
-            "Failed to check manifest file at path {}",
-            src.to_string_lossy()
-        ),
-    ))
+    Err(io::Error::other(format!(
+        "Failed to check manifest file at path {}",
+        src.to_string_lossy()
+    )))
 }

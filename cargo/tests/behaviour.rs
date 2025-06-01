@@ -14,6 +14,8 @@ use tokio::fs;
 use tokio_test::task::spawn;
 use tracing::info;
 
+const MANIFEST_DIR: &str = std::env!("CARGO_MANIFEST_DIR", "No such manifest dir");
+
 async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf> {
     let mut rng = rand::rng();
     let random_tag: u8 = rng.random();
@@ -39,20 +41,30 @@ async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf
         versioned_dirs: true,
     };
     let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: None,
+        versionrewriteregex: None,
+        versionrewritepattern: None,
         method: Method::Vendor,
-        src: outfile.to_path_buf(),
+        src: outfile.to_string_lossy().to_string(),
         custom_root: None,
         no_root_manifest: false,
         compression: Compression::default(),
         tag: Some(random_tag.clone()),
         manifest_path: vec![],
         update,
-        update_crate: vec![],
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
-        i_accept_the_risk: vec![],
-        vendor_specific_args,
         respect_lockfile: false,
+        i_accept_the_risk: vec![],
+        update_crate: vec![],
+        vendor_specific_args,
     };
 
     let res = opt.run_vendor();
@@ -133,20 +145,30 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
         versioned_dirs: true,
     };
     let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: None,
+        versionrewriteregex: None,
+        versionrewritepattern: None,
         method: Method::Vendor,
-        update_crate: vec![],
+        src: outfile.to_string_lossy().to_string(),
         custom_root: None,
         no_root_manifest: false,
-        src: outfile.to_path_buf(),
         compression: Compression::default(),
         tag: Some(random_tag.clone()),
         manifest_path: vec![],
         update: true,
-        vendor_specific_args,
         outdir: outdir.to_path_buf(),
-        respect_lockfile: false,
         color: clap::ColorChoice::Auto,
+        respect_lockfile: false,
         i_accept_the_risk: vec![],
+        update_crate: vec![],
+        vendor_specific_args,
     };
 
     let res = opt.run_vendor();
@@ -253,11 +275,21 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
         versioned_dirs: true,
     };
     let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: None,
+        versionrewriteregex: None,
+        versionrewritepattern: None,
         custom_root: None,
         update_crate: vec![],
         no_root_manifest: true,
         method: Method::Registry,
-        src: outfile.to_path_buf(),
+        src: outfile.to_string_lossy().to_string(),
         compression: Compression::default(),
         tag: Some(random_tag.clone()),
         manifest_path: [PathBuf::from("rust/pvsecret/Cargo.toml")].to_vec(),
@@ -331,11 +363,21 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
         versioned_dirs: true,
     };
     let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: None,
+        versionrewriteregex: None,
+        versionrewritepattern: None,
         update_crate: vec![],
         no_root_manifest: false,
         custom_root: None,
         method: Method::Vendor,
-        src: outfile.to_path_buf(),
+        src: outfile.to_string_lossy().to_string(),
         compression: Compression::default(),
         tag: Some(random_tag.clone()),
         manifest_path: [PathBuf::from("libflux/Cargo.toml")].to_vec(),
@@ -402,12 +444,22 @@ async fn custom_root_test_1() -> io::Result<()> {
         versioned_dirs: true,
     };
     let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: None,
+        versionrewriteregex: None,
+        versionrewritepattern: None,
         update_crate: vec![],
         no_root_manifest: false,
         respect_lockfile: false,
         custom_root: Some("libflux".to_string()),
         method: Method::Vendor,
-        src: outfile.to_path_buf(),
+        src: outfile.to_string_lossy().to_string(),
         compression: Compression::default(),
         tag: Some(random_tag.clone()),
         manifest_path: vec![],
@@ -473,12 +525,22 @@ async fn custom_root_test_2() -> io::Result<()> {
         versioned_dirs: true,
     };
     let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: None,
+        versionrewriteregex: None,
+        versionrewritepattern: None,
         update_crate: vec![],
         no_root_manifest: false,
         respect_lockfile: false,
         custom_root: Some("libflux".to_string()),
         method: Method::Registry,
-        src: outfile.to_path_buf(),
+        src: outfile.to_string_lossy().to_string(),
         compression: Compression::default(),
         tag: Some(random_tag.clone()),
         manifest_path: vec![],
@@ -551,12 +613,22 @@ async fn custom_root_test_3() -> io::Result<()> {
     ];
 
     let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: None,
+        versionrewriteregex: None,
+        versionrewritepattern: None,
         update_crate: vec![],
         no_root_manifest: true,
         respect_lockfile: false,
         custom_root: None,
         method: Method::Registry,
-        src: outfile.to_path_buf(),
+        src: outfile.to_string_lossy().to_string(),
         compression: Compression::default(),
         tag: Some(random_tag.clone()),
         manifest_path,
@@ -594,5 +666,99 @@ async fn custom_root_test_3() -> io::Result<()> {
     assert!(!cargo_config_path.is_file());
     assert!(cargo_lock_path.is_file());
     assert!(cargo_registry_path.is_dir());
+    Ok(())
+}
+
+#[test]
+#[ignore]
+fn vendor_git_source_of_package_itself_with_vendor_method() -> io::Result<()> {
+    let url = "https://github.com/openSUSE-Rust/obs-service-cargo";
+    let revision = "v5.1.0";
+    let tmp_binding = tempfile::TempDir::new()?;
+    let outdir = tmp_binding.path();
+    let outdir = outdir.join("obs-service-cargo");
+    std::fs::create_dir_all(&outdir)?;
+    let specfile_path = std::path::Path::new(MANIFEST_DIR).join("tests/obs-service-cargo.spec");
+    std::env::set_current_dir(&outdir)?;
+    std::fs::copy(&specfile_path, outdir.join("obs-service-cargo.spec"))?;
+    let vendor_specific_args = VendorArgs {
+        filter: false,
+        versioned_dirs: true,
+    };
+    let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: Some(revision.to_string()),
+        versionrewriteregex: None,
+        versionrewritepattern: None,
+        update_crate: vec![],
+        no_root_manifest: true,
+        respect_lockfile: false,
+        custom_root: None,
+        method: Method::Vendor,
+        src: url.to_string(),
+        compression: Compression::default(),
+        tag: None,
+        manifest_path: vec![],
+        update: true,
+        outdir: outdir.to_path_buf(),
+        color: clap::ColorChoice::Auto,
+        i_accept_the_risk: vec![],
+        vendor_specific_args,
+    };
+    let res = opt.run_vendor();
+    assert!(res.is_ok());
+    Ok(())
+}
+
+#[test]
+#[ignore]
+fn vendor_git_source_of_package_itself_with_registry_method() -> io::Result<()> {
+    let url = "https://github.com/openSUSE-Rust/obs-service-cargo";
+    let revision = "v5.1.0";
+    let tmp_binding = tempfile::TempDir::new()?;
+    let outdir = tmp_binding.path();
+    let outdir = outdir.join("obs-service-cargo");
+    std::fs::create_dir_all(&outdir)?;
+    let specfile_path = std::path::Path::new(MANIFEST_DIR).join("tests/obs-service-cargo.spec");
+    std::env::set_current_dir(&outdir)?;
+    std::fs::copy(&specfile_path, outdir.join("obs-service-cargo.spec"))?;
+    let vendor_specific_args = VendorArgs {
+        filter: false,
+        versioned_dirs: true,
+    };
+    let mut opt = cli::Opts {
+        changesgenerate: false,
+        changesauthor: None,
+        changesemail: None,
+        changesoutfile: None,
+        set_version: None,
+        set_name: None,
+        exclude: None,
+        revision: Some(revision.to_string()),
+        versionrewriteregex: None,
+        versionrewritepattern: None,
+        update_crate: vec![],
+        no_root_manifest: true,
+        respect_lockfile: false,
+        custom_root: None,
+        method: Method::Registry,
+        src: url.to_string(),
+        compression: Compression::default(),
+        tag: None,
+        manifest_path: vec![],
+        update: true,
+        outdir: outdir.to_path_buf(),
+        color: clap::ColorChoice::Auto,
+        i_accept_the_risk: vec![],
+        vendor_specific_args,
+    };
+    let res = opt.run_vendor();
+    assert!(res.is_ok());
     Ok(())
 }

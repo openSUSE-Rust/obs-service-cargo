@@ -15,7 +15,7 @@ use crate::vendor::run_cargo_vendor;
 use libroast::common::Compression;
 
 use clap::{Args, Parser, ValueEnum};
-use libroast::operations::cli::RawArgs;
+use libroast::operations::cli::{RawArgs, RoastScmArgs};
 use libroast::operations::raw::raw_opts;
 use libroast::utils::copy_dir_all;
 use libroast::{decompress, utils};
@@ -42,19 +42,80 @@ Bugs can be reported on GitHub: https://github.com/openSUSE/obs-service-cargo_ve
     max_term_width = 120
 )]
 pub struct Opts {
+    #[arg(long, action = clap::ArgAction::Set, default_value_t = false, help = "Whether to generate or update a changelog file or not. To be passed to Roast SCM.")]
+    pub changesgenerate: bool,
+    #[arg(
+        long,
+        short = 'A',
+        requires_if("changesgenerate", "true"),
+        help = "Author to include during the changelog generation. To be passed to Roast SCM."
+    )]
+    pub changesauthor: Option<String>,
+    #[arg(
+        long,
+        short = 'e',
+        help = "Email of author to include during the changelog generation. To be passed to Roast SCM."
+    )]
+    pub changesemail: Option<String>,
+    #[arg(
+        long,
+        alias = "caof",
+        requires_if("changesgenerate", "true"),
+        help = "Whether to specify a path to the changes file. Otherwise, it is the current \
+                directory and the filename is the same filename prefix of the generated tarball \
+                e.g. `source.tar.xz` will have `source.changes` file. If file exists, append the \
+                newest changes to the top-most part of the text file. To be passed to Roast SCM."
+    )]
+    pub changesoutfile: Option<PathBuf>,
+    #[arg(
+        long,
+        help = "Whether to hard code the version or not. Set it to hard code one, otherwise, it \
+                will use the generated version internally. To be passed to Roast SCM."
+    )]
+    pub set_version: Option<String>,
+    #[arg(
+        long,
+        help = "Whether to hard code the name or not. Set it to hard code one, otherwise, it will \
+                use the generated name internally. To be passed to Roast SCM."
+    )]
+    pub set_name: Option<String>,
+    #[arg(
+        long,
+        short = 'E',
+        help = "Additional paths such as files or directories from within target repository's \
+                work directory to exclude when generating the archive. To be passed to Roast SCM."
+    )]
+    pub exclude: Option<Vec<PathBuf>>,
+    #[arg(
+        long,
+        help = "Revision or tag. It can also be a specific commit hash or branch. Supports <https://git-scm.com/docs/git-rev-parse.html#_specifying_revisions>."
+    )]
+    pub revision: Option<String>,
+    #[arg(
+        long,
+        help = "Pass a regex with capture groups. Required by `versionrewritepattern` flag. Each \
+                capture group is labelled through increments of 1. To be passed to Roast SCM.",
+        requires = "versionrewritepattern"
+    )]
+    pub versionrewriteregex: Option<String>,
+    #[arg(
+        long,
+        help = "Pass a pattern from the capture groups from `versionrewriteregex` flag. To be passed to Roast SCM."
+    )]
+    pub versionrewritepattern: Option<String>,
     #[arg(
         long,
         value_enum,
         default_value_t,
-        help = "Whether to use vendor or the registry."
+        help = "Whether to use vendor or the registry. To be passed to Roast SCM."
     )]
     pub method: Method,
     #[arg(
         long,
-        visible_aliases = ["srctar", "srcdir", "target"],
-        help = "Where to find sources. Source is either a directory or a source tarball AND cannot be both."
+        visible_aliases = ["srctar", "srcdir", "target", "url"],
+        help = "Where to find sources. Source is either a directory or a source tarball or a URL to a remote git repository."
     )]
-    pub src: PathBuf,
+    pub src: String,
     #[arg(
         long,
         short = 'C',
@@ -141,21 +202,81 @@ pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Res
 impl Opts {
     pub fn run_vendor(&mut self) -> io::Result<()> {
         debug!(?self);
+        let is_url = url::Url::parse(&self.src).is_ok();
         let tempdir_for_workdir = tempfile::Builder::new()
             .prefix(VENDOR_PATH_PREFIX)
             .rand_bytes(12)
             .tempdir()?;
-        let workdir = &tempdir_for_workdir.path();
+        let mut workdir = tempdir_for_workdir.path().to_path_buf();
         debug!(?workdir);
-        let target = utils::process_globs(&self.src)?;
+        let target = if let Ok(result) = utils::process_globs(std::path::Path::new(&self.src)) {
+            result
+        } else {
+            if is_url {
+                warn!(
+                    "⚠️ Not a glob input. Please check if you are passing a path to a file or a directory. We expect that you are passing a URL to a remote git repository."
+                );
+                warn!(
+                    "⚠️ Ensure you pass a commit hash or version to `--revision`. Otherwise, this will fail."
+                );
+                warn!(
+                    " ⚠️ This is an experimental feature. Please file a bug report at <https://github.com/openSUSE-Rust/obs-service-cargo/issues/new/choose>. Thank you!"
+                );
+            }
+            std::path::Path::new(&self.src).to_path_buf()
+        };
+
         if target.is_dir() {
-            copy_dir_all(&target, workdir)?;
+            copy_dir_all(&target, &workdir)?;
         } else if target.is_file() && utils::is_supported_format(&target).is_ok() {
             let raw_args = RawArgs {
                 target: target.to_path_buf(),
                 outdir: Some(workdir.to_path_buf()),
             };
             raw_opts(raw_args, false)?;
+        } else if is_url {
+            if let Some(revision) = &self.revision {
+                let roast_scm_args = RoastScmArgs {
+                    changesgenerate: self.changesgenerate,
+                    changesauthor: self.changesauthor.clone(),
+                    changesemail: self.changesemail.clone(),
+                    changesoutfile: self.changesoutfile.clone(),
+                    set_version: self.set_version.clone(),
+                    set_name: self.set_name.clone(),
+                    git_repository_url: self.src.to_string(),
+                    exclude: None,
+                    revision: revision.to_string(),
+                    versionrewriteregex: self.versionrewriteregex.clone(),
+                    versionrewritepattern: self.versionrewritepattern.clone(),
+                    depth: 0,
+                    is_temporary: false,
+                    outfile: None,
+                    outdir: Some(self.outdir.to_path_buf()),
+                    reproducible: true,
+                    ignore_git: true,
+                    ignore_hidden: false,
+                    compression: self.compression,
+                };
+                let roast_scm_result =
+                    libroast::operations::roast_scm::roast_scm_opts(&roast_scm_args, false);
+                match roast_scm_result {
+                    Ok(some_path) => match some_path {
+                        Some(local_clone_dir) => workdir = local_clone_dir,
+                        None => {
+                            return Err(io::Error::new(
+                                io::ErrorKind::NotFound,
+                                "Target path does not exist!",
+                            ));
+                        }
+                    },
+                    Err(err) => return Err(err),
+                };
+            } else {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Revision is empty.",
+                ));
+            }
         } else {
             return Err(io::Error::new(
                 io::ErrorKind::Unsupported,
@@ -165,7 +286,7 @@ impl Opts {
 
         let setup_workdir = {
             let dirs: Vec<Result<std::fs::DirEntry, std::io::Error>> =
-                std::fs::read_dir(workdir)?.collect();
+                std::fs::read_dir(&workdir)?.collect();
             debug!(?dirs, "List of files and directories of the workdir");
             if dirs.len() > 1 {
                 debug!(?workdir);
@@ -251,7 +372,7 @@ osc service -vvv mr cargo_vendor
                 msg.push_str(" This seems to be a bug. Please file an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.");
             }
             error!(msg);
-            return Err(io::Error::new(io::ErrorKind::Other, msg));
+            return Err(io::Error::other(msg));
         }
         info!("🌟 OBS Service Cargo finished.");
         info!("🧹 Cleaning up temporary directories...");
