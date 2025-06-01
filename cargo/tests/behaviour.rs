@@ -184,7 +184,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
         target: vendor_tarball_path.to_path_buf(),
         outdir: Some(raw_outdir.clone()),
     };
-    if *"https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz" != *source {
+    if *"https://github.com/elliot40404/bonk/archive/refs/tags/v0.4.0.tar.gz" != *source {
         assert!(raw_opts(raw_args, false).is_ok());
     } else {
         assert!(raw_opts(raw_args, false).is_err());
@@ -192,7 +192,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     let vendor_path = raw_outdir.join("vendor");
     let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
     let cargo_lock_path = raw_outdir.join("Cargo.lock");
-    if *"https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz" != *source {
+    if *"https://github.com/elliot40404/bonk/archive/refs/tags/v0.4.0.tar.gz" != *source {
         assert!(vendor_tarball_path.is_file());
         assert!(vendor_path.is_dir());
         assert!(cargo_config_path.is_file());
@@ -210,7 +210,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
 async fn no_filter_vendor_sources() -> io::Result<()> {
     let sources = [
         // NOTE: This should not vendor anything as it does not contain any dependencies
-        "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
+        "https://github.com/elliot40404/bonk/archive/refs/tags/v0.4.0.tar.gz",
         // NOTE: This should vendor
         "https://codeberg.org/Rusty-Geckos/roast/archive/tags/v5.1.7.tar.gz",
         // NOTE: This should not stack overflow
@@ -232,7 +232,7 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
 async fn filter_vendor_sources() -> io::Result<()> {
     let sources = [
         // NOTE: This should not vendor anything as it does not contain any dependencies
-        "https://github.com/elliot40404/bonk/archive/refs/tags/v0.3.2.tar.gz",
+        "https://github.com/elliot40404/bonk/archive/refs/tags/v0.4.0.tar.gz",
         // NOTE: This should vendor
         "https://codeberg.org/Rusty-Geckos/roast/archive/tags/v5.1.7.tar.gz",
         // NOTE: This should not stack overflow
