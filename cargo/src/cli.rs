@@ -90,7 +90,7 @@ pub struct Opts {
         long,
         help = "Revision or tag. It can also be a specific commit hash or branch. Supports <https://git-scm.com/docs/git-rev-parse.html#_specifying_revisions>."
     )]
-    pub revision: String,
+    pub revision: Option<String>,
     #[arg(
         long,
         help = "Pass a regex with capture groups. Required by `versionrewritepattern` flag. Each \
@@ -235,41 +235,48 @@ impl Opts {
             };
             raw_opts(raw_args, false)?;
         } else if is_url {
-            let roast_scm_args = RoastScmArgs {
-                changesgenerate: self.changesgenerate,
-                changesauthor: self.changesauthor.clone(),
-                changesemail: self.changesemail.clone(),
-                changesoutfile: self.changesoutfile.clone(),
-                set_version: self.set_version.clone(),
-                set_name: self.set_name.clone(),
-                git_repository_url: self.src.to_string(),
-                exclude: None,
-                revision: self.revision.clone(),
-                versionrewriteregex: self.versionrewriteregex.clone(),
-                versionrewritepattern: self.versionrewritepattern.clone(),
-                depth: 0,
-                is_temporary: false,
-                outfile: None,
-                outdir: Some(self.outdir.to_path_buf()),
-                reproducible: true,
-                ignore_git: true,
-                ignore_hidden: false,
-                compression: self.compression,
-            };
-            let roast_scm_result =
-                libroast::operations::roast_scm::roast_scm_opts(&roast_scm_args, false);
-            match roast_scm_result {
-                Ok(some_path) => match some_path {
-                    Some(local_clone_dir) => workdir = local_clone_dir,
-                    None => {
-                        return Err(io::Error::new(
-                            io::ErrorKind::NotFound,
-                            "Target path does not exist!",
-                        ));
-                    }
-                },
-                Err(err) => return Err(err),
-            };
+            if let Some(revision) = &self.revision {
+                let roast_scm_args = RoastScmArgs {
+                    changesgenerate: self.changesgenerate,
+                    changesauthor: self.changesauthor.clone(),
+                    changesemail: self.changesemail.clone(),
+                    changesoutfile: self.changesoutfile.clone(),
+                    set_version: self.set_version.clone(),
+                    set_name: self.set_name.clone(),
+                    git_repository_url: self.src.to_string(),
+                    exclude: None,
+                    revision: revision.to_string(),
+                    versionrewriteregex: self.versionrewriteregex.clone(),
+                    versionrewritepattern: self.versionrewritepattern.clone(),
+                    depth: 0,
+                    is_temporary: false,
+                    outfile: None,
+                    outdir: Some(self.outdir.to_path_buf()),
+                    reproducible: true,
+                    ignore_git: true,
+                    ignore_hidden: false,
+                    compression: self.compression,
+                };
+                let roast_scm_result =
+                    libroast::operations::roast_scm::roast_scm_opts(&roast_scm_args, false);
+                match roast_scm_result {
+                    Ok(some_path) => match some_path {
+                        Some(local_clone_dir) => workdir = local_clone_dir,
+                        None => {
+                            return Err(io::Error::new(
+                                io::ErrorKind::NotFound,
+                                "Target path does not exist!",
+                            ));
+                        }
+                    },
+                    Err(err) => return Err(err),
+                };
+            } else {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Revision is empty.",
+                ));
+            }
         } else {
             return Err(io::Error::new(
                 io::ErrorKind::Unsupported,
