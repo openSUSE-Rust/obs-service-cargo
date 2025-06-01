@@ -2,6 +2,67 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.0.0] - 2025-06-01
+
+### Bug Fixes
+
+- Revision should be an `Option<String>` in obs service cargo [2714f44](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2714f44dfc6b945bc36da486e377025647924a3c)
+- Clippy lint fixes + adding missing fields in tests. [a728118](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a728118e6578e0674e1c6fd211a3fad6fcf3594d)
+
+### Dependencies
+
+- Update libroast to 7.1.2 [b3519a0](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b3519a01be92bfd7884931e1e17e4f017e1c1da7)
+- Update libroast to v7.1.1 [559cc66](https://github.com/openSUSE-Rust/obs-service-cargo/commit/559cc66b8928c48530a0245cbe6eac16dffaa78a)
+- Update libroast to v7.1.0 [1dc6072](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1dc60723a662de5c42f9be0c042631231cbf1b44)
+- Update Cargo.lock [4f76cd5](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4f76cd5fae18deacd4151b748e74c4210572924e)
+- Only use git sources for libroast [f0dbc9a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f0dbc9a124eb1e7a23faf92a1559c292b80a80ff)
+- Get libroast from registry now [4fa7b42](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4fa7b42dcc299906fd079edec8d87d59b16714e9)
+- Use another fixed change in libroast [3100c6c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3100c6cc90826436aabb1a53fd5e92ab46992870)
+- Add url crate [b7243a1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b7243a177efca4cd11910e572dac955f85bec653)
+- Use another fixed change in libroast [4108601](https://github.com/openSUSE-Rust/obs-service-cargo/commit/41086012822a661ee474494f3e1cfe696aac1eee)
+- Update libroast to the working commit [fec6956](https://github.com/openSUSE-Rust/obs-service-cargo/commit/fec6956748bace0dd830d5cfbb21f2799d7f2fb8)
+- Use git source at a specific commit hash for libroast. [d0b8592](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d0b8592886d0c2494d4ed80e792ad7ed901f36a5)
+- Bump libroast to 6.1.0 [6d3fd1f](https://github.com/openSUSE-Rust/obs-service-cargo/commit/6d3fd1f3f8d9c51751dc301e46988e7079698c05)
+
+### Documentation
+
+- Update service file definition [4cf1c67](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4cf1c678a4c04a69a8a644b66f975a2bc0d34224)
+- Update wording in code docs [145161b](https://github.com/openSUSE-Rust/obs-service-cargo/commit/145161bc0cfc80e6139ec2c85dea45f688baf7b9)
+- Update doc comments to match intention [b080951](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b080951456d9a4d4a3d9429382dbf2f9a882690d)
+
+### Features
+
+- Roast_scm + obs-service-cargo_vendor in one go [1dcb937](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1dcb93798dee90330aaded26b601a8b20e117b50)
+
+### Improvements
+
+- Port over roast scm specific fields to obs service cargo [8fbc6af](https://github.com/openSUSE-Rust/obs-service-cargo/commit/8fbc6af21e2349ac585cc54fdfb40ad2bbdab56b)
+
+### Miscellaneous Tasks
+
+- Apply clippy suggestions [94d47ce](https://github.com/openSUSE-Rust/obs-service-cargo/commit/94d47ced0e125cde8ce6a6a8bbba5a425c6151ef)
+
+### Other
+
+- Run `cargo fmt` [f976cc2](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f976cc250041cb89f1c9ab6db92ec7e01becdda0)
+
+### Refactor
+
+- Change this field to `String` instead of `PathBuf`. [eeaf4e7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/eeaf4e735956f52e71feeb14836594cd3b461ba2)
+
+### Removed
+
+- Woah this test file has not been removed since lol [eaa15d9](https://github.com/openSUSE-Rust/obs-service-cargo/commit/eaa15d9c54a8521d562ec693269c31b27e7cb531)
+
+### Testing
+
+- Update bonk to v0.4.0 [2fedf31](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2fedf31e2818f7b4ed2bd2e562b53dacfc4b4b63)
+- Ignored -> ignore [83be42c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/83be42c64b2e12a838e57b7061b13a0ac902d9aa)
+- Fix tests by ignoring those that change directories in the environment [d547eba](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d547ebafc2eaecb2ec201295bfb0d75fdd26125c)
+- Add tests that points to a URL [0f475b2](https://github.com/openSUSE-Rust/obs-service-cargo/commit/0f475b281506181ada2903021f764d603adf1e1e)
+- Add test file [4dbcf04](https://github.com/openSUSE-Rust/obs-service-cargo/commit/4dbcf04af486eff0eb5578c5221152ceaef511c4)
+- Update struct fields of `Opts` in tests [322ece6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/322ece6fb3e09167dd99fe1fd07b4d52168e1d4a)
+
 ## [5.1.0] - 2025-04-13
 
 ### Continuous Integrations
@@ -11,6 +72,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
+- Bump to v5.1.0 [2910335](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2910335f66158a658dfeebca8b8bf6cfc09ba1c0)
 - Remove unnecessary newlines in Cargo.toml configuration. [e918141](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e918141025a8e6492109e760f8a25231fce822b2)
 
 ### Other
