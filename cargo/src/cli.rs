@@ -42,11 +42,72 @@ Bugs can be reported on GitHub: https://github.com/openSUSE/obs-service-cargo_ve
     max_term_width = 120
 )]
 pub struct Opts {
+    #[arg(long, action = clap::ArgAction::Set, default_value_t = false, help = "Whether to generate or update a changelog file or not. To be passed to Roast SCM.")]
+    pub changesgenerate: bool,
+    #[arg(
+        long,
+        short = 'A',
+        requires_if("changesgenerate", "true"),
+        help = "Author to include during the changelog generation. To be passed to Roast SCM."
+    )]
+    pub changesauthor: Option<String>,
+    #[arg(
+        long,
+        short = 'e',
+        help = "Email of author to include during the changelog generation. To be passed to Roast SCM."
+    )]
+    pub changesemail: Option<String>,
+    #[arg(
+        long,
+        alias = "caof",
+        requires_if("changesgenerate", "true"),
+        help = "Whether to specify a path to the changes file. Otherwise, it is the current \
+                directory and the filename is the same filename prefix of the generated tarball \
+                e.g. `source.tar.xz` will have `source.changes` file. If file exists, append the \
+                newest changes to the top-most part of the text file. To be passed to Roast SCM."
+    )]
+    pub changesoutfile: Option<PathBuf>,
+    #[arg(
+        long,
+        help = "Whether to hard code the version or not. Set it to hard code one, otherwise, it \
+                will use the generated version internally. To be passed to Roast SCM."
+    )]
+    pub set_version: Option<String>,
+    #[arg(
+        long,
+        help = "Whether to hard code the name or not. Set it to hard code one, otherwise, it will \
+                use the generated name internally. To be passed to Roast SCM."
+    )]
+    pub set_name: Option<String>,
+    #[arg(
+        long,
+        short = 'E',
+        help = "Additional paths such as files or directories from within target repository's \
+                work directory to exclude when generating the archive. To be passed to Roast SCM."
+    )]
+    pub exclude: Option<Vec<PathBuf>>,
+    #[arg(
+        long,
+        help = "Revision or tag. It can also be a specific commit hash or branch. Supports <https://git-scm.com/docs/git-rev-parse.html#_specifying_revisions>."
+    )]
+    pub revision: String,
+    #[arg(
+        long,
+        help = "Pass a regex with capture groups. Required by `versionrewritepattern` flag. Each \
+                capture group is labelled through increments of 1. To be passed to Roast SCM.",
+        requires = "versionrewritepattern"
+    )]
+    pub versionrewriteregex: Option<String>,
+    #[arg(
+        long,
+        help = "Pass a pattern from the capture groups from `versionrewriteregex` flag. To be passed to Roast SCM."
+    )]
+    pub versionrewritepattern: Option<String>,
     #[arg(
         long,
         value_enum,
         default_value_t,
-        help = "Whether to use vendor or the registry."
+        help = "Whether to use vendor or the registry. To be passed to Roast SCM."
     )]
     pub method: Method,
     #[arg(
@@ -55,8 +116,6 @@ pub struct Opts {
         help = "Where to find sources. Source is either a directory or a source tarball or a URL to a remote git repository."
     )]
     pub src: String,
-    #[arg(long, help = "Revision or tag. It can also be a specific commit hash.")]
-    pub revision: Option<String>,
     #[arg(
         long,
         short = 'C',
@@ -166,6 +225,7 @@ impl Opts {
             }
             std::path::Path::new(&self.src).to_path_buf()
         };
+
         if target.is_dir() {
             copy_dir_all(&target, &workdir)?;
         } else if target.is_file() && utils::is_supported_format(&target).is_ok() {
@@ -174,14 +234,20 @@ impl Opts {
                 outdir: Some(workdir.to_path_buf()),
             };
             raw_opts(raw_args, false)?;
-        } else if is_url && self.revision.is_some() {
-            // We already evaluated that it is at a `Some` variant
-            let revision = self.revision.clone().unwrap_or_default().to_string();
+        } else if is_url {
             let roast_scm_args = RoastScmArgs {
+                changesgenerate: self.changesgenerate,
+                changesauthor: self.changesauthor.clone(),
+                changesemail: self.changesemail.clone(),
+                changesoutfile: self.changesoutfile.clone(),
+                set_version: self.set_version.clone(),
+                set_name: self.set_name.clone(),
                 git_repository_url: self.src.to_string(),
                 exclude: None,
-                revision,
-                depth: 1,
+                revision: self.revision.clone(),
+                versionrewriteregex: self.versionrewriteregex.clone(),
+                versionrewritepattern: self.versionrewritepattern.clone(),
+                depth: 0,
                 is_temporary: false,
                 outfile: None,
                 outdir: Some(self.outdir.to_path_buf()),
