@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.0.1] - 2025-06-02
+
+### Documentation
+
+- Behaviour changed. i don't want TMPDIR to be filled up like crazy. [1a41a5a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1a41a5a269bcfba2dcbfa46a0ae6b7e625d2eedb)
+- Update README.md [770de72](https://github.com/openSUSE-Rust/obs-service-cargo/commit/770de723ee30ed80478d72915ac6d709fdf388b8)
+
+### Improvements
+
+- Just pass the current workdir instead [1ceb0d1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1ceb0d1938542e5fae25a22364ccab00ea21c97c)
+
 ## [6.0.0] - 2025-06-01
 
 ### Bug Fixes
@@ -40,6 +51,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
+- Bump to v6.0.0 [bfb4b70](https://github.com/openSUSE-Rust/obs-service-cargo/commit/bfb4b70af4219d27cdd038b13fb90621b375e7ca)
 - Apply clippy suggestions [94d47ce](https://github.com/openSUSE-Rust/obs-service-cargo/commit/94d47ced0e125cde8ce6a6a8bbba5a425c6151ef)
 
 ### Other
