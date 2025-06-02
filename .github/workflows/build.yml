@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - '**.rs'
+      - '**/github/**.yaml'
+      - '**/github/**.yml'
       - '**/Cargo.toml'
       - '**/Cargo.lock'
       - '!**.md'
