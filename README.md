@@ -78,23 +78,6 @@ that documents those flags.
 You can see that [roast_scm.service](https://codeberg.org/Rusty-Geckos/roast/src/branch/main/roast_scm.service) have the flags of the same name. This is intentional
 since we are passing those parameters' values to `roast_scm`.
 
-> [!WARNING]
-> It's important to know that by default in `obs-service-cargo`, the repositories that are cloned in `roast_scm` won't be deleted
-> as we pass `false` to `is-temporary` parameter to `roast_scm`.
->
-> This behaviour might change in the future if in case it becomes a problem. I do believe that it's possible to just pass the
-> resulting tarball source generated from `roast_scm` itself.
->
-> The issue with this current behaviour is it will cause the `TMPDIR` (default `/tmp`) to fill up pretty quickly, especially,
-> when a packager updates multiple Rust software. The workaround for this is setting another location for `TMPDIR` like so
->
-> ```bash
-> export TMPDIR="$HOME/.cache
-> osc service -vvv mr cargo_vendor
-> ```
->
-> I am still keen on changing the behaviour to just point to the generated tarball from `roast_scm` in the future.
-
 ## Updating dependencies
 
 Updating crate dependencies require users to set `--update` to true. This is
