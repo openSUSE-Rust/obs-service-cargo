@@ -25,9 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     container: opensuse/leap
     steps:
-    - name: Install tar, dependencies and Rust
+    - name: Install tar, gzip, dependencies and Rust
       run: |
-        zypper --non-interactive -vvv in tar libzstd-devel rustup openssl-devel
+        zypper --non-interactive -vvv in tar gzip libzstd-devel rustup openssl-devel
         # Seems to be a rustup command inconsistency
         rustup show
     - name: Checkout
