@@ -21,16 +21,14 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: opensuse/tumbleweed:latest
+    container: opensuse/leap
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Install dependencies and Rust
       run: |
-        zypper --non-interactive -vvv ref -f
-        zypper --non-interactive -vvv dup
         zypper --non-interactive -vvv in libzstd-devel rustup openssl-devel
-        # Seems to be a rustup inconsistency
+        # Seems to be a rustup command inconsistency
         rustup show
     - name: Build
       run: |
