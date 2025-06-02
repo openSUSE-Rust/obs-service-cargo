@@ -31,6 +31,70 @@ A good example would be the [zellij](https://zellij.dev) project. Users will jus
 </services>
 ```
 
+## The `src` parameter
+
+The `src` parameter can be in three types:
+- a source directory
+- a source tarball
+- a Git URL
+
+The Git URL is unique as compared to the other two since it contains additional flags that is passed internally to `roast_scm`. This is a section of the service file
+that documents those flags.
+
+```xml
+   <parameter name="changesgenerate">
+      <description>Whether to generate or update a changelog file or not. Default: false. To be passed to Roast SCM.</description>
+      <allowedvalues>true</allowedvalues>
+      <allowedvalues>false</allowedvalues>
+   </parameter>
+   <parameter name="changesauthor">
+      <description>Author to include during the changelog generation. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="changesemail">
+      <description>Email of author to include during the changelog generation. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="changesoutfile">
+      <description> Whether to specify a path to the changes file. Otherwise, it is the current directory and the
+      filename is the same filename prefix of the generated tarball e.g. `source.tar.xz` will have `source.changes`
+      file. If file exists, append the newest changes to the top-most part of the text file. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="set-version">
+      <description>Whether to hard code the version or not. Set it to hard code one, otherwise, it will use the generated version internally. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="set-name">
+      <description>Whether to hard code the name or not. Set it to hard code one, otherwise, it will use the generated name internally. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="revision">
+      <description>Revision or tag. It can also be a specific commit hash. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="versionrewriteregex">
+      <description>Pass a regex with capture groups. Required by `versionrewritepattern` flag. Each capture group is labelled through increments of 1. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="versionrewritepattern">
+      <description>Pass a pattern from the capture groups from `versionrewriteregex` flag. To be passed to Roast SCM.</description>
+   </parameter>
+```
+
+You can see that [roast_scm.service](https://codeberg.org/Rusty-Geckos/roast/src/branch/main/roast_scm.service) have the flags of the same name. This is intentional
+since we are passing those parameters' values to `roast_scm`.
+
+> [!WARNING]
+> It's important to know that by default in `obs-service-cargo`, the repositories that are cloned in `roast_scm` won't be deleted
+> as we pass `false` to `is-temporary` parameter to `roast_scm`.
+>
+> This behaviour might change in the future if in case it becomes a problem. I do believe that it's possible to just pass the
+> resulting tarball source generated from `roast_scm` itself.
+>
+> The issue with this current behaviour is it will cause the `TMPDIR` (default `/tmp`) to fill up pretty quickly, especially,
+> when a packager updates multiple Rust software. The workaround for this is setting another location for `TMPDIR` like so
+>
+> ```bash
+> export TMPDIR="$HOME/.cache
+> osc service -vvv mr cargo_vendor
+> ```
+>
+> I am still keen on changing the behaviour to just point to the generated tarball from `roast_scm` in the future.
+
 ## Updating dependencies
 
 Updating crate dependencies require users to set `--update` to true. This is
@@ -458,7 +522,38 @@ The following are the parameters you can use with this utility:
   and creates a vendor.tar[.<tar compression>] to be committed allowing fully offline
   builds of Rust applications.]]></description>
    <parameter name="strategy">
-      <description>Legacy argument, no longer used. Values: cargo_vendor. Default: cargo_vendor</description>
+      <description>Legacy argument, no longer used. Values: cargo_vendor. Default: cargo_vendor.</description>
+   </parameter>
+   <parameter name="changesgenerate">
+      <description>Whether to generate or update a changelog file or not. Default: false. To be passed to Roast SCM.</description>
+      <allowedvalues>true</allowedvalues>
+      <allowedvalues>false</allowedvalues>
+   </parameter>
+   <parameter name="changesauthor">
+      <description>Author to include during the changelog generation. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="changesemail">
+      <description>Email of author to include during the changelog generation. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="changesoutfile">
+      <description> Whether to specify a path to the changes file. Otherwise, it is the current directory and the
+      filename is the same filename prefix of the generated tarball e.g. `source.tar.xz` will have `source.changes`
+      file. If file exists, append the newest changes to the top-most part of the text file. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="set-version">
+      <description>Whether to hard code the version or not. Set it to hard code one, otherwise, it will use the generated version internally. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="set-name">
+      <description>Whether to hard code the name or not. Set it to hard code one, otherwise, it will use the generated name internally. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="revision">
+      <description>Revision or tag. It can also be a specific commit hash. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="versionrewriteregex">
+      <description>Pass a regex with capture groups. Required by `versionrewritepattern` flag. Each capture group is labelled through increments of 1. To be passed to Roast SCM.</description>
+   </parameter>
+   <parameter name="versionrewritepattern">
+      <description>Pass a pattern from the capture groups from `versionrewriteregex` flag. To be passed to Roast SCM.</description>
    </parameter>
    <parameter name="method">
       <description>Whether to use vendor or the registry. Default: vendor</description>
@@ -466,7 +561,7 @@ The following are the parameters you can use with this utility:
       <allowedvalues>vendor</allowedvalues>
    </parameter>
    <parameter name="src">
-      <description>Where to find sources. Source is either a directory or a source tarball AND cannot be both. Aliases: srctar, srcdir</description>
+      <description>Where to find sources. Source is either a directory or a source tarball or a URL to a remote git repository. Aliases: srctar, srcdir, target, url</description>
    </parameter>
    <parameter name="outdir">
       <description>Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry. If using with `osc service`, this option is automatically appended.</description>
