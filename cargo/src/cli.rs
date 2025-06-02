@@ -207,7 +207,7 @@ impl Opts {
             .prefix(VENDOR_PATH_PREFIX)
             .rand_bytes(12)
             .tempdir()?;
-        let mut workdir = tempdir_for_workdir.path().to_path_buf();
+        let workdir = tempdir_for_workdir.path().to_path_buf();
         debug!(?workdir);
         let target = if let Ok(result) = utils::process_globs(std::path::Path::new(&self.src)) {
             result
@@ -249,7 +249,7 @@ impl Opts {
                     versionrewriteregex: self.versionrewriteregex.clone(),
                     versionrewritepattern: self.versionrewritepattern.clone(),
                     depth: 0,
-                    is_temporary: false,
+                    is_temporary: true,
                     outfile: None,
                     outdir: Some(self.outdir.to_path_buf()),
                     reproducible: true,
@@ -257,20 +257,12 @@ impl Opts {
                     ignore_hidden: false,
                     compression: self.compression,
                 };
-                let roast_scm_result =
-                    libroast::operations::roast_scm::roast_scm_opts(&roast_scm_args, false);
-                match roast_scm_result {
-                    Ok(some_path) => match some_path {
-                        Some(local_clone_dir) => workdir = local_clone_dir,
-                        None => {
-                            return Err(io::Error::new(
-                                io::ErrorKind::NotFound,
-                                "Target path does not exist!",
-                            ));
-                        }
-                    },
-                    Err(err) => return Err(err),
-                };
+
+                libroast::operations::roast_scm::roast_scm_opts(
+                    Some(workdir.clone()),
+                    &roast_scm_args,
+                    false,
+                )?;
             } else {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
