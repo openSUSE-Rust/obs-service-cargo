@@ -25,13 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     container: opensuse/leap
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Install dependencies and Rust
+    - name: Install tar, dependencies and Rust
       run: |
-        zypper --non-interactive -vvv in libzstd-devel rustup openssl-devel
+        zypper --non-interactive -vvv in tar libzstd-devel rustup openssl-devel
         # Seems to be a rustup command inconsistency
         rustup show
+    - name: Checkout
+      uses: actions/checkout@v4
     - name: Build
       run: |
         cargo update
