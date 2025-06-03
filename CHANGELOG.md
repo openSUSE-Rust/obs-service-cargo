@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.0.2] - 2025-06-03
+
+### Bug Fixes
+
+- Changelog generation is fixed in libroast 7.2.2 [a9dea69](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a9dea69555bee8b2b855f2abde34736692416890)
+
+### Continuous Integrations
+
+- Leap does not have gzip in its image by default [96601a0](https://github.com/openSUSE-Rust/obs-service-cargo/commit/96601a0add20b2fc3f937b84ac02583b303e6875)
+- Leap does not have tar for some reason in its docker image. [5420a56](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5420a561d74250e3022ba997601dd70e6ac9cbd4)
+- Run CI if workflow changes [cc328c1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/cc328c13fcd2cb1e24fa3f9a8b3ec7d8c9416bdd)
+- Change to leap container [032e85f](https://github.com/openSUSE-Rust/obs-service-cargo/commit/032e85f8f1394e81463ab25f7fe2fe60fe6a0010)
+
 ## [6.0.1] - 2025-06-02
 
 ### Documentation
@@ -12,6 +25,10 @@ All notable changes to this project will be documented in this file.
 ### Improvements
 
 - Just pass the current workdir instead [1ceb0d1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1ceb0d1938542e5fae25a22364ccab00ea21c97c)
+
+### Miscellaneous Tasks
+
+- V6.0.1 [b1c1db4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b1c1db47429ae1d7caefe2a5e08f829b89c9f246)
 
 ## [6.0.0] - 2025-06-01
 
