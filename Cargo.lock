@@ -1995,9 +1995,9 @@ dependencies = [
 
 [[package]]
 name = "libroast"
-version = "7.2.2"
+version = "7.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5145797964405ae3765a9f38a9fde96acc70695d0bcd0037e2faf766d8c718ca"
+checksum = "88653734fb1d8b3dae43c524b4deb451a7b319b3796e39556e8cbddbff11be0f"
 dependencies = [
  "bzip2",
  "clap",
