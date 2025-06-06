@@ -51,10 +51,10 @@
    <parameter name="outdir">
       <description>Where to output vendor.tar* and cargo_config if method is vendor and registry.tar* if method is registry. If using with `osc service`, this option is automatically appended.</description>
    </parameter>
-   <parameter name="custom root">
+   <parameter name="custom-root">
       <description>Whether you want to manually set the root of the
       project. Useful with a combination with `--manifest-path` (aliased as `--cargotoml`) or
-      `--no-root-manifest`. You have to replace the spaces with dashes (-) to make this work.
+      `--no-root-manifest`.
       </description>
    </parameter>
    <parameter name="update">
@@ -62,11 +62,11 @@
       <allowedvalues>false</allowedvalues>
       <allowedvalues>true</allowedvalues>
    </parameter>
-   <parameter name="no root manifest">
+   <parameter name="no-root-manifest">
       <description>Available only if `--method` is set to registry. If a
       project has no root manifest, this flag is useful for those situations
       to set the manifest path manually. Useful in combination with
-      `--manifest-path` (aliased as `--cargotoml`) flag. You have to replace the spaces with dashes (-) to make this work. Default: false
+      `--manifest-path` (aliased as `--cargotoml`) flag. Default: false
       </description>
       <allowedvalues>false</allowedvalues>
       <allowedvalues>true</allowedvalues>
@@ -85,26 +85,26 @@
    <parameter name="cargotoml">
       <description>Other cargo manifest files to sync with vendor or registry. Behaviour between methods changes. Consult the documentation.</description>
    </parameter>
-   <parameter name="i accept the risk">
-      <description>A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it. You have to replace the spaces with dashes (-) to make this work.</description>
+   <parameter name="i-accept-the-risk">
+      <description>A list of rustsec-id's to ignore. By setting this value, you acknowledge that this issue does not affect your package and you should be exempt from resolving it.</description>
    </parameter>
    <parameter name="filter">
       <description>Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies. Default: false</description>
       <allowedvalues>false</allowedvalues>
       <allowedvalues>true</allowedvalues>
    </parameter>
-   <parameter name="respect lockfile">
-      <description>Whether to respect Cargo.lock or lockfiles by passing the `--locked` flag. You have to replace the spaces with dashes (-) to make this work. Default: false</description>
+   <parameter name="respect-lockfile">
+      <description>Whether to respect Cargo.lock or lockfiles by passing the `--locked` flag. Default: false</description>
       <allowedvalues>false</allowedvalues>
       <allowedvalues>true</allowedvalues>
    </parameter>
-   <parameter name="versioned dirs">
-      <description>Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor. You have to replace the spaces with dashes (-) to make this work. Default: true</description>
+   <parameter name="versioned-dirs">
+      <description>Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor. Default: true</description>
       <allowedvalues>false</allowedvalues>
       <allowedvalues>true</allowedvalues>
    </parameter>
-   <parameter name="update crate">
-      <description>Set of specific crates to update. If not empty, it will set the global update flag to false. You can specify a valid version string by adding a `@` after the crate name e.g. `foo@1.2.3`. You can also do recursive updates of a crate by appending `recursive` to `@` e.g. `foo@recursive`. However, recursive can't be used with precise. You can specify a manifest path to update a package with `+` e.g. `foo@1.0+foo/better/Cargo.toml`. See `cargo help update` for info about how to update specific crates. You have to replace the spaces with dashes (-) to make this work.</description>
+   <parameter name="update-crate">
+      <description>Set of specific crates to update. If not empty, it will set the global update flag to false. You can specify a valid version string by adding a `@` after the crate name e.g. `foo@1.2.3`. You can also do recursive updates of a crate by appending `recursive` to `@` e.g. `foo@recursive`. However, recursive can't be used with precise. You can specify a manifest path to update a package with `+` e.g. `foo@1.0+foo/better/Cargo.toml`. See `cargo help update` for info about how to update specific crates.</description>
    </parameter>
 </service>
 
