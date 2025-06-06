@@ -15,10 +15,12 @@ This is a Rust written variant for https://github.com/openSUSE/obs-service-cargo
 
 ## How to use OBS Service `cargo vendor`
 
-Typical Rust projects may have a **workspace** manifest at the **root of their project directory**. Others don't and do not really require much intervention.
+Typical Rust projects may have a **workspace** manifest at the **root of their
+project directory**. Others don't and do not really require much intervention.
 
-A good example would be the [zellij](https://zellij.dev) project. Users will just depend the first Cargo.toml found in that project. Therefore, they do not need to use the 
-`cargotoml` parameter for the `_service` file.
+A good example would be the [zellij](https://zellij.dev) project. Users
+will just depend the first Cargo.toml found in that project. Therefore,
+they do not need to use the `cargotoml` parameter for the `_service` file.
 
 ```xml
 <services>
@@ -38,8 +40,13 @@ The `src` parameter can be in three types:
 - a source tarball
 - a Git URL
 
-The Git URL is unique as compared to the other two since it contains additional flags that is passed internally to `roast_scm`. This is a section of the service file
-that documents those flags.
+The first two supports globbing and finds the directory or file based on
+how the list of matching patterns are sorted, in most cases, in alphanumeric
+naming order.
+
+The Git URL is unique as compared to the other two since it contains additional
+flags that is passed internally to `roast_scm`. This is a section of the
+service file that documents those flags.
 
 ```xml
    <parameter name="changesgenerate">
