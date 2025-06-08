@@ -2,11 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.0.4] - 2025-06-08
+
+### Bug Fixes
+
+- Error message caused confusion here. changed it so that it passes any general kind of errors. [11e3c0a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/11e3c0ab99b12832cd2e69c2cde565c06df398c3)
+
+### Dependencies
+
+- Adjust libroast version and update dependencies. [e6e7395](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e6e73950b0802315ff83e11dc21df673adef73f8)
+
+### Documentation
+
+- Update cargo_vendor service documentation [d6be731](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d6be731aa98a3603236a5b8b3ed60cbedd895c01)
+- Update README [8c95c36](https://github.com/openSUSE-Rust/obs-service-cargo/commit/8c95c36be96c4214d7f70270e78d16fb42c6e7d2)
+
 ## [6.0.3] - 2025-06-03
 
 ### Bug Fixes
 
 - Bring in libroast fixes from newer version [d01e674](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d01e6745902e5085d6a7b3a3972fa143ab9ef43a)
+
+### Miscellaneous Tasks
+
+- Bump to version 6.0.3 [d2d06f5](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d2d06f5e44770ee4e55282b83d33b2fc8ea1b589)
 
 ## [6.0.2] - 2025-06-03
 
