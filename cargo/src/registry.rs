@@ -39,10 +39,7 @@ pub fn run_cargo_vendor_home_registry(
 
     let res = {
         debug!(?home_registry_dot_cargo);
-        let no_root_manifest = match registry.no_root_manifest {
-            Some(val) => val,
-            None => false,
-        };
+        let no_root_manifest = registry.no_root_manifest.unwrap_or_default();
         if !no_root_manifest {
             let mut hash = blake3::Hasher::new();
             let possible_root_manifest = custom_root.join("Cargo.toml");
