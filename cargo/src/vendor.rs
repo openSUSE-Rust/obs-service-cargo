@@ -24,6 +24,10 @@ pub fn run_cargo_vendor(
     vendor_opts: &Opts,
 ) -> io::Result<()> {
     debug!(?vendor_opts);
+    if vendor_opts.no_root_manifest.is_some() {
+        warn!("🛑 The `--no-root-manifest` flag is only used if `--method` is set to `registry`.");
+        warn!("Ignoring `--no-root-manifest` flag...");
+    }
     info!("📦 Starting Cargo Vendor");
     let tmpdir_for_config = tempfile::Builder::new()
         .prefix(".vendor_out")
