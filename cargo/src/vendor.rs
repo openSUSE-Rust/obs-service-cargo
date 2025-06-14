@@ -180,6 +180,9 @@ pub fn workspace_has_dependencies(workdir: &Path, src: &Path) -> io::Result<bool
                     } || match extra_data.build_dependencies {
                         Some(deps) => !deps.is_empty(),
                         None => false,
+                    } || match extra_data.target {
+                        Some(deps) => !deps.is_empty(),
+                        None => false,
                     }
                 }
                 let mut members_paths: Vec<PathBuf> = Vec::new();
@@ -284,6 +287,9 @@ pub fn has_dependencies(src: &Path) -> io::Result<bool> {
                     Some(deps) => !deps.is_empty(),
                     None => false,
                 } || match manifest_data.build_dependencies {
+                    Some(deps) => !deps.is_empty(),
+                    None => false,
+                } || match manifest_data.target {
                     Some(deps) => !deps.is_empty(),
                     None => false,
                 });
