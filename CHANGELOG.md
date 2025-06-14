@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.0.6] - 2025-06-14
+
+### Bug Fixes
+
+- The `target` field for build targets is now being used [c10b125](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c10b125b3968257754f9bc4b526198105b2c94a3)
+
 ## [6.0.5] - 2025-06-13
 
 ### Dependencies
 
 - Bump libroast to v8.x [347c96f](https://github.com/openSUSE-Rust/obs-service-cargo/commit/347c96f63979549c23923841dbd25a5dbcca5f7d)
+
+### Miscellaneous Tasks
+
+- Bump to version 6.0.5 [10b4f62](https://github.com/openSUSE-Rust/obs-service-cargo/commit/10b4f62b994ff1a3670f955509888bde044f6dba)
 
 ## [6.0.4] - 2025-06-08
 
