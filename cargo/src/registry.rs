@@ -39,7 +39,11 @@ pub fn run_cargo_vendor_home_registry(
 
     let res = {
         debug!(?home_registry_dot_cargo);
-        if !registry.no_root_manifest {
+        let no_root_manifest = match registry.no_root_manifest {
+            Some(val) => val,
+            None => false,
+        };
+        if !no_root_manifest {
             let mut hash = blake3::Hasher::new();
             let possible_root_manifest = custom_root.join("Cargo.toml");
             if possible_root_manifest.is_file() {
@@ -244,7 +248,7 @@ pub fn run_cargo_vendor_home_registry(
             }
         }
 
-        if !registry.no_root_manifest {
+        if !no_root_manifest {
             let possible_root_lockfile = &custom_root.join("Cargo.lock");
             let possible_root_lockfile = &possible_root_lockfile
                 .canonicalize()

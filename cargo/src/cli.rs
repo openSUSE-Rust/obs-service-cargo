@@ -125,11 +125,10 @@ pub struct Opts {
     #[arg(
 		long,
 		short = 'N',
-		requires_if("registry", "method"),
-		default_value_t = false,
+		requires_if("method", "registry"),
 		action = clap::ArgAction::Set,
 		help = "Available only if `--method` is set to registry. If a project has no root manifest, this flag is useful for those situations to set the manifest path manually. Useful in combination with `--manifest-path` (aliased as `--cargotoml`) flag.")]
-    pub no_root_manifest: bool,
+    pub no_root_manifest: Option<bool>,
     #[arg(
         long,
         value_enum,
