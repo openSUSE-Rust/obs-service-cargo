@@ -47,7 +47,7 @@ pub struct Opts {
     #[arg(
         long,
         short = 'A',
-        requires_if("changesgenerate", "true"),
+        required_if_eq("changesgenerate", "true"),
         help = "Author to include during the changelog generation. To be passed to Roast SCM."
     )]
     pub changesauthor: Option<String>,
@@ -60,7 +60,7 @@ pub struct Opts {
     #[arg(
         long,
         alias = "caof",
-        requires_if("changesgenerate", "true"),
+        requires("changesauthor"),
         help = "Whether to specify a path to the changes file. Otherwise, it is the current \
                 directory and the filename is the same filename prefix of the generated tarball \
                 e.g. `source.tar.xz` will have `source.changes` file. If file exists, append the \
@@ -176,15 +176,40 @@ pub struct Opts {
     )]
     pub update_crate: Vec<String>,
     #[clap(flatten)]
-    pub vendor_specific_args: VendorArgs,
+    pub vendor_specific_args: Option<VendorArgs>,
 }
 
-#[derive(Debug, Args)]
+#[derive(Debug, Args, Clone)]
 pub struct VendorArgs {
-    #[arg(long,requires_if("vendor", "method"), default_value_t = false, action = clap::ArgAction::Set, help = "Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies.")]
+    #[arg(
+        long,
+        help = "Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies."
+    )]
     pub filter: bool,
-    #[arg(long, requires_if("vendor", "method"), default_value_t = true, action = clap::ArgAction::Set, help = "Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor.")]
+    #[arg(
+        long,
+        help = "Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor."
+    )]
     pub versioned_dirs: bool,
+}
+
+impl Default for VendorArgs {
+    fn default() -> Self {
+        VendorArgs {
+            filter: false,
+            versioned_dirs: true,
+        }
+    }
+}
+
+impl Default for &VendorArgs {
+    fn default() -> Self {
+        static VENDOR_ARGS: VendorArgs = VendorArgs {
+            filter: false,
+            versioned_dirs: true,
+        };
+        &VENDOR_ARGS
+    }
 }
 
 pub fn decompress(comp_type: &Compression, outdir: &Path, src: &Path) -> io::Result<()> {
