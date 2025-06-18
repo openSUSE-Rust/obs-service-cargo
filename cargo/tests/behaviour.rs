@@ -64,7 +64,7 @@ async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf
         respect_lockfile: false,
         i_accept_the_risk: vec![],
         update_crate: vec![],
-        vendor_specific_args,
+        vendor_specific_args: Some(vendor_specific_args),
     };
 
     let res = opt.run_vendor();
@@ -140,10 +140,8 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     let data = data.to_vec();
     fs::write(&outfile, data).await.unwrap();
     let outdir = PathBuf::from("/tmp");
-    let vendor_specific_args = VendorArgs {
-        filter,
-        versioned_dirs: true,
-    };
+    let mut vendor_specific_args = VendorArgs::default();
+    vendor_specific_args.filter = filter;
     let mut opt = cli::Opts {
         changesgenerate: false,
         changesauthor: None,
@@ -168,7 +166,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
         respect_lockfile: false,
         i_accept_the_risk: vec![],
         update_crate: vec![],
-        vendor_specific_args,
+        vendor_specific_args: Some(vendor_specific_args),
     };
 
     let res = opt.run_vendor();
@@ -294,7 +292,7 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
         tag: Some(random_tag.clone()),
         manifest_path: [PathBuf::from("rust/pvsecret/Cargo.toml")].to_vec(),
         update: true,
-        vendor_specific_args,
+        vendor_specific_args: Some(vendor_specific_args),
         respect_lockfile: false,
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
@@ -358,10 +356,6 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
     let data = data.to_vec();
     fs::write(&outfile, data).await.unwrap();
     let outdir = PathBuf::from("/tmp");
-    let vendor_specific_args = VendorArgs {
-        filter: false,
-        versioned_dirs: true,
-    };
     let mut opt = cli::Opts {
         changesgenerate: false,
         changesauthor: None,
@@ -386,7 +380,7 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
-        vendor_specific_args,
+        vendor_specific_args: None,
     };
 
     let res = opt.run_vendor();
@@ -439,10 +433,6 @@ async fn custom_root_test_1() -> io::Result<()> {
     let data = data.to_vec();
     fs::write(&outfile, data).await.unwrap();
     let outdir = PathBuf::from("/tmp");
-    let vendor_specific_args = VendorArgs {
-        filter: false,
-        versioned_dirs: true,
-    };
     let mut opt = cli::Opts {
         changesgenerate: false,
         changesauthor: None,
@@ -467,7 +457,7 @@ async fn custom_root_test_1() -> io::Result<()> {
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
-        vendor_specific_args,
+        vendor_specific_args: None,
     };
 
     let res = opt.run_vendor();
@@ -520,10 +510,6 @@ async fn custom_root_test_2() -> io::Result<()> {
     let data = data.to_vec();
     fs::write(&outfile, data).await.unwrap();
     let outdir = PathBuf::from("/tmp");
-    let vendor_specific_args = VendorArgs {
-        filter: false,
-        versioned_dirs: true,
-    };
     let mut opt = cli::Opts {
         changesgenerate: false,
         changesauthor: None,
@@ -548,7 +534,7 @@ async fn custom_root_test_2() -> io::Result<()> {
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
-        vendor_specific_args,
+        vendor_specific_args: None,
     };
 
     let res = opt.run_vendor();
@@ -603,10 +589,6 @@ async fn custom_root_test_3() -> io::Result<()> {
     let data = data.to_vec();
     fs::write(&outfile, data).await.unwrap();
     let outdir = PathBuf::from("/tmp");
-    let vendor_specific_args = VendorArgs {
-        filter: false,
-        versioned_dirs: true,
-    };
     let manifest_path = vec![
         PathBuf::from("bindings/python/Cargo.toml"),
         PathBuf::from("tokenizers/Cargo.toml"),
@@ -636,7 +618,7 @@ async fn custom_root_test_3() -> io::Result<()> {
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
-        vendor_specific_args,
+        vendor_specific_args: None,
     };
 
     let res = opt.run_vendor();
@@ -681,10 +663,6 @@ fn vendor_git_source_of_package_itself_with_vendor_method() -> io::Result<()> {
     let specfile_path = std::path::Path::new(MANIFEST_DIR).join("tests/obs-service-cargo.spec");
     std::env::set_current_dir(&outdir)?;
     std::fs::copy(&specfile_path, outdir.join("obs-service-cargo.spec"))?;
-    let vendor_specific_args = VendorArgs {
-        filter: false,
-        versioned_dirs: true,
-    };
     let mut opt = cli::Opts {
         changesgenerate: false,
         changesauthor: None,
@@ -709,7 +687,7 @@ fn vendor_git_source_of_package_itself_with_vendor_method() -> io::Result<()> {
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
-        vendor_specific_args,
+        vendor_specific_args: None,
     };
     let res = opt.run_vendor();
     assert!(res.is_ok());
@@ -728,10 +706,6 @@ fn vendor_git_source_of_package_itself_with_registry_method() -> io::Result<()> 
     let specfile_path = std::path::Path::new(MANIFEST_DIR).join("tests/obs-service-cargo.spec");
     std::env::set_current_dir(&outdir)?;
     std::fs::copy(&specfile_path, outdir.join("obs-service-cargo.spec"))?;
-    let vendor_specific_args = VendorArgs {
-        filter: false,
-        versioned_dirs: true,
-    };
     let mut opt = cli::Opts {
         changesgenerate: false,
         changesauthor: None,
@@ -756,7 +730,7 @@ fn vendor_git_source_of_package_itself_with_registry_method() -> io::Result<()> 
         outdir: outdir.to_path_buf(),
         color: clap::ColorChoice::Auto,
         i_accept_the_risk: vec![],
-        vendor_specific_args,
+        vendor_specific_args: None,
     };
     let res = opt.run_vendor();
     assert!(res.is_ok());

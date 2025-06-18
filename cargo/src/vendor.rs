@@ -45,11 +45,15 @@ pub fn run_cargo_vendor(
         std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
     }
     // Cargo vendor stdouts the configuration for config.toml
+    let vendor_specific_args = vendor_opts
+        .vendor_specific_args
+        .as_ref()
+        .unwrap_or_default();
     let res = {
         if let Some((lockfile, cargo_config_output)) = cargo_vendor(
             custom_root,
-            vendor_opts.vendor_specific_args.versioned_dirs,
-            vendor_opts.vendor_specific_args.filter,
+            vendor_specific_args.versioned_dirs,
+            vendor_specific_args.filter,
             &vendor_opts.manifest_path,
             &vendor_opts.i_accept_the_risk,
             vendor_opts.update,

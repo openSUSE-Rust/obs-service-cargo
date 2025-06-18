@@ -24,6 +24,13 @@ pub fn run_cargo_vendor_home_registry(
     debug!(?registry);
     info!("🛖🏃📦 Starting Cargo Vendor Home Registry");
 
+    if registry.vendor_specific_args.is_some() {
+        warn!(
+            "🛑 The `--filter` and `--versioned-dirs flags are only used if `--method` is set to `vendor`."
+        );
+        warn!("Ignoring vendor specific flags...");
+    }
+
     let tempdir_for_home_registry_binding = tempfile::Builder::new()
         .prefix(".cargo")
         .rand_bytes(12)
