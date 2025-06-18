@@ -141,7 +141,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     fs::write(&outfile, data).await.unwrap();
     let outdir = PathBuf::from("/tmp");
     let vendor_specific_args = VendorArgs {
-        filter: filter,
+        filter,
         ..VendorArgs::default()
     };
     let mut opt = cli::Opts {
