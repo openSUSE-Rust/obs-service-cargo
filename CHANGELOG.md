@@ -2,11 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.0.7] - 2025-06-19
+
+### Bug Fixes
+
+- Apply clippy fix for `redundant-field-names` [52405a8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/52405a8e697950364498c1237748fc3ed6afe81f)
+- Apply clippy fix for `field-reassign-with-default` [2237e16](https://github.com/openSUSE-Rust/obs-service-cargo/commit/2237e16a2e9a5658fafce8a7d3defb0208d0e647)
+- Wrongly used clap derive attributes for requires. rework VendorArgs as well provide defaults. [516b3e7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/516b3e7678c192ddb6dccedb4ce9fb0b91a184c6)
+- Bring in new version of libroast by running `cargo update`. [dd4c925](https://github.com/openSUSE-Rust/obs-service-cargo/commit/dd4c92565e77ee446f29e7e0ed08efbef0b2e01e)
+- Apply clippy fixes [7574d42](https://github.com/openSUSE-Rust/obs-service-cargo/commit/7574d42f03979e0fd51ea352b48d49d8afd62117)
+- Only provide a warning. `--no-root-manifest` is never used in `vendor.rs` [f9a9e55](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f9a9e55fcf18d4c44b1e24fce3ebfe33bbd5440c)
+- Make `no-root-manifest` field to `Option<bool>` [1924212](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1924212999fbaa6072a96c39be12511754091cd2)
+
+### Miscellaneous Tasks
+
+- Apply new Option<VendorArgs> change [8bcdc62](https://github.com/openSUSE-Rust/obs-service-cargo/commit/8bcdc6298539a7c417dcfa1b24304403c3c13844)
+
 ## [6.0.6] - 2025-06-14
 
 ### Bug Fixes
 
 - The `target` field for build targets is now being used [c10b125](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c10b125b3968257754f9bc4b526198105b2c94a3)
+
+### Miscellaneous Tasks
+
+- V6.0.6 [dc00b3c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/dc00b3c7862b33121c67bc51b86a5fad38526c3f)
 
 ## [6.0.5] - 2025-06-13
 
