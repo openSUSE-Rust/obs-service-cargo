@@ -36,12 +36,12 @@ pub fn run_cargo_vendor_home_registry(
         .rand_bytes(12)
         .tempdir()?;
 
-    let home_registry = &tempdir_for_home_registry_binding.path();
-    let home_registry_dot_cargo = &home_registry.join(".cargo");
+    let home_registry = tempdir_for_home_registry_binding.path();
+    let home_registry_dot_cargo = home_registry.join(".cargo");
     let mut global_has_deps = false;
 
     unsafe {
-        std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
+        std::env::set_var("CARGO_HOME", &home_registry_dot_cargo);
     }
 
     let res = {
@@ -360,11 +360,9 @@ pub fn run_cargo_vendor_home_registry(
         roast_opts(&roast_args, false)
     };
 
-    res.map(|val| {
+    res.inspect(|val| {
         trace!(?val);
         info!("📦 Cargo Vendor Home Registry finished.");
         info!("🧹 Cleaning up temporary directory...");
-        tempdir_for_home_registry_binding.close()?;
-        Ok(())
-    })?
+    })
 }

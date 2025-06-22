@@ -39,10 +39,12 @@ pub fn run_cargo_vendor(
         .prefix(".cargo")
         .rand_bytes(12)
         .tempdir()?;
-    let home_registry = &tempdir_for_home_registry_binding.path();
-    let home_registry_dot_cargo = &home_registry.join(".cargo");
+
+    let home_registry = tempdir_for_home_registry_binding.path();
+    let home_registry_dot_cargo = home_registry.join(".cargo");
+
     unsafe {
-        std::env::set_var("CARGO_HOME", home_registry_dot_cargo);
+        std::env::set_var("CARGO_HOME", &home_registry_dot_cargo);
     }
     // Cargo vendor stdouts the configuration for config.toml
     let vendor_specific_args = vendor_opts
