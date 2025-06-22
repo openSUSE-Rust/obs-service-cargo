@@ -2,11 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.0.0] - 2025-06-22
+
+### Dependencies
+
+- Bump all available updates/dependencies [f348ea8](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f348ea821c709522b09a2535c007f9ecfaa84093)
+- Update libroast to v9.x [6cd9c17](https://github.com/openSUSE-Rust/obs-service-cargo/commit/6cd9c171de7b3ee8ef1f224b1662285ddc52d45b)
+
+### Miscellaneous Tasks
+
+- More cleanup [08c5101](https://github.com/openSUSE-Rust/obs-service-cargo/commit/08c51016058472a29bb699f41a5fabdaa8b738d3)
+- Cleanup code [0d2c3a6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/0d2c3a69206b7691f41d6bcfd602ad58fb8822ef)
+
+### Refactor
+
+- Adopt to libroast v9.x API [cdd35e3](https://github.com/openSUSE-Rust/obs-service-cargo/commit/cdd35e3c6a3b748548c0b8cf79da70faa22e1525)
+
 ## [6.0.9] - 2025-06-19
 
 ### Bug Fixes
 
 - Bring libroast fix where we just add one newline [35e3c5f](https://github.com/openSUSE-Rust/obs-service-cargo/commit/35e3c5f517c69aba5de9f066588094bea92fbd3b)
+
+### Miscellaneous Tasks
+
+- V6.0.9 [bf21ecd](https://github.com/openSUSE-Rust/obs-service-cargo/commit/bf21ecd2f4eaea3cffe8b6fcdac8912da7efba3a)
 
 ## [6.0.8] - 2025-06-19
 
