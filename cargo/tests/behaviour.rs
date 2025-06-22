@@ -77,8 +77,9 @@ async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
-        target: vendor_tarball_path.to_path_buf(),
+        target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
+        subcommands: None,
     };
     raw_opts(raw_args, false)?;
     let cargo_lockfile_path = raw_outdir.join("Cargo.lock");
@@ -181,8 +182,9 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
-        target: vendor_tarball_path.to_path_buf(),
+        target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
+        subcommands: None,
     };
     if *"https://github.com/elliot40404/bonk/archive/refs/tags/v0.4.0.tar.gz" != *source {
         assert!(raw_opts(raw_args, false).is_ok());
@@ -313,8 +315,9 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
-        target: vendor_tarball_path.to_path_buf(),
+        target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
+        subcommands: None,
     };
     raw_opts(raw_args, false)?;
     let vendor_path = raw_outdir.join("rust").join("pvsecret").join("vendor");
@@ -397,8 +400,9 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
-        target: vendor_tarball_path.to_path_buf(),
+        target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
+        subcommands: None,
     };
     raw_opts(raw_args, false)?;
     let vendor_path = raw_outdir.join("libflux").join("vendor");
@@ -474,8 +478,9 @@ async fn custom_root_test_1() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
-        target: vendor_tarball_path.to_path_buf(),
+        target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
+        subcommands: None,
     };
     raw_opts(raw_args, false)?;
     let vendor_path = raw_outdir.join("libflux").join("vendor");
@@ -551,8 +556,9 @@ async fn custom_root_test_2() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
-        target: vendor_tarball_path.to_path_buf(),
+        target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
+        subcommands: None,
     };
     raw_opts(raw_args, false)?;
     let vendor_path = raw_outdir.join("libflux").join("vendor");
@@ -635,8 +641,9 @@ async fn custom_root_test_3() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
-        target: vendor_tarball_path.to_path_buf(),
+        target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
+        subcommands: None,
     };
     raw_opts(raw_args, false)?;
     let vendor_path = raw_outdir.join("tokenizers").join("vendor");

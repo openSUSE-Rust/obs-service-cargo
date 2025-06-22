@@ -345,16 +345,17 @@ pub fn run_cargo_vendor_home_registry(
         }
 
         let roast_args = RoastArgs {
-            target: home_registry.to_path_buf(),
+            target: Some(home_registry.to_path_buf()),
             include: None,
             exclude: None,
             additional_paths: None,
-            outfile,
+            outfile: Some(outfile),
             outdir: Some(registry.outdir.to_path_buf()),
             preserve_root: false,
             reproducible: true,
             ignore_git: false,
             ignore_hidden: false,
+            subcommands: None,
         };
 
         roast_opts(&roast_args, false)

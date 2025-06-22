@@ -253,8 +253,9 @@ impl Opts {
             copy_dir_all(&target, &workdir)?;
         } else if target.is_file() && utils::is_supported_format(&target).is_ok() {
             let raw_args = RawArgs {
-                target: target.to_path_buf(),
+                target: Some(target.to_path_buf()),
                 outdir: Some(workdir.to_path_buf()),
+                subcommands: None,
             };
             raw_opts(raw_args, false)?;
         } else if is_url {
@@ -266,9 +267,9 @@ impl Opts {
                     changesoutfile: self.changesoutfile.clone(),
                     set_version: self.set_version.clone(),
                     set_name: self.set_name.clone(),
-                    git_repository_url: self.src.to_string(),
+                    git_repository_url: Some(self.src.to_string()),
                     exclude: None,
-                    revision: revision.to_string(),
+                    revision: Some(revision.to_string()),
                     versionrewriteregex: self.versionrewriteregex.clone(),
                     versionrewritepattern: self.versionrewritepattern.clone(),
                     depth: 0,
@@ -279,6 +280,7 @@ impl Opts {
                     ignore_git: true,
                     ignore_hidden: false,
                     compression: self.compression,
+                    subcommands: None,
                 };
 
                 libroast::operations::roast_scm::roast_scm_opts(
