@@ -128,12 +128,11 @@ pub fn run_cargo_vendor(
         };
         roast_opts(&roast_args, false)
     };
-    res.map(|val| {
+    res.inspect(|val| {
         trace!(?val);
         info!("📦 Cargo Vendor finished.");
         info!("🧹 Cleaning up temporary directory...");
-        tmpdir_for_config.close()
-    })?
+    })
 }
 
 #[derive(Debug, Serialize, Deserialize)]
