@@ -219,13 +219,12 @@ async fn no_filter_vendor_sources() -> io::Result<()> {
         "https://github.com/casey/just/archive/refs/tags/1.38.0.tar.gz",
     ];
 
-    for src in sources {
-        let _ = spawn(async move {
+    spawn(async move {
+        for src in sources {
             vendor_source(src, false).await.unwrap();
-            src
-        })
-        .await;
-    }
+        }
+    })
+    .await;
 
     Ok(())
 }
@@ -240,13 +239,14 @@ async fn filter_vendor_sources() -> io::Result<()> {
         // NOTE: This should not stack overflow
         "https://github.com/casey/just/archive/refs/tags/1.38.0.tar.gz",
     ];
-    for src in sources {
-        let _ = spawn(async move {
-            vendor_source(src, true).await.unwrap();
-            src
-        })
-        .await;
-    }
+
+    spawn(async move {
+        for src in sources {
+            vendor_source(src, false).await.unwrap();
+        }
+    })
+    .await;
+
     Ok(())
 }
 
