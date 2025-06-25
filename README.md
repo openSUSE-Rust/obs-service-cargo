@@ -269,6 +269,16 @@ osc add vendor.tar.zst
 > Some Rust software such as the infamous https://github.com/elliot40404/bonk do not have any dependencies so they may not generate a vendored tarball.
 > The service will inform you if that's the case.
 
+### With the registry method
+
+`cargotoml` in the **registry** method is used to locate other "main" `Cargo.toml` files. This is useful for configurations where a project
+has multiple crates that are actually subprojects themselves. This design decision was intentional since under the hood, the **registry** method
+calls `cargo-fetch` and creates a tarball from the generated `$CARGO_HOME`. See [cargo book documentation of `CARGO_HOME`](https://doc.rust-lang.org/cargo/guide/cargo-home.html#cargo-home).
+
+> [!NOTE]
+> Read [How to do multiple vendors](#how-to-do-multiple-vendors) section
+> for more information of how `cargotoml` behaves between.
+
 ## Respecting lockfiles
 
 Respecting lockfiles is just a matter of setting `respect-lockfile` from `true` to `false`.
