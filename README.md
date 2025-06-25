@@ -31,8 +31,8 @@ they do not need to use the `cargotoml` parameter for the `_service` file.
 ```
 
 > [!IMPORTANT]
-> Although that's how projects are structured, it's still important to
-> to check how the project is structured, especially, for those that
+> Although that's how Rust projects are usually structured, it's still important to
+> to check because that's not always the case, especially, for those that
 > have different subprojects or that are monorepos e.g. s390-tools.
 
 ## Methods on how to "vendor"
@@ -42,7 +42,8 @@ There are two methods on how to vendor Rust dependencies with this service:
 - **vendor** method
 - **registry** method
 
-The **vendor** method uses `cargo vendor` under the hood, generating vendored tarballs with the filename `vendor.tar.zst` since **zstd** is the default compression format.
+The **vendor** method uses `cargo vendor` under the hood, generating vendored tarballs
+with the filename `vendor.tar.zst` since **zstd** is the default compression format.
 
 The files inside the vendored tarball contains the following:
 - a lockfile `Cargo.lock`. Sometimes it does not exist if the project directory is super different e.g. flux
@@ -50,7 +51,7 @@ The files inside the vendored tarball contains the following:
 - a `.cargo/config`
 - the crates that were fetched during the vendor process.
 
-When extracted, it will have the following paths when extracted.
+When extracted, it will have the following paths
 
 ```
 .
@@ -68,9 +69,11 @@ This means, a `%prep` section may look like this
 %autosetup -a1
 ```
 
-No need to copy a `cargo_config` or a lockfile to somewhere else or add it as part of the sources in the specfile. *They are all part of the vendored tarball now*.
+No need to copy a `cargo_config` or a lockfile to somewhere else or add it as part of
+the sources in the specfile. *They are all part of the vendored tarball now*.
 
-The **registry** method uses `cargo fetch` under the hood, generating vendored tarballs with the filename `registry.tar.zst` since **zstd** is the default compression format.
+The **registry** method uses `cargo fetch` under the hood, generating vendored tarballs
+with the filename `registry.tar.zst` since **zstd** is the default compression format.
 
 If we extract the contents of `registry.tar.zst`, you will get a tree like this
 
@@ -93,21 +96,21 @@ behaves differently between **vendor** and **registry** methods.
 
 #### Vendor Method
 
-For this method, `cargotoml` is used to pass over the `--sync` flag. If there are
-no root manifest found but there is `cargotoml`, the first `cargotoml` is assumed
-to be the "root manifest".
+For this method, `cargotoml` is used to pass over the `--sync` flag within `cargo
+vendor` command. If there are no root manifest found but there is `cargotoml`, the first
+`cargotoml` is assumed to be the "root manifest".
 
 #### Registry Method
 
-For this method, `cargotoml` acts like an extra set of "root" manifests. It's
-not passed over to `--sync` since under the hood, the registry method uses
-`cargo-fetch`. This design decision is intentional for monorepo scenarios
-where you have many crates that are standalone, regardless if they are a
-dependency from each other or not, like the s390-tools or python-tokenizers.
+For this method, `cargotoml` acts like an extra set of "root" or top-level
+manifests. It's not passed over to `--sync` since under the hood, the registry method
+uses `cargo-fetch`. This design decision is intentional for monorepo scenarios where
+you have many crates that are standalone, regardless if they are a dependency from
+each other or not, like the s390-tools or python-tokenizers.
 
-If there is a case that you will do that, do experiment with the setting of
-the `no-root-manifest` flag. A tip would be setting `no-root-manifest` to true
-while having a lot of `cargotoml` declared.
+If there is a case that you will do that, do experiment with the setting of the
+`no-root-manifest` flag. A tip would be setting `no-root-manifest` to true while having
+a lot of `cargotoml` declared. See [Tips and Tricks](#tips-and-tricks) for more info.
 
 ## The `src` parameter
 
@@ -272,8 +275,8 @@ Respecting lockfiles is just a matter of setting `respect-lockfile` from `true` 
 
 > [!WARNING]
 > If a lockfile do needs updating, you're ultimately stuck at
-> setting the `respect-lockfile` to `false` (which is the default) unless upstream uploads an updated lockfile.
-> The vendoring process will abort in case it happens.
+> setting the `respect-lockfile` to `false` (which is the default) unless upstream
+> uploads an updated lockfile. The vendoring process will abort in case it happens.
 > Sadly, this is the behaviour of lockfiles. If there is an update of the version
 > with **semver** compatibility e.g. `x.y.1` -> `x.y.2`, then it's likely
 > the lockfile will attempt to be updated.
@@ -299,8 +302,29 @@ The `--versioned-dirs` flag is used when you
 
 By default, it is set to true. So far, it has no impact on how we vendor.
 
+It's also useful for things like applying patches to a specified crate since
+we know that the extracted path results to `vendor/crate-name-version`.
+
 > [!IMPORTANT]
 > This is only available for the **vendor** method.
+>
+> `versioned-dirs` is not available for **registry** method. Fortunately,
+> directory names of crates are already versioned. But to patch it, you have
+> to obtain a copy. You can do this by having this knowledge that the
+> `registry.tar.zst` contains a path `.cargo/registry/cache/crate-name-version.crate`.
+>
+> Although, the extension ends with `.crate`, it is actually equivalent to a `.tar.gz`
+> or gz compressed tar. Hence, you can theoretically do the following in your specfile
+>
+> ```
+> tar xf .cargo/registry/cache/crate-name-version.crate
+> pushd crate-name-version
+> # apply patch here
+> patch -p1 < %{PATCH1}
+> popd
+> # Patch your Cargo.toml. Refer to https://doc.rust-lang.org/cargo/reference/overriding-dependencies.html#the-patch-section.
+> patch -p1 < %{PATCH2}
+> ```
 
 # Filter
 
