@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.0.1] - 2025-06-25
+
+### Documentation
+
+- WARN -> WARNING [7db8aad](https://github.com/openSUSE-Rust/obs-service-cargo/commit/7db8aad8dc83075ce4550eca4ebbcc3f3ea1a86a)
+- Improve README.md [6bef49e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/6bef49e5743debc5ec165dd08a83542428b277c5)
+
+### Testing
+
+- Change tokio spawn logic to perform batched tasks [c867a35](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c867a357d9fca1f8ff596ece00a4dfbd687feb49)
+
 ## [7.0.0] - 2025-06-22
 
 ### Dependencies
@@ -11,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
+- V7.0.0 [700bd50](https://github.com/openSUSE-Rust/obs-service-cargo/commit/700bd506461e963f1dc33d09166ee3d8d227c6fe)
 - More cleanup [08c5101](https://github.com/openSUSE-Rust/obs-service-cargo/commit/08c51016058472a29bb699f41a5fabdaa8b738d3)
 - Cleanup code [0d2c3a6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/0d2c3a69206b7691f41d6bcfd602ad58fb8822ef)
 
