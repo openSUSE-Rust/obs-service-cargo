@@ -255,12 +255,14 @@ impl Opts {
             let raw_args = RawArgs {
                 target: Some(target.to_path_buf()),
                 outdir: Some(workdir.to_path_buf()),
+                silent: false,
                 subcommands: None,
             };
             raw_opts(raw_args, false)?;
         } else if is_url {
             if let Some(revision) = &self.revision {
                 let roast_scm_args = RoastScmArgs {
+                    silent: false,
                     changesgenerate: self.changesgenerate,
                     changesauthor: self.changesauthor.clone(),
                     changesemail: self.changesemail.clone(),

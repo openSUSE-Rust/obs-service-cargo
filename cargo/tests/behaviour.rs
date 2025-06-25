@@ -77,6 +77,7 @@ async fn another_vendor_helper(source: &str, update: bool) -> io::Result<PathBuf
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
+        silent: false,
         target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
         subcommands: None,
@@ -182,6 +183,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
+        silent: false,
         target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
         subcommands: None,
@@ -315,6 +317,7 @@ async fn vendor_registry_test_with_no_root_manifest() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
+        silent: false,
         target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
         subcommands: None,
@@ -400,6 +403,7 @@ async fn manifest_paths_with_vendor() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
+        silent: false,
         target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
         subcommands: None,
@@ -478,6 +482,7 @@ async fn custom_root_test_1() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
+        silent: false,
         target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
         subcommands: None,
@@ -556,6 +561,7 @@ async fn custom_root_test_2() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
+        silent: false,
         target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
         subcommands: None,
@@ -641,6 +647,7 @@ async fn custom_root_test_3() -> io::Result<()> {
 
     let raw_outdir = PathBuf::from("/tmp").join(random_tag).join("output");
     let raw_args = RawArgs {
+        silent: false,
         target: Some(vendor_tarball_path.to_path_buf()),
         outdir: Some(raw_outdir.clone()),
         subcommands: None,

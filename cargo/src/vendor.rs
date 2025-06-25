@@ -114,6 +114,7 @@ pub fn run_cargo_vendor(
             return Err(io::Error::other("Unable to set extension"));
         }
         let roast_args = RoastArgs {
+            silent: false,
             target: Some(PathBuf::from(&to_vendor_cargo_config_dir)),
             include: None,
             exclude: None,

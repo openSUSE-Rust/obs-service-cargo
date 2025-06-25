@@ -345,6 +345,7 @@ pub fn run_cargo_vendor_home_registry(
         }
 
         let roast_args = RoastArgs {
+            silent: false,
             target: Some(home_registry.to_path_buf()),
             include: None,
             exclude: None,
