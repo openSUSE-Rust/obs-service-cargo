@@ -82,7 +82,7 @@ If we extract the contents of `registry.tar.zst`, you will get a tree like this
 └── Cargo.lock
 ```
 
-> [!WARN]
+> [!WARNING]
 > The example `tree` output are what you should expect from projects that have a common top-level `Cargo.toml`. More configurations below are discussed
 > such as subprojects or monorepo scenarios where a `Cargo.toml` is not at the top-most level directory of a project.
 
