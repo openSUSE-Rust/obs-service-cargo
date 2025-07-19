@@ -326,7 +326,7 @@ pub fn run_cargo_vendor_home_registry(
         }
 
         let outfile = match &registry.tag {
-            Some(v) => format!("registry-{}", v),
+            Some(v) => format!("registry-{v}"),
             None => "registry".to_string(),
         };
 

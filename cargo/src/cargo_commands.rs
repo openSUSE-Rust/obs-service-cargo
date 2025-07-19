@@ -394,10 +394,8 @@ pub fn cargo_update(
                             } else if semver::Version::parse(crate_ver)
                                 .map_err(|err| {
                                     error!(?err);
-                                    let msg = format!(
-                                        "Expected a valid version string. Got {}",
-                                        crate_ver
-                                    );
+                                    let msg =
+                                        format!("Expected a valid version string. Got {crate_ver}");
                                     io::Error::new(io::ErrorKind::InvalidInput, msg)
                                 })
                                 .is_ok()
@@ -410,8 +408,7 @@ pub fn cargo_update(
                                 default_options.push(crate_ver.to_string());
                             } else {
                                 let msg = format!(
-                                    "Expected a valid `cargo update` option for {}. Got {}",
-                                    crate_name, crate_ver
+                                    "Expected a valid `cargo update` option for {crate_name}. Got {crate_ver}"
                                 );
                                 return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
                             }
@@ -420,8 +417,7 @@ pub fn cargo_update(
                         if !dependent.trim().is_empty() {
                             if !dependent.ends_with("Cargo.toml") {
                                 let msg = format!(
-                                    "Expected a valid manifest filename. Got {}.",
-                                    dependent,
+                                    "Expected a valid manifest filename. Got {dependent}.",
                                 );
                                 error!(?dependent, msg);
                                 return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
@@ -451,7 +447,7 @@ pub fn cargo_update(
                             .map_err(|err| {
                                 error!(?err);
                                 let msg =
-                                    format!("Expected a valid version string. Got {}", string_tail);
+                                    format!("Expected a valid version string. Got {string_tail}");
                                 io::Error::new(io::ErrorKind::InvalidInput, msg)
                             })
                             .is_ok()
@@ -464,8 +460,7 @@ pub fn cargo_update(
                             default_options.push(string_tail.to_string());
                         } else {
                             let msg = format!(
-                                "Expected a valid `cargo update` option for {}. Got {}",
-                                crate_name, string_tail
+                                "Expected a valid `cargo update` option for {crate_name}. Got {string_tail}"
                             );
                             return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
                         }
@@ -486,10 +481,8 @@ pub fn cargo_update(
                             } else if semver::Version::parse(crate_ver)
                                 .map_err(|err| {
                                     error!(?err);
-                                    let msg = format!(
-                                        "Expected a valid version string. Got {}",
-                                        crate_ver
-                                    );
+                                    let msg =
+                                        format!("Expected a valid version string. Got {crate_ver}");
                                     io::Error::new(io::ErrorKind::InvalidInput, msg)
                                 })
                                 .is_ok()
@@ -502,8 +495,7 @@ pub fn cargo_update(
                                 default_options.push(crate_ver.to_string());
                             } else {
                                 let msg = format!(
-                                    "Expected a valid `cargo update` option for {}. Got {}",
-                                    crate_name, crate_ver
+                                    "Expected a valid `cargo update` option for {crate_name}. Got {crate_ver}"
                                 );
                                 return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
                             }
@@ -512,8 +504,7 @@ pub fn cargo_update(
                         if !dependent.trim().is_empty() {
                             if !dependent.ends_with("Cargo.toml") {
                                 let msg = format!(
-                                    "Expected a valid manifest filename. Got {}.",
-                                    dependent,
+                                    "Expected a valid manifest filename. Got {dependent}.",
                                 );
                                 error!(?dependent, msg);
                                 return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));
@@ -536,8 +527,7 @@ pub fn cargo_update(
                         if !string_tail.trim().is_empty() {
                             if !string_tail.ends_with("Cargo.toml") {
                                 let msg = format!(
-                                    "Expected a valid manifest filename. Got {}.",
-                                    string_tail,
+                                    "Expected a valid manifest filename. Got {string_tail}.",
                                 );
                                 error!(?string_tail, msg);
                                 return Err(io::Error::new(io::ErrorKind::InvalidInput, msg));

@@ -98,7 +98,7 @@ pub fn run_cargo_vendor(
             return Ok(());
         }
         let outfile = match &vendor_opts.tag {
-            Some(v) => format!("vendor-{}", v),
+            Some(v) => format!("vendor-{v}"),
             None => "vendor".to_string(),
         };
         let mut outfile = PathBuf::from(outfile);
