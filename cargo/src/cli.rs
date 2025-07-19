@@ -183,11 +183,15 @@ pub struct Opts {
 pub struct VendorArgs {
     #[arg(
         long,
+        action = clap::ArgAction::Set,
+        default_value_t = false,
         help = "Available only if `--method` is set to vendor. EXPERIMENTAL: Reduce vendor-tarball size by filtering out non-Linux dependencies."
     )]
     pub filter: bool,
     #[arg(
         long,
+        action = clap::ArgAction::Set,
+        default_value_t = true,
         help = "Available only if `--method` is set to vendor. Whether to use the `--versioned-dirs` flag of cargo-vendor."
     )]
     pub versioned_dirs: bool,
