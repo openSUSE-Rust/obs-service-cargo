@@ -32,7 +32,7 @@ they do not need to use the `cargotoml` parameter for the `_service` file.
 
 > [!IMPORTANT]
 > Although that's how Rust projects are usually structured, it's still important to
-> to check because that's not always the case, especially, for those that
+> check because that's not always the case, especially, for those that
 > have different subprojects or that are monorepos e.g. s390-tools.
 
 ## Methods on how to "vendor"
