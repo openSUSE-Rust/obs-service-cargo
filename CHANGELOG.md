@@ -2,12 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.1.0] - 2025-08-01
+
+### Bug Fixes
+
+- Forgot to set clap::ArgAction::Set for filter and versioned-dirs [c26db9f](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c26db9f556d99d5188f5968055869f383a356027)
+
+### Dependencies
+
+- Update libroast to patched version 10.0.1 [5985ee1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5985ee1ceb41d11a33b1ab0b4217068095a22d64)
+- Update libroast to v10.x [0654e2e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/0654e2efa5d34376b95d6033a30f1b4fc1c2c218)
+
+### Documentation
+
+- Improve README.md [f492aff](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f492aff6b70ec15c54c50bd1800062bdac7c6b0e)
+- Improve README.md [ca111de](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ca111de6fe77845aff46d63d4add65dfa599cf3e)
+
+### Miscellaneous Tasks
+
+- Update dependencies [785a5d6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/785a5d6bf86e8c8c6b0cfb9828fd78ce764c2eb5)
+
 ## [7.0.1] - 2025-06-25
 
 ### Documentation
 
 - WARN -> WARNING [7db8aad](https://github.com/openSUSE-Rust/obs-service-cargo/commit/7db8aad8dc83075ce4550eca4ebbcc3f3ea1a86a)
 - Improve README.md [6bef49e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/6bef49e5743debc5ec165dd08a83542428b277c5)
+
+### Miscellaneous Tasks
+
+- Bugfix release v7.0.1 [bcae1f1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/bcae1f1af21eceed4eb8c26234383b9fd10d809a)
 
 ### Testing
 
