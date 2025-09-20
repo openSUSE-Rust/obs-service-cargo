@@ -12,3 +12,4 @@ pub mod cli;
 pub mod consts;
 pub mod registry;
 pub mod vendor;
+pub(crate) mod toml_manifest;
