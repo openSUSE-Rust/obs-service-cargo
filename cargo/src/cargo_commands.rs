@@ -8,9 +8,9 @@ use tracing::{Level, debug, error, info, trace, warn};
 
 use crate::audit;
 // use crate::target::TARGET_TRIPLES;
-use crate::vendor::has_dependencies;
-use crate::vendor::is_workspace;
-use crate::vendor::workspace_has_dependencies;
+use crate::toml_manifest::has_dependencies;
+use crate::toml_manifest::is_workspace;
+use crate::toml_manifest::workspace_has_dependencies;
 
 fn cargo_command(
     subcommand: &str,
@@ -339,7 +339,7 @@ pub fn cargo_update(
     manifest: &str,
     respect_lockfile: bool,
 ) -> io::Result<String> {
-    let mut default_options = vec![];
+    let mut default_options: Vec<String> = vec![];
     if global_update {
         info!("⏫ Updating dependencies...");
         let manifest_path = PathBuf::from(&manifest).canonicalize()?;
@@ -551,7 +551,7 @@ pub fn cargo_update(
             }
             cargo_command("update", &default_options, new_cur_dir)
                 .inspect(|_| {
-                    info!("✅ Updated dependencies.");
+                    info!("✅ Updated dependencies for crate.");
                 })
                 .inspect_err(|err| {
                     error!(?err);
@@ -561,6 +561,7 @@ pub fn cargo_update(
                     // NOTE: Maybe in the future we can add ways to be specific on each manifest path
                     warn!("This error will be ignored.");
                 })?;
+            default_options = Vec::new();
         }
         let success_msg = "ℹ️ Finished updating specified crate dependencies.".to_string();
         Ok(success_msg)
