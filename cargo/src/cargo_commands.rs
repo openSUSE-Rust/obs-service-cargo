@@ -568,6 +568,6 @@ pub fn cargo_update(
     } else {
         let msg = "🫠 Nothing to update.".to_string();
         info!("{}", &msg);
-        return Ok(msg);
+        Ok(msg)
     }
 }

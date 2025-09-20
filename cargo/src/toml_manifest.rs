@@ -119,8 +119,8 @@ pub fn workspace_has_dependencies(workdir: &Path, src: &Path) -> io::Result<bool
                                     error!(?possible_manifest_at_path, msg);
                                     return Err(io::Error::new(io::ErrorKind::NotFound, msg));
                                 }
-                            } else if member_path_from_glob.is_file() {
-                                if let Some(filename) = member_path_from_glob.file_name() {
+                            } else if member_path_from_glob.is_file()
+                                && let Some(filename) = member_path_from_glob.file_name() {
                                     let filename = filename.to_string_lossy();
                                     if filename == *"Cargo.toml" {
                                         info!(?member_path_from_glob, "🐈 Found a membered path.");
@@ -137,7 +137,6 @@ pub fn workspace_has_dependencies(workdir: &Path, src: &Path) -> io::Result<bool
                                         }
                                     }
                                 }
-                            }
                         }
                     } else {
                         warn!("⚠️ Workspace has membered itself at the root of the project.");
