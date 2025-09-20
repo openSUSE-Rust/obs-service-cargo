@@ -12,9 +12,9 @@ use tracing::{Level, debug, error, info, trace, warn};
 use crate::audit;
 use crate::cargo_commands::*;
 use crate::cli::Opts;
-use crate::vendor::has_dependencies;
-use crate::vendor::is_workspace;
-use crate::vendor::workspace_has_dependencies;
+use crate::toml_manifest::has_dependencies;
+use crate::toml_manifest::is_workspace;
+use crate::toml_manifest::workspace_has_dependencies;
 
 pub fn run_cargo_vendor_home_registry(
     setup_workdir: &Path,
