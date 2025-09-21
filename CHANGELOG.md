@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.1.1] - 2025-09-21
+
+### Bug Fixes
+
+- Forgot to reset the default options when doing precise or recursive updates [b78ab77](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b78ab777f475d4ac3f8c43415563927bf7234232)
+
+### Miscellaneous Tasks
+
+- Update Cargo.lock [c957a8e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c957a8ea9a71a5b945ef1716dc70b862a72c0db0)
+- Ignore workspace vscode config [08db61e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/08db61e0caf8b195fc4ac96d22bccb13a2fd579a)
+
+### Other
+
+- Apply clippy fixes [86be698](https://github.com/openSUSE-Rust/obs-service-cargo/commit/86be698b58f17845416eb00e5dd1c204650739d1)
+
+### Refactor
+
+- Add toml_manifest in lib.rs [60cfc39](https://github.com/openSUSE-Rust/obs-service-cargo/commit/60cfc39671d396dc1335409e41ec8985c8d6fc12)
+- Use toml_manifest module now [3ab188c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3ab188c7604e319f52358a4acd0fb6b64dedd68b)
+- Put the toml reader logic to toml_manifest.rs [b5e3e21](https://github.com/openSUSE-Rust/obs-service-cargo/commit/b5e3e21803ae6be388c7afc3e911fa81b45468c5)
+
 ## [7.1.0] - 2025-08-01
 
 ### Bug Fixes
@@ -20,6 +41,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
+- V7.1.0 [97249e1](https://github.com/openSUSE-Rust/obs-service-cargo/commit/97249e1d48946c542add6767a9ad6bc3f77feaec)
 - Update dependencies [785a5d6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/785a5d6bf86e8c8c6b0cfb9828fd78ce764c2eb5)
 
 ## [7.0.1] - 2025-06-25
@@ -759,15 +781,13 @@ All notable changes to this project will be documented in this file.
 
 - Support uncompressed tarballs or with `.tar` extension [5733edc](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5733edcf50b494441d8d854a490e0f154934b4f5)
 
-### Other
-
-- Get libroast dep from crates.io [043c050](https://github.com/openSUSE-Rust/obs-service-cargo/commit/043c05053c5db9e5cb697c4aabd80d0f319ec7a7)
-
-## [2.0.0] - 2024-10-12
-
 ### Miscellaneous Tasks
 
 - V2.0.0 [d775b7c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d775b7c006f537f704187928d7a53d8418f11e7f)
+
+### Other
+
+- Get libroast dep from crates.io [043c050](https://github.com/openSUSE-Rust/obs-service-cargo/commit/043c05053c5db9e5cb697c4aabd80d0f319ec7a7)
 
 ### Refactor
 
