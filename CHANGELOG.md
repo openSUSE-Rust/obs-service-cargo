@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.1.2] - 2025-09-26
+
+### Dependencies
+
+- Update libroast to v10.0.2 in Cargo.lock [ef54bea](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ef54bead96208ab4bfead4aee86a332c90c06f59)
+
 ## [7.1.1] - 2025-09-21
 
 ### Bug Fixes
@@ -10,6 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
+- Release v7.1.1 [3a85227](https://github.com/openSUSE-Rust/obs-service-cargo/commit/3a85227e653aa94538d66876d635a21f33253607)
 - Update Cargo.lock [c957a8e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c957a8ea9a71a5b945ef1716dc70b862a72c0db0)
 - Ignore workspace vscode config [08db61e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/08db61e0caf8b195fc4ac96d22bccb13a2fd579a)
 
