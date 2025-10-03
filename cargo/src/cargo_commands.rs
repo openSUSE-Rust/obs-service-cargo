@@ -270,18 +270,11 @@ pub fn cargo_vendor(
     }
     info!("🛡️🙂 All lockfiles are audited");
 
-    if !global_has_deps {
-        info!("🎉 Nothing to vendor.");
-        return Ok(Some((
-            possible_lockfile
-                .canonicalize()
-                .unwrap_or(possible_lockfile),
-            output_cargo_configuration,
-        )));
-    }
-
     match res {
         Ok(output_cargo_configuration) => {
+            if !global_has_deps {
+                info!("🎉 Nothing to vendor.");
+            }
             info!("🏪 `cargo {}` finished.", &which_subcommand);
             Ok(Some((
                 possible_lockfile
