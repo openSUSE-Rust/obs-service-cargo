@@ -296,8 +296,7 @@ pub fn run_cargo_vendor_home_registry(
             info!(
                 "🙂 If you think this is a BUG 🐞, please open an issue at <https://github.com/openSUSE-Rust/obs-service-cargo/issues>."
             );
-            info!("🎉 Nothing to vendor.");
-            return Ok(());
+            info!("🎉 No dependencies! Still, we need to regenerate the lockfile to ensure cargo works.");
         }
 
         let registry_src_dir = &home_registry_dot_cargo.join("registry").join("src");
