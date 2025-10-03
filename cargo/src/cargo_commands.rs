@@ -272,7 +272,12 @@ pub fn cargo_vendor(
 
     if !global_has_deps {
         info!("🎉 Nothing to vendor.");
-        return Ok(None);
+        return Ok(Some((
+            possible_lockfile
+                .canonicalize()
+                .unwrap_or(possible_lockfile),
+            output_cargo_configuration,
+        )));
     }
 
     match res {
