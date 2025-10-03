@@ -91,7 +91,7 @@ pub fn cargo_vendor(
     update: bool,
     crates: &[String],
     respect_lockfile: bool,
-) -> io::Result<Option<(PathBuf, String)>> {
+) -> io::Result<Option<(PathBuf, String, bool)>> {
     let which_subcommand = if filter { "vendor-filterer" } else { "vendor" };
     let mut default_options: Vec<String> = vec![];
     if versioned_dirs {
@@ -283,6 +283,7 @@ pub fn cargo_vendor(
                     .canonicalize()
                     .unwrap_or(possible_lockfile),
                 output_cargo_configuration,
+                global_has_deps,
             )))
         }
         Err(err) => {

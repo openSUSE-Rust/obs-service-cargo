@@ -48,7 +48,7 @@ pub fn run_cargo_vendor(
         .as_ref()
         .unwrap_or_default();
     let res = {
-        if let Some((lockfile, cargo_config_output)) = cargo_vendor(
+        if let Some((lockfile, cargo_config_output, global_has_deps)) = cargo_vendor(
             custom_root,
             vendor_specific_args.versioned_dirs,
             vendor_specific_args.filter,
@@ -72,9 +72,14 @@ pub fn run_cargo_vendor(
             // NOTE: It's always in the same directory as Cargo.lock.
             let path_to_vendor_dir = lockfile_parent.join("vendor");
             if !path_to_vendor_dir.is_dir() {
-                let msg = "🫠 Vendor directory not found... Aborting process. Please report a bug to <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.";
-                error!(msg);
-                return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+                if global_has_deps {
+                    let msg = "🫠 Vendor directory not found... Aborting process. Please report a bug to <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.";
+                    error!(msg);
+                    return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+                }
+                // Creating non-existent directory
+                debug!("Creating non existent directory for no dependencies projects...");
+                fs::create_dir_all(&path_to_vendor_dir)?;
             }
             let target_archive_path_for_vendor_dir = &to_vendor_cargo_config_dir
                 .join(lockfile_parent_stripped)
