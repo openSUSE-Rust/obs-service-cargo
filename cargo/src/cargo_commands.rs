@@ -273,7 +273,9 @@ pub fn cargo_vendor(
     match res {
         Ok(output_cargo_configuration) => {
             if !global_has_deps {
-                info!("🎉 Nothing to vendor.");
+                info!(
+                    "🎉 No dependencies! Still, we need to regenerate the lockfile to ensure cargo works."
+                );
             }
             info!("🏪 `cargo {}` finished.", &which_subcommand);
             Ok(Some((
