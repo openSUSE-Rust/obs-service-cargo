@@ -1,11 +1,11 @@
 use glob::glob;
+use serde::Deserialize;
+use serde::Serialize;
 use std::collections::BTreeMap;
 use std::fs;
 use std::io;
 use std::path::Path;
 use std::path::PathBuf;
-use serde::Deserialize;
-use serde::Serialize;
 
 #[allow(unused_imports)]
 use tracing::{Level, debug, error, info, trace, warn};
@@ -120,23 +120,24 @@ pub fn workspace_has_dependencies(workdir: &Path, src: &Path) -> io::Result<bool
                                     return Err(io::Error::new(io::ErrorKind::NotFound, msg));
                                 }
                             } else if member_path_from_glob.is_file()
-                                && let Some(filename) = member_path_from_glob.file_name() {
-                                    let filename = filename.to_string_lossy();
-                                    if filename == *"Cargo.toml" {
-                                        info!(?member_path_from_glob, "🐈 Found a membered path.");
-                                        let is_workspace = is_workspace(&member_path_from_glob)?;
-                                        if is_workspace {
-                                            global_has_deps = global_has_deps
-                                                || workspace_has_dependencies(
-                                                    workdir,
-                                                    &member_path_from_glob,
-                                                )?;
-                                        } else {
-                                            global_has_deps = global_has_deps
-                                                || has_dependencies(&member_path_from_glob)?;
-                                        }
+                                && let Some(filename) = member_path_from_glob.file_name()
+                            {
+                                let filename = filename.to_string_lossy();
+                                if filename == *"Cargo.toml" {
+                                    info!(?member_path_from_glob, "🐈 Found a membered path.");
+                                    let is_workspace = is_workspace(&member_path_from_glob)?;
+                                    if is_workspace {
+                                        global_has_deps = global_has_deps
+                                            || workspace_has_dependencies(
+                                                workdir,
+                                                &member_path_from_glob,
+                                            )?;
+                                    } else {
+                                        global_has_deps = global_has_deps
+                                            || has_dependencies(&member_path_from_glob)?;
                                     }
                                 }
+                            }
                         }
                     } else {
                         warn!("⚠️ Workspace has membered itself at the root of the project.");

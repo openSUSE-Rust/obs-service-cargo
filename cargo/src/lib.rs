@@ -11,5 +11,5 @@ pub mod cargo_commands;
 pub mod cli;
 pub mod consts;
 pub mod registry;
-pub mod vendor;
 pub(crate) mod toml_manifest;
+pub mod vendor;
