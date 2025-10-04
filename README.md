@@ -73,7 +73,7 @@ This means, a `%prep` section may look like this
 ```
 
 No need to copy a `cargo_config` or a lockfile to somewhere else or add it as part of
-the sources in the specfile. *They are all part of the vendored tarball now*.
+the sources in the specfile. _They are all part of the vendored tarball now_.
 
 The **registry** method uses `cargo fetch` under the hood, generating vendored tarballs
 with the filename `registry.tar.zst` since **zstd** is the default compression format.
@@ -98,16 +98,15 @@ The prep section will still be similar to **vendor** method.
 > %build
 > export CARGO_HOME=%{_builddir}/%{buildsubdir}/.cargo  # even just $PWD/.cargo is enough
 > %cargo_build
-> 
+>
 > %check
 > export CARGO_HOME=%{_builddir}/%{buildsubdir}/.cargo  # even just $PWD/.cargo is enough
 > %cargo_test
-> 
+>
 > %install
 > export CARGO_HOME=%{_builddir}/%{buildsubdir}/.cargo  # even just $PWD/.cargo is enough
 > %cargo_install
 > ```
-
 
 > [!WARNING]
 > The example `tree` output are what you should expect from projects that have a common top-level `Cargo.toml`. More configurations below are discussed
@@ -116,7 +115,7 @@ The prep section will still be similar to **vendor** method.
 ### No dependencies
 
 We have updated the behaviour of this tool. If there are no dependencies then we will ship a vendored tarball from either
-methods with no `vendor` directory inside. However, we will ship the `Cargo.lock` for both methods. The only
+methods with the **vendor** method having no `vendor` directory inside. However, we will ship the `Cargo.lock` for both methods. The only
 difference would be the **registry** method still having the cached registry located at `$CARGO_HOME/registry` where
 `CARGO_HOME` is a directory pointing to the directory joined with `.cargo`.
 
@@ -211,12 +210,12 @@ this global `--update` flag will be overriden and set to false. The syntax
 for updating specific crates are as follows:
 
 - To pass a `--precise` flag to `cargo-update`, just add `@` and then a
-valid version string e.g. `foo@1.0.0`.
+  valid version string e.g. `foo@1.0.0`.
 - To pass a `--recursive` flag to `cargo-update`, just add `@` and then the
-word `recursive` e.g. `foo@recursive`.
+  word `recursive` e.g. `foo@recursive`.
 - To pass a specific manifest path that depends on the crate
-dependency, just add `+` and then add the specific manifest path
-e.g. `foo@1.0.0+foo/path/Cargo.toml`.
+  dependency, just add `+` and then add the specific manifest path
+  e.g. `foo@1.0.0+foo/path/Cargo.toml`.
 
 > [!IMPORTANT]
 > Note that you cannot combine `--precise` and `--recursive` as stated in `cargo-help update`.
@@ -243,7 +242,6 @@ should now be in openSUSE, you can "accept a risk" of a RUSTSEC ID by adding a n
 > [!IMPORTANT]
 > If you are not sure what to do, let a security expert assess and audit it for you by just pushing the new update.
 
-
 > [!IMPORTANT]
 > The `i-accept-the-risk` parameter is available and behaves the same either in **vendor** or **registry** methods.
 
@@ -259,16 +257,16 @@ Use only `cargotoml` in situations where you need to also vendor from a subproje
 at the top-most level directory of the project.
 
 Since this flag is can be used repeatedly, it's good to know that the **first** `cargotoml` flag is considered to be the location of the main `Cargo.toml`. Other
-`Cargo.toml` files are passed for ***syncing***.
+`Cargo.toml` files are passed for **_syncing_**.
 
-When adding a `cargotoml` parameter, make sure *it is after the root folder*. For example, your project has a top-level directory named `s390-tools`, and then you should
+When adding a `cargotoml` parameter, make sure _it is after the root folder_. For example, your project has a top-level directory named `s390-tools`, and then you should
 omit `s390-tools` and proceed to the files or subdirectories next to it. So a manifest file located at `s390-tools/rust/utils/Cargo.toml` will have
 the following `cargotoml` parameter value of `rust/utils/Cargo.toml`.
 
 > [!WARNING]
-> Certain projects may not have a root manifest file, thus, each directory may be a separate subproject e.g. https://github.com/ibm-s390-linux/s390-tools 
+> Certain projects may not have a root manifest file, thus, each directory may be a separate subproject e.g. https://github.com/ibm-s390-linux/s390-tools
 > and may need some thinking.
-> 
+>
 > ```xml
 > <services>
 >   <service name="cargo_vendor" mode="manual">
@@ -340,6 +338,7 @@ Respecting lockfiles is just a matter of setting `respect-lockfile` from `true` 
 # Versioned Dirs
 
 The `--versioned-dirs` flag is used when you
+
 - want to know the version quickly
 - prefer this configuration
 
@@ -372,7 +371,7 @@ we know that the extracted path results to `vendor/crate-name-version`.
 # Filter
 
 You can filter platform-specific crates and features
-using `filter` option.  It's still **experimental** and it uses
+using `filter` option. It's still **experimental** and it uses
 [cargo-vendor-filterer](https://github.com/coreos/cargo-vendor-filterer)
 under the hood.
 
@@ -426,7 +425,6 @@ Thus, this allows you to have many vendored tarballs by using the `--tag` parame
 > [!WARNING]
 > As long as the manifest file contains dependencies or the manifest file is a workspace
 > that either has workspace dependencies or member crates that have dependencies, it will produce a vendored tarball. Otherwise, it won't proceed to produce a tarball.
->
 
 ## With the registry method
 
@@ -462,6 +460,7 @@ both methods.
 The [flux project](https://github.com/influxdata/flux) can have three different configurations below.
 
 **Registry method variant 1**
+
 ```xml
 <services>
   <service name="download_files" mode="manual" />
@@ -484,6 +483,7 @@ The [flux project](https://github.com/influxdata/flux) can have three different 
 > that the "root" manifest is not at the top-most level of the directory.
 
 **Registry method variant 2**
+
 ```xml
 <services>
   <service name="download_files" mode="manual" />
@@ -498,10 +498,10 @@ The [flux project](https://github.com/influxdata/flux) can have three different 
 
 > [!NOTE]
 > The second registry method variant is cleaner, as it avoids setting `no-root-manifest`
-> and it's pretty clear that we are actually defining a **custom**
-> **root** here.
+> and it's pretty clear that we are actually defining a **custom** > **root** here.
 
 **Vendor method**
+
 ```xml
 <services>
   <service name="download_files" mode="manual" />
@@ -512,6 +512,7 @@ The [flux project](https://github.com/influxdata/flux) can have three different 
   </service>
 </services>
 ```
+
 > [!NOTE]
 > The **vendor method** is cleaner than the previous. As we said before, there is a clear
 > location of where our "root" manifest is.
@@ -558,7 +559,7 @@ pushd libflux
 popd
 ```
 
-One caveat with **vendor** method is it can only do *one* thing, so we ended up littered with many
+One caveat with **vendor** method is it can only do _one_ thing, so we ended up littered with many
 vendored tarballs. While for **registry**, we can have one registry tarball and that's it.
 You can see how advantageous it is when you look back at the s390-tools. The previous example can be converted to something like this
 if using the **registry** method:
@@ -747,10 +748,10 @@ The following are the parameters you can use with this utility:
 OBS Cargo Vendor does a boring way to check for lockfiles:
 
 1. If a manifest is not a workspace manifest, it's likely the lockfile
-is in the directory of where the manifest is
+   is in the directory of where the manifest is
 2. If a manifest is part or a member of a workspace manifest, then it's
-likely that the lockfile is on the path of where the workspace manifest
-is.
+   likely that the lockfile is on the path of where the workspace manifest
+   is.
 
 So we just eagerly take all manifest paths from the parameters, and
 just check if there are any lockfiles there. And then we slap their full
@@ -762,9 +763,11 @@ the root folder of the project.
 > [!IMPORTANT]
 > If a source does not ship a lockfile, we attempt to regenerate it by
 > running the command
+>
 > ```bash
 > cargo generate-lockfile
 > ```
+>
 > This ensures that there will be no errors during a `cargo update` or
 > a build when update is set to false but there was no lockfile originally.
 > Therefore, we check if there is a lockfile **twice**.
@@ -793,8 +796,8 @@ https://github.com/openSUSE-Rust/obs-service-cargo_vendor/issues. We will
 try to investigate those in the best of our abilities. The goal of this
 project is to help automate some tasks when packaging Rust software. We
 won't assume we can automate where we can a locate a project's root manifest
-file `Cargo.toml`.  Thus, at best, please indicate it with `cargotoml`
-parameter. In the mean time, this will work, *hopefully*, in most projects
+file `Cargo.toml`. Thus, at best, please indicate it with `cargotoml`
+parameter. In the mean time, this will work, _hopefully_, in most projects
 since most projects have a root manifest file.
 
 ## Reproducibility
@@ -810,4 +813,3 @@ maintain or guarantee that it will continue to work in the future.
 > caught with reproducible builds. Although, the tainted sources can be identified using
 > reproducible / deterministic generation of the tarballs, those tainted sources
 > are **only known AFTER a successful malicious attempt**.
-
