@@ -77,16 +77,16 @@ pub fn run_cargo_vendor(
                     error!(msg);
                     return Err(io::Error::new(io::ErrorKind::NotFound, msg));
                 }
-                // Creating non-existent directory
-                debug!("Creating non existent directory for no dependencies projects...");
-                fs::create_dir_all(&path_to_vendor_dir)?;
             }
             let target_archive_path_for_vendor_dir = &to_vendor_cargo_config_dir
                 .join(lockfile_parent_stripped)
                 .join("vendor");
             fs::create_dir_all(target_archive_path_for_dot_cargo)?;
             fs::copy(lockfile, target_archive_path_for_lockfile)?;
-            utils::copy_dir_all(path_to_vendor_dir, target_archive_path_for_vendor_dir)?;
+            if !global_has_deps {
+                info!("🎉 Project has no dependencies.");
+                utils::copy_dir_all(path_to_vendor_dir, target_archive_path_for_vendor_dir)?;
+            }
             // NOTE maybe in the future, we might need to respect import
             // an existing `cargo.toml` but I doubt that's necessary?
             let path_to_dot_cargo_cargo_config =
@@ -94,9 +94,6 @@ pub fn run_cargo_vendor(
             let mut cargo_config_file = fs::File::create(path_to_dot_cargo_cargo_config)?;
             cargo_config_file.write_all(cargo_config_output.as_bytes())?;
             debug!(?cargo_config_file);
-        } else {
-            info!("🎉 Project has no dependencies.");
-            return Ok(());
         }
         let outfile = match &vendor_opts.tag {
             Some(v) => format!("vendor-{v}"),
