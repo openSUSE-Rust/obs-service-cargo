@@ -28,8 +28,6 @@ jobs:
     - name: Install tar, gzip, dependencies and Rust
       run: |
         zypper --non-interactive -vvv in tar gzip libzstd-devel rustup openssl-devel
-        # Seems to be a rustup command inconsistency
-        rustup show
     - name: Checkout
       uses: actions/checkout@v4
     - name: Build
@@ -44,8 +42,8 @@ jobs:
     - name: Install tar, gzip, dependencies and Rust
       run: |
         zypper --non-interactive -vvv in tar gzip libzstd-devel rustup openssl-devel
-        # Seems to be a rustup command inconsistency
-        rustup show
+    - name: Checkout
+      uses: actions/checkout@v4
     - name: Check formatting
       run: |
         cargo fmt -- --check || true
@@ -61,8 +59,8 @@ jobs:
     - name: Install tar, gzip, dependencies and Rust
       run: |
         zypper --non-interactive -vvv in tar gzip libzstd-devel rustup openssl-devel
-        # Seems to be a rustup command inconsistency
-        rustup show
+    - name: Checkout
+      uses: actions/checkout@v4
     - name: Install cargo-vendor-filterer
       run: |
         cargo install cargo-vendor-filterer
