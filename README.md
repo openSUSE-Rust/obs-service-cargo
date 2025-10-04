@@ -91,7 +91,7 @@ If we extract the contents of `registry.tar.zst`, you will get a tree like this
 The prep section will still be similar to **vendor** method.
 
 > [!IMPORTANT]
-> In this scenario, **it is required** set `$CARGO_HOME` where `.cargo` is located.
+> In this scenario, **it is required** to set `$CARGO_HOME` where `.cargo` is located.
 > Hence, the build section, the check section and the install section of your specfile should look similar to this.
 >
 > ```
