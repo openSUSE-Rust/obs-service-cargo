@@ -6,11 +6,11 @@
 > [!IMPORTANT]
 > The original obs-service-cargo_audit is now deprecated as the vendoring process now
 > includes audit.
-
+>
 > [!IMPORTANT]
-> An informative tutorial for packaging Rust software in openSUSE can be found at https://en.opensuse.org/openSUSE:Packaging_Rust_Software.
+> An informative tutorial for packaging Rust software in openSUSE can be found at <https://en.opensuse.org/openSUSE:Packaging_Rust_Software>.
 
-## A quick example on how to run this service
+## Quick Start
 
 A Rust project has a root manifest, usually located at
 the top-most level directory of the project.
@@ -46,8 +46,9 @@ The **vendor** method uses `cargo vendor` under the hood, generating vendored ta
 with the filename `vendor.tar.zst` since **zstd** is the default compression format.
 
 The files inside the vendored tarball contains the following:
+
 - a lockfile `Cargo.lock`. Sometimes it does not exist if the project directory is super different e.g. flux
-- other lockfiles and their respective directories. See more [here](#about-lockfiles)
+- other lockfiles and their respective directories. [See more here](#about-lockfiles)
 - a `.cargo/config`
 - the crates that were fetched during the vendor process.
 
@@ -85,9 +86,37 @@ If we extract the contents of `registry.tar.zst`, you will get a tree like this
 └── Cargo.lock
 ```
 
+The prep section will still be similar to **vendor** method.
+
+> [!IMPORTANT]
+> In this scenario, **it is required** set `$CARGO_HOME` where `.cargo` is located.
+> Hence, the build section, the check section and the install section of your specfile should look similar to this.
+>
+> ```
+> %build
+> export CARGO_HOME=%{_builddir}/%{buildsubdir}/.cargo  # even just $PWD/.cargo is enough
+> %cargo_build
+> 
+> %check
+> export CARGO_HOME=%{_builddir}/%{buildsubdir}/.cargo  # even just $PWD/.cargo is enough
+> %cargo_test
+> 
+> %install
+> export CARGO_HOME=%{_builddir}/%{buildsubdir}/.cargo  # even just $PWD/.cargo is enough
+> %cargo_install
+> ```
+
+
 > [!WARNING]
 > The example `tree` output are what you should expect from projects that have a common top-level `Cargo.toml`. More configurations below are discussed
 > such as subprojects or monorepo scenarios where a `Cargo.toml` is not at the top-most level directory of a project.
+
+### No dependencies
+
+We have updated the behaviour of this tool. If there are no dependencies then we will ship a vendored tarball from either
+methods with no `vendor` directory inside. However, we will ship the `Cargo.lock` for both methods. The only
+difference would be the **registry** method still having the cached registry located at `$CARGO_HOME/registry` where
+`CARGO_HOME` is a directory pointing to the directory joined with `.cargo`.
 
 ### `cargotoml` behaviours
 
@@ -115,6 +144,7 @@ a lot of `cargotoml` declared. See [Tips and Tricks](#tips-and-tricks) for more 
 ## The `src` parameter
 
 The `src` parameter can be in three types:
+
 - a source directory
 - a source tarball
 - a Git URL
@@ -210,6 +240,7 @@ should now be in openSUSE, you can "accept a risk" of a RUSTSEC ID by adding a n
 
 > [!IMPORTANT]
 > If you are not sure what to do, let a security expert assess and audit it for you by just pushing the new update.
+
 
 > [!IMPORTANT]
 > The `i-accept-the-risk` parameter is available and behaves the same either in **vendor** or **registry** methods.
