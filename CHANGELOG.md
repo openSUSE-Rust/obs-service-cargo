@@ -2,11 +2,64 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.2.0] - 2025-10-04
+
+### Bug Fixes
+
+- Correct wording in README for setting CARGO_HOME [be6ac9e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/be6ac9ee6d05949e5d6390a3d0c4092fb1f02546)
+- Update README to improve clarity on obs-service-cargo functionality [5a153b4](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5a153b4cd592100d387904927f79ad149b38e327)
+- Remove rustup show command and let rustup select automagically [69d467c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/69d467ce316d349cbc0b8884e7c999a07240fac7)
+- Move checkout step to the beginning of each job in build workflow [c34e4e7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c34e4e79abc85cc2f4cd3a4185813c57f5461627)
+- Run jobs in parallel for build, tests and style [c82f29a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/c82f29a23e769450f2ee24da0725ff954ce35b7b)
+- Ensure vendor directory is copied only when dependencies exist [f309811](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f309811b5f9bcd2e7f4fe78b37cbbb87759d749d)
+- Refactor to resolve "cannot find value `output_cargo_configuration` in this scope" [9d18985](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9d18985232d6aeb613d294afa872ff760803dc0b)
+- Ensure vendor.tar.<compression> is created even if no dependencies [e1de78e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e1de78e4fb187b1d7f093bb894df039f6991723d)
+
+### Continuous Integrations
+
+- Rename file to ci.yml [aae0031](https://github.com/openSUSE-Rust/obs-service-cargo/commit/aae0031d9147bd294ea388ecbef704b12ff7567b)
+
+### Dependencies
+
+- Update libroast version to 10.1 [d6d7b23](https://github.com/openSUSE-Rust/obs-service-cargo/commit/d6d7b236af2529ed2c95927adbbd398ea4f756c2)
+
+### Documentation
+
+- Only vendor method has a vendor directory inside the generated tarball [1a49830](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1a49830d2f798c1c866b20ea148887f95412d198)
+- Update README for clarity and additional instructions on vendoring without dependencies [5fc4ce9](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5fc4ce96d4502ea67c028b68df58af3d991ac6be)
+
+### Other
+
+- Run cargo fmt [0798b2b](https://github.com/openSUSE-Rust/obs-service-cargo/commit/0798b2b68e1abc99af2bb4e9a626c70b289373dc)
+
+### Refactor
+
+- Revert back to no vendor directory. [525fa35](https://github.com/openSUSE-Rust/obs-service-cargo/commit/525fa356c2cc2afde69df9886cfa3838dde7bc27)
+- Remove outdated TODO comment in run_cargo_vendor function [85ef0e6](https://github.com/openSUSE-Rust/obs-service-cargo/commit/85ef0e6b8b4e8e777a6da8c30dfbd80a4c06890d)
+- Update cargo_vendor return signature to Result<Option<(PathBuf, String, bool)>> [e08586c](https://github.com/openSUSE-Rust/obs-service-cargo/commit/e08586c5301199f5ac99cba87293515052c4b79d)
+- Improve message about no dependencies [9d86210](https://github.com/openSUSE-Rust/obs-service-cargo/commit/9d86210a7e4310d4dc4ce3335d53555b54a4fb25)
+- Still produce a registry.tar here [6634761](https://github.com/openSUSE-Rust/obs-service-cargo/commit/663476127033fd5e3d0de74065a160adc91b5826)
+
+### Styling
+
+- Run cargo fmt [0ad66bc](https://github.com/openSUSE-Rust/obs-service-cargo/commit/0ad66bc7a9c0144713db803e4352df43d73c6b15)
+- "collapsible-if" clippy suggestion applied [0fb8927](https://github.com/openSUSE-Rust/obs-service-cargo/commit/0fb89272bae62aff68a62bcb8981c9507e297f58)
+
+### Testing
+
+- Vendor path should exist as an empty directory if crate has no dependencies [a1da422](https://github.com/openSUSE-Rust/obs-service-cargo/commit/a1da42228183e989bc5c73a6e43de375dd69d8ff)
+- Vendor dir is not created [ae0be4e](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ae0be4e4e665874f7d4c19e1ea6c7571230f67ec)
+- No dependency packages still produce vendored tarballs now. [f7c33e7](https://github.com/openSUSE-Rust/obs-service-cargo/commit/f7c33e7992ebe08edee3598d0e0e02a809df192a)
+
 ## [7.1.2] - 2025-09-26
 
 ### Dependencies
 
 - Update libroast to v10.0.2 in Cargo.lock [ef54bea](https://github.com/openSUSE-Rust/obs-service-cargo/commit/ef54bead96208ab4bfead4aee86a332c90c06f59)
+
+### Miscellaneous Tasks
+
+- Release v7.1.2 [856bc29](https://github.com/openSUSE-Rust/obs-service-cargo/commit/856bc29180969cb575cf8fff25f23c6ccddfbcab)
 
 ## [7.1.1] - 2025-09-21
 
