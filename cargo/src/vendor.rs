@@ -71,12 +71,11 @@ pub fn run_cargo_vendor(
                 .join(".cargo");
             // NOTE: It's always in the same directory as Cargo.lock.
             let path_to_vendor_dir = lockfile_parent.join("vendor");
-            if !path_to_vendor_dir.is_dir()
-                && global_has_deps {
-                    let msg = "🫠 Vendor directory not found... Aborting process. Please report a bug to <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.";
-                    error!(msg);
-                    return Err(io::Error::new(io::ErrorKind::NotFound, msg));
-                }
+            if !path_to_vendor_dir.is_dir() && global_has_deps {
+                let msg = "🫠 Vendor directory not found... Aborting process. Please report a bug to <https://github.com/openSUSE-Rust/obs-service-cargo/issues>.";
+                error!(msg);
+                return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+            }
             let target_archive_path_for_vendor_dir = &to_vendor_cargo_config_dir
                 .join(lockfile_parent_stripped)
                 .join("vendor");
