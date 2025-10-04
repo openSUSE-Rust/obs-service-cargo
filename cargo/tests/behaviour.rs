@@ -193,11 +193,7 @@ async fn vendor_source(source: &str, filter: bool) -> io::Result<PathBuf> {
     let cargo_config_path = raw_outdir.join(".cargo").join("config.toml");
     let cargo_lock_path = raw_outdir.join("Cargo.lock");
     assert!(vendor_tarball_path.is_file());
-    if *source == *"https://github.com/elliot40404/bonk/archive/refs/tags/v0.4.0.tar.gz" {
-        assert!(!vendor_path.is_dir());
-    } else {
-        assert!(vendor_path.is_dir());
-    }
+    assert!(vendor_path.is_dir());
     assert!(cargo_config_path.is_file());
     assert!(cargo_lock_path.is_file());
     Ok(outfile)
