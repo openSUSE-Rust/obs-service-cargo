@@ -84,6 +84,7 @@ pub fn run_cargo_vendor(
             fs::copy(lockfile, target_archive_path_for_lockfile)?;
             if !global_has_deps {
                 info!("🎉 Project has no dependencies.");
+            } else {
                 utils::copy_dir_all(path_to_vendor_dir, target_archive_path_for_vendor_dir)?;
             }
             // NOTE maybe in the future, we might need to respect import
