@@ -1,4 +1,4 @@
-name: Build OBS Service Cargo
+name: CI for OBS Service Cargo
 
 on:
   push:
