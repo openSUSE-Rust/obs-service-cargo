@@ -1,6 +1,6 @@
 # OBS Source Service `obs-service-cargo`
 
-[![Build OBS Service Cargo](https://github.com/openSUSE/obs-service-cargo_vendor/actions/workflows/build.yml/badge.svg)](https://github.com/openSUSE/obs-service-cargo_vendor/actions/workflows/build.yml)
+[![Build OBS Service Cargo](https://github.com/openSUSE/obs-service-cargo_vendor/actions/workflows/ci.yml/badge.svg)](https://github.com/openSUSE/obs-service-cargo_vendor/actions/workflows/ci.yml)
 [![build result](https://build.opensuse.org/projects/devel:languages:rust/packages/obs-service-cargo/badge.svg?type=percent)](https://build.opensuse.org/package/show/devel:languages:rust/obs-service-cargo)
 
 `obs-service-cargo` is an Open Build Service source service that automates Cargo vendoring for Rust projects. It streamlines packaging for packagers by auditing lockfiles, resolving dependencies, and vendoring crates. With tight OBS integration, packagers can ship Rust software quickly with a single command and minimal configuration.
