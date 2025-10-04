@@ -86,7 +86,6 @@ pub fn run_cargo_vendor(
                 .join("vendor");
             fs::create_dir_all(target_archive_path_for_dot_cargo)?;
             fs::copy(lockfile, target_archive_path_for_lockfile)?;
-            // TODO: Fix this function in roast
             utils::copy_dir_all(path_to_vendor_dir, target_archive_path_for_vendor_dir)?;
             // NOTE maybe in the future, we might need to respect import
             // an existing `cargo.toml` but I doubt that's necessary?
