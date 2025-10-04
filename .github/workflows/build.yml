@@ -36,6 +36,16 @@ jobs:
       run: |
         cargo update
         cargo build --release --all-features
+  
+  style:
+    runs-on: ubuntu-latest
+    container: opensuse/leap
+    steps:
+    - name: Install tar, gzip, dependencies and Rust
+      run: |
+        zypper --non-interactive -vvv in tar gzip libzstd-devel rustup openssl-devel
+        # Seems to be a rustup command inconsistency
+        rustup show
     - name: Check formatting
       run: |
         cargo fmt -- --check || true
@@ -43,6 +53,16 @@ jobs:
       run: |
         cargo clippy
         cargo clippy --tests
+  
+  tests:
+    runs-on: ubuntu-latest
+    container: opensuse/leap
+    steps:
+    - name: Install tar, gzip, dependencies and Rust
+      run: |
+        zypper --non-interactive -vvv in tar gzip libzstd-devel rustup openssl-devel
+        # Seems to be a rustup command inconsistency
+        rustup show
     - name: Install cargo-vendor-filterer
       run: |
         cargo install cargo-vendor-filterer
