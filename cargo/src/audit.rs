@@ -53,7 +53,7 @@ pub fn process_reports(reports: Vec<Report>) -> Result<(), io::Error> {
                 let score = vuln
                     .advisory
                     .cvss
-                    .map(|base| base.score().value().to_string())
+                    .map(|base| base.score().to_string())
                     .unwrap_or_else(|| "unset".to_string());
                 let id = vuln.advisory.id;
                 let name = vuln.package.name;
