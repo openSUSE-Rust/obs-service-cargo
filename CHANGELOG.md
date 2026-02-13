@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.2.1] - 2026-02-13
+
+### Bug Fixes
+
+- Update build badge link in README to point to the correct CI workflow [31e7dfe](https://github.com/openSUSE-Rust/obs-service-cargo/commit/31e7dfe5e51eb05304d359f19fc2a8c1491e75ce)
+
+### Miscellaneous Tasks
+
+- Bump deps [86ead5a](https://github.com/openSUSE-Rust/obs-service-cargo/commit/86ead5ad4f3587ccb13bc0ba9b6a2f674566c998)
+
 ## [7.2.0] - 2025-10-04
 
 ### Bug Fixes
@@ -27,6 +37,10 @@ All notable changes to this project will be documented in this file.
 
 - Only vendor method has a vendor directory inside the generated tarball [1a49830](https://github.com/openSUSE-Rust/obs-service-cargo/commit/1a49830d2f798c1c866b20ea148887f95412d198)
 - Update README for clarity and additional instructions on vendoring without dependencies [5fc4ce9](https://github.com/openSUSE-Rust/obs-service-cargo/commit/5fc4ce96d4502ea67c028b68df58af3d991ac6be)
+
+### Miscellaneous Tasks
+
+- Bump version to 7.2.0 [649e76f](https://github.com/openSUSE-Rust/obs-service-cargo/commit/649e76f9dec07f1d3cc0688e9b2c191e7a785c57)
 
 ### Other
 
